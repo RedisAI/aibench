@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 	"log"
-	"strings"
+	//"strings"
 	"sync"
 	"time"
 )
@@ -71,17 +71,15 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 }
 
-func (p *Processor) ProcessQuery(q inference.Query, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	tq := q.(*inference.RedisAI)
 
-	qry := string(tq.RedisQuery)
 
-	t := strings.Split(qry, ",")
+	//t := strings.Split(qry, ",")
 	//if len(t) < 2 {
 	//	log.Fatalf("The inference has not the correct format ", qry)
 	//}
@@ -111,7 +109,7 @@ func (p *Processor) ProcessQuery(q inference.Query, isWarm bool) ([]*inference.S
 
 	}
 	stat := inference.GetStat()
-	stat.Init(q.HumanLabelName(), took, uint64(0), false, t[1])
+	stat.Init([]byte("query"), took, uint64(0), false, "")
 
 	return []*inference.Stat{stat}, nil
 }

@@ -35,7 +35,7 @@ type BenchmarkRunner struct {
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *scanner
-	ch      chan Query
+	ch      chan []string
 }
 
 // NewBenchmarkRunner creates a new instance of BenchmarkRunner which is
@@ -87,7 +87,7 @@ type Processor interface {
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessQuery handles a given inference and reports its stats
-	ProcessQuery(q Query, isWarm bool) ([]*Stat, error)
+	ProcessQuery(q []string, isWarm bool) ([]*Stat, error)
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -118,7 +118,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	if b.sp.burnIn > b.limit {
 		panic("burn-in is larger than limit")
 	}
-	b.ch = make(chan Query, b.workers)
+	b.ch = make(chan []string, b.workers)
 
 	// Launch the stats processor:
 	go b.sp.process(b.workers)

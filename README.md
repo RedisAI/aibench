@@ -63,9 +63,11 @@ the data using the previous section and generate the queries as
 described earlier. Once the data is loaded and the queries are generated,
 just use the corresponding `dlbench_run_inference_` binary for the database
 being tested:
+
 ```bash
-$ dlbench_run_inference_redisai \
-       -file /tmp/creditcards.csv \
+$ cat ./data/creditcard.csv.gz \
+        | gunzip \
+        | dlbench_run_inference_redisai \
        -max-queries 10000 -workers 16 -print-interval 1000 
 ```
 
