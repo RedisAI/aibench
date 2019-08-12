@@ -6,10 +6,11 @@ package main
 import (
 	"flag"
 	"github.com/filipecosta90/dlbench/inference"
+	redisai "github.com/filipecosta90/dlbench/redisai-go"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
-	"log"
-	//"strings"
+	//ignoring until we get the correct model
+	//"log"
 	"sync"
 	"time"
 )
@@ -17,7 +18,7 @@ import (
 // Program option vars:
 var (
 	host  string
-	index string
+	model string
 
 	showExplain bool
 )
@@ -36,6 +37,8 @@ func init() {
 	runner = inference.NewBenchmarkRunner()
 
 	flag.StringVar(&host, "host", "localhost:6379", "Redis host address and port")
+	flag.StringVar(&model, "model", "", "model name")
+
 	flag.Parse()
 	client = redis.NewClient(&redis.Options{
 		Addr: host,
@@ -53,9 +56,9 @@ type queryExecutorOptions struct {
 }
 
 type Processor struct {
-	opts          *queryExecutorOptions
-	Metrics       chan uint64
-	Wg            *sync.WaitGroup
+	opts    *queryExecutorOptions
+	Metrics chan uint64
+	Wg      *sync.WaitGroup
 }
 
 func newProcessor() inference.Processor { return &Processor{} }
@@ -63,53 +66,37 @@ func newProcessor() inference.Processor { return &Processor{} }
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.Wg = wg
 	p.Metrics = m
-
-	p.opts = &queryExecutorOptions{
-		showExplain:   showExplain,
-		debug:         runner.DebugLevel() > 0,
-		printResponse: runner.DoPrintResponses(),
-	}
 }
 
-func (p *Processor) ProcessQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-
-
-	//t := strings.Split(qry, ",")
-	//if len(t) < 2 {
-	//	log.Fatalf("The inference has not the correct format ", qry)
-	//}
-	//command := t[0]
-	//if command != "FT.SEARCH" {
-	//	log.Fatalf("Command not supported yet. Only FT.SEARCH. ", command)
-	//}
-	//rediSearchQuery := redisearch.NewQuery(t[1])
-	start := time.Now()
-	//client.Do("AI.TENSORSET", "transactionX", "FLOAT32", 1,  37, "BLOB", imgbuf.Bytes())
+	transactionTensorName := "transacation:" + q[0]
+	referenceDataTensorName := "reference:" + q[0]
+	classificationTensorName := "classification:" + q[0]
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{30}, q[1:31])
+	modelrun_args := redisai.Generate_AI_ModelRun_Args(model, []string{transactionTensorName, referenceDataTensorName}, []string{classificationTensorName})
+	tensorget_args := redisai.Generate_AI_TensorGet_Args(classificationTensorName)
 	pipe := client.Pipeline()
-	pipe.Do("PING")
-	pipe.Do("PING")
-	pipe.Do("PING")
-	// Execute
-	//
-	//     INCR pipeline_counter
-	//     EXPIRE pipeline_counts 3600
-	//
-	// using one redisdb-server roundtrip.
-	_, err := pipe.Exec()
+	start := time.Now()
+	pipe.Do(tensorset_args...)
+	pipe.Do(modelrun_args...)
+	pipe.Do(tensorget_args...)
+	pipe.Exec()
+	//ignoring until we get the correct model
+	//_, err := pipe.Exec()
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
-
-	if err != nil {
-
-		log.Fatalf("Command failed:%v\tError message:%v\tString Error message:|%s|\n", err, err.Error())
-
-	}
+	//ignoring until we get the correct model
+	//
+	//if err != nil {
+	//	log.Fatalf("Command failed:%v\n", err)
+	//
+	//}
 	stat := inference.GetStat()
-	stat.Init([]byte("query"), took, uint64(0), false, "")
+	stat.Init([]byte("RedisAI Query"), took, uint64(0), false, "")
 
 	return []*inference.Stat{stat}, nil
 }

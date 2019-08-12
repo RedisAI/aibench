@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"runtime/pprof"
 	"sync"
@@ -19,7 +20,7 @@ const (
 	defaultReadSize = 4 << 20 // 4 MB
 )
 
-// BenchmarkRunner contains the common components for running a inference benchmarking
+// LoadRunner contains the common components for running a inference benchmarking
 // program against a database.
 type BenchmarkRunner struct {
 	// flag fields
@@ -30,15 +31,17 @@ type BenchmarkRunner struct {
 	printResponses bool
 	debug          int
 	fileName       string
+	skipFirstLine  bool
+	seed           int64
 
 	// non-flag fields
 	br      *bufio.Reader
 	sp      *statProcessor
-	scanner *scanner
+	scanner *producer
 	ch      chan []string
 }
 
-// NewBenchmarkRunner creates a new instance of BenchmarkRunner which is
+// NewLoadRunner creates a new instance of LoadRunner which is
 // common functionality to be used by inference benchmarker programs
 func NewBenchmarkRunner() *BenchmarkRunner {
 	runner := &BenchmarkRunner{}
@@ -53,7 +56,9 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
+	flag.BoolVar(&runner.skipFirstLine, "skip-first-line", true, "Skip first line of csv (default true).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
+	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	return runner
 }
@@ -73,21 +78,21 @@ func (b *BenchmarkRunner) DebugLevel() int {
 	return b.debug
 }
 
-// DatabaseName returns the name of the database to run queries against
+// ModelName returns the name of the database to run queries against
 func (b *BenchmarkRunner) DatabaseName() string {
 	return b.dbName
 }
 
-// ProcessorCreate is a function that creates a new Processor (called in Run)
+// LoaderCreate is a function that creates a new Loader (called in Run)
 type ProcessorCreate func() Processor
 
-// Processor is an interface that handles the setup of a inference processing worker and executes queries one at a time
+// Loader is an interface that handles the setup of a inference processing worker and executes queries one at a time
 type Processor interface {
-	// Init initializes at global state for the Processor, possibly based on its worker number / ID
+	// Init initializes at global state for the Loader, possibly based on its worker number / ID
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
-	// ProcessQuery handles a given inference and reports its stats
-	ProcessQuery(q []string, isWarm bool) ([]*Stat, error)
+	// ProcessInferenceQuery handles a given inference and reports its stats
+	ProcessInferenceQuery(q []string, isWarm bool) ([]*Stat, error)
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -112,6 +117,9 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
 func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate) {
+
+	rand.Seed(b.seed)
+
 	if b.workers == 0 {
 		panic("must have at least one worker")
 	}
@@ -134,7 +142,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Wall clock start time
 	wallStart := time.Now()
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.scan(queryPool, b.ch)
+	_ = br.produce(queryPool, b.ch, b.skipFirstLine)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -170,7 +178,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	processor.Init(workerNum, pwg, metricsChan, responseSizesChan)
 
 	for query := range b.ch {
-		stats, err := processor.ProcessQuery(query, false)
+		stats, err := processor.ProcessInferenceQuery(query, false)
 		if err != nil {
 			panic(err)
 		}
@@ -181,7 +189,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 		// This guarantees that the warm stat will reflect optimal cache performance.
 		if b.sp.prewarmQueries {
 			// Warm run
-			stats, err = processor.ProcessQuery(query, true)
+			stats, err = processor.ProcessInferenceQuery(query, true)
 			if err != nil {
 				panic(err)
 			}
