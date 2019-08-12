@@ -4,22 +4,16 @@ including RedisAI.
 This code is based on a fork of work initially made public by TSBS
 at https://github.com/timescale/tsbs.
 
-Current databases supported:
+Current DL solutions supported:
 
 + RedisAI [(supplemental docs)](docs/redisai.md)
-
-## Overview
-
-TBD 
++ TFServing + Redis [(supplemental docs)](docs/tfserving_and_redis.md)
++ Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
 
 ## Current use cases
 
-TBD
 
-
-## What the FTSB tests
-
-TBD
+Currently, DLBench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
 
 
 ## Installation
