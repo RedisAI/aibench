@@ -30,7 +30,7 @@ $ go get ./...
 # Install desired binaries. At a minimum this includes one dlbench_run_inference_*
 # binary:
 $ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-$ cd dlbench_load_referencedata_redisai && go install
+$ cd dlbench_load_referencedata && go install
 $ cd ../dlbench_run_inference_redisai && go install
 ```
 
@@ -61,7 +61,7 @@ $ redis-cli -x AI.MODELSET financialNet \
 $ cd $GOPATH/src/github.com/filipecosta90/dlbench
 $ cat ./data/creditcard.csv.gz \
         | gunzip \
-        | dlbench_load_referencedata_redisai \
+        | dlbench_load_referencedata \
           -workers 16 
 ```
 

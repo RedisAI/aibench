@@ -4,12 +4,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"github.com/filipecosta90/dlbench/inference"
 	redisai "github.com/filipecosta90/dlbench/redisai-go"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
+	"log"
 	"math/rand"
 	//ignoring until we get the correct model
 	//"log"
@@ -56,27 +59,37 @@ func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 	p.Wg = wg
 }
 
-func randReferenceData( n int) []string {
+func randReferenceData(n int) []string {
 	res := make([]string, n)
 	for i := range res {
-		res[i] =  fmt.Sprintf("%f", rand.Float64())
+		res[i] = fmt.Sprintf("%f", rand.Float64())
 	}
 	return res
 }
 
 func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 
-	referenceDataTensorName := "reference:" + q[0]
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{256}, randReferenceData(256) )
-	client.Do(tensorset_args...)
-	//ignoring until we get the correct model
-	//_, err := pipe.Exec()
-	//ignoring until we get the correct model
-	//
-	//if err != nil {
-	//	log.Fatalf("Command failed:%v\n", err)
-	//
-	//}
+	referenceDataTensorName := "referenceTensor:" + q[0]
+	referenceDataKeyName := "referenceKey:" + q[0]
+	//referenceDataListName := "referenceList:" + q[0]
+	refData := randReferenceData(256)
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{256}, refData)
+	errTensorSet := client.Do(tensorset_args...).Err()
+	if errTensorSet != nil {
+		log.Fatalf("Command TensorSet:%v\n", errTensorSet)
+	}
 
+	buffer := &bytes.Buffer{}
+
+	gob.NewEncoder(buffer).Encode(refData)
+	refDataBytes := buffer.Bytes()
+	//errLPush := client.RPush( referenceDataListName, refData ).Err()
+	//if errLPush != nil {
+	//	log.Fatalf("Command RPush:%v\n", errLPush)
+	//}
+	errSet := client.Set(referenceDataKeyName, refDataBytes, 0).Err()
+	if errSet != nil {
+		log.Fatalf("Command Set:%v\n", errSet)
+	}
 	return nil, nil
 }

@@ -77,9 +77,9 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		return nil, nil
 	}
 	transactionTensorName := "transacation:" + q[0]
-	referenceDataTensorName := "reference:" + q[0]
+	referenceDataTensorName := "referenceTensor:" + q[0]
 	classificationTensorName := "classification:" + q[0]
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{1,30}, q[1:31])
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{1, 30}, q[1:31])
 	modelrun_args := redisai.Generate_AI_ModelRun_Args(model, []string{transactionTensorName, referenceDataTensorName}, []string{classificationTensorName})
 	tensorget_args := redisai.Generate_AI_TensorGet_Args(classificationTensorName)
 	pipe := client.Pipeline()
