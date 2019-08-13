@@ -50,14 +50,15 @@ $ redis-cli flushall
 # create the index
 $ redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
 $ redis-cli -x AI.MODELSET financialNet \
-            TF CPU INPUTS transaction \
-            OUTPUTS classification < ./models/tensorflow/fraudGraph.pb
+            TF CPU INPUTS transaction reference \
+            OUTPUTS output < ./models/tensorflow/creditcardfraud.pb
 ```
-
 
 ### Reference Data Loading
 
 ```bash
+# make sure you're on the root project folder
+$ cd $GOPATH/src/github.com/filipecosta90/dlbench
 $ cat ./data/creditcard.csv.gz \
         | gunzip \
         | dlbench_load_referencedata_redisai \
@@ -73,10 +74,12 @@ just use the corresponding `dlbench_run_inference_` binary for the database
 being tested:
 
 ```bash
+# make sure you're on the root project folder
+$ cd $GOPATH/src/github.com/filipecosta90/dlbench
 $ cat ./data/creditcard.csv.gz \
         | gunzip \
         | dlbench_run_inference_redisai \
-       -max-queries 10000 -workers 16 -print-interval 2000 
+       -max-queries 10000 -workers 16 -print-interval 2000 -model financialNet
 ```
 
 You can change the value of the `-workers` flag to
@@ -87,53 +90,52 @@ resulting output will look similar to this:
 after 2000 queries with 16 workers:
 All queries  :
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.43 ms, q25:     0.33 ms, med(q50):     0.42 ms, q75:     0.49 ms, q99:     0.97 ms, max:     3.71 ms, stddev:     0.30ms, sum: 0.860 sec, count: 2000, timedOut count: 0
+        min:    16.18 ms,  mean:    22.70 ms, q25:    22.37 ms, med(q50):    22.71 ms, q75:    23.01 ms, q99:    24.09 ms, max:    34.71 ms, stddev:     0.77ms, sum: 45.391 sec, count: 2000, timedOut count: 0
 
 RedisAI Query:
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.43 ms, q25:     0.33 ms, med(q50):     0.42 ms, q75:     0.49 ms, q99:     0.97 ms, max:     3.71 ms, stddev:     0.30ms, sum: 0.860 sec, count: 2000, timedOut count: 0
+        min:    16.18 ms,  mean:    22.70 ms, q25:    22.37 ms, med(q50):    22.71 ms, q75:    23.01 ms, q99:    24.09 ms, max:    34.71 ms, stddev:     0.77ms, sum: 45.391 sec, count: 2000, timedOut count: 0
 
 
 after 4000 queries with 16 workers:
 All queries  :
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.41 ms, q25:     0.30 ms, med(q50):     0.40 ms, q75:     0.49 ms, q99:     0.85 ms, max:     3.71 ms, stddev:     0.24ms, sum: 1.633 sec, count: 4000, timedOut count: 0
+        min:    16.18 ms,  mean:    23.34 ms, q25:    22.36 ms, med(q50):    22.71 ms, q75:    23.09 ms, q99:    32.35 ms, max:    34.71 ms, stddev:     2.44ms, sum: 93.367 sec, count: 4000, timedOut count: 0
 
 RedisAI Query:
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.41 ms, q25:     0.30 ms, med(q50):     0.40 ms, q75:     0.49 ms, q99:     0.85 ms, max:     3.71 ms, stddev:     0.24ms, sum: 1.633 sec, count: 4000, timedOut count: 0
+        min:    16.18 ms,  mean:    23.34 ms, q25:    22.36 ms, med(q50):    22.71 ms, q75:    23.09 ms, q99:    32.35 ms, max:    34.71 ms, stddev:     2.44ms, sum: 93.367 sec, count: 4000, timedOut count: 0
 
 
 after 6000 queries with 16 workers:
 All queries  :
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.45 ms, q25:     0.34 ms, med(q50):     0.45 ms, q75:     0.54 ms, q99:     0.83 ms, max:     3.71 ms, stddev:     0.21ms, sum: 2.675 sec, count: 6000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.22 ms, q25:    22.36 ms, med(q50):    22.80 ms, q75:    23.94 ms, q99:    32.27 ms, max:    34.71 ms, stddev:     3.17ms, sum: 145.314 sec, count: 6000, timedOut count: 0
 
 RedisAI Query:
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.45 ms, q25:     0.34 ms, med(q50):     0.45 ms, q75:     0.54 ms, q99:     0.83 ms, max:     3.71 ms, stddev:     0.21ms, sum: 2.675 sec, count: 6000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.22 ms, q25:    22.36 ms, med(q50):    22.80 ms, q75:    23.94 ms, q99:    32.27 ms, max:    34.71 ms, stddev:     3.17ms, sum: 145.314 sec, count: 6000, timedOut count: 0
 
 
 after 8000 queries with 16 workers:
 All queries  :
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.46 ms, q25:     0.37 ms, med(q50):     0.46 ms, q75:     0.54 ms, q99:     0.80 ms, max:     3.71 ms, stddev:     0.19ms, sum: 3.643 sec, count: 8000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.37 ms, q25:    22.44 ms, med(q50):    22.97 ms, q75:    26.48 ms, q99:    32.10 ms, max:    34.71 ms, stddev:     3.01ms, sum: 194.988 sec, count: 8000, timedOut count: 0
 
 RedisAI Query:
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.46 ms, q25:     0.37 ms, med(q50):     0.46 ms, q75:     0.54 ms, q99:     0.80 ms, max:     3.71 ms, stddev:     0.19ms, sum: 3.643 sec, count: 8000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.37 ms, q25:    22.44 ms, med(q50):    22.97 ms, q75:    26.48 ms, q99:    32.10 ms, max:    34.71 ms, stddev:     3.01ms, sum: 194.988 sec, count: 8000, timedOut count: 0
 
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Run complete after 10000 queries with 16 workers:
 All queries  :
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.46 ms, q25:     0.38 ms, med(q50):     0.47 ms, q75:     0.55 ms, q99:     0.78 ms, max:     3.71 ms, stddev:     0.18ms, sum: 4.639 sec, count: 10000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.21 ms, q25:    22.50 ms, med(q50):    23.05 ms, q75:    25.40 ms, q99:    31.84 ms, max:    34.71 ms, stddev:     2.77ms, sum: 242.109 sec, count: 10000, timedOut count: 0
 
 RedisAI Query:
 + Query execution latency (statistical histogram):
-        min:     0.06 ms,  mean:     0.46 ms, q25:     0.38 ms, med(q50):     0.47 ms, q75:     0.55 ms, q99:     0.78 ms, max:     3.71 ms, stddev:     0.18ms, sum: 4.639 sec, count: 10000, timedOut count: 0
+        min:    16.18 ms,  mean:    24.21 ms, q25:    22.50 ms, med(q50):    23.05 ms, q75:    25.40 ms, q99:    31.84 ms, max:    34.71 ms, stddev:     2.77ms, sum: 242.109 sec, count: 10000, timedOut count: 0
 
-Took:    0.317 sec
-
+Took:   15.151 sec
 ```

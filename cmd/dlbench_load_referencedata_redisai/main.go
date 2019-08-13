@@ -5,10 +5,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/filipecosta90/dlbench/inference"
 	redisai "github.com/filipecosta90/dlbench/redisai-go"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
+	"math/rand"
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
@@ -54,10 +56,18 @@ func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 	p.Wg = wg
 }
 
+func randReferenceData( n int) []string {
+	res := make([]string, n)
+	for i := range res {
+		res[i] =  fmt.Sprintf("%f", rand.Float64())
+	}
+	return res
+}
+
 func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 
 	referenceDataTensorName := "reference:" + q[0]
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{30}, q[1:31])
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{256}, randReferenceData(256) )
 	client.Do(tensorset_args...)
 	//ignoring until we get the correct model
 	//_, err := pipe.Exec()

@@ -9,6 +9,8 @@ import (
 	redisai "github.com/filipecosta90/dlbench/redisai-go"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
+	"log"
+
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
@@ -77,7 +79,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	transactionTensorName := "transacation:" + q[0]
 	referenceDataTensorName := "reference:" + q[0]
 	classificationTensorName := "classification:" + q[0]
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{30}, q[1:31])
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{1,30}, q[1:31])
 	modelrun_args := redisai.Generate_AI_ModelRun_Args(model, []string{transactionTensorName, referenceDataTensorName}, []string{classificationTensorName})
 	tensorget_args := redisai.Generate_AI_TensorGet_Args(classificationTensorName)
 	pipe := client.Pipeline()
@@ -85,16 +87,11 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	pipe.Do(tensorset_args...)
 	pipe.Do(modelrun_args...)
 	pipe.Do(tensorget_args...)
-	pipe.Exec()
-	//ignoring until we get the correct model
-	//_, err := pipe.Exec()
+	_, err := pipe.Exec()
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
-	//ignoring until we get the correct model
-	//
-	//if err != nil {
-	//	log.Fatalf("Command failed:%v\n", err)
-	//
-	//}
+	if err != nil {
+		log.Fatalf("Command failed:%v\n", err)
+	}
 	stat := inference.GetStat()
 	stat.Init([]byte("RedisAI Query"), took, uint64(0), false, "")
 
