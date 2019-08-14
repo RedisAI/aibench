@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Config proto for StaticStoragePathSource.
 type StaticStoragePathSourceConfig struct {
@@ -33,16 +35,17 @@ func (m *StaticStoragePathSourceConfig) Reset()         { *m = StaticStoragePath
 func (m *StaticStoragePathSourceConfig) String() string { return proto.CompactTextString(m) }
 func (*StaticStoragePathSourceConfig) ProtoMessage()    {}
 func (*StaticStoragePathSourceConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_static_storage_path_source_1b6368ec621b1d6b, []int{0}
+	return fileDescriptor_0651e15b76c19a4e, []int{0}
 }
+
 func (m *StaticStoragePathSourceConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StaticStoragePathSourceConfig.Unmarshal(m, b)
 }
 func (m *StaticStoragePathSourceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_StaticStoragePathSourceConfig.Marshal(b, m, deterministic)
 }
-func (dst *StaticStoragePathSourceConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StaticStoragePathSourceConfig.Merge(dst, src)
+func (m *StaticStoragePathSourceConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StaticStoragePathSourceConfig.Merge(m, src)
 }
 func (m *StaticStoragePathSourceConfig) XXX_Size() int {
 	return xxx_messageInfo_StaticStoragePathSourceConfig.Size(m)
@@ -79,10 +82,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/sources/storage_path/static_storage_path_source.proto", fileDescriptor_static_storage_path_source_1b6368ec621b1d6b)
+	proto.RegisterFile("tensorflow_serving/sources/storage_path/static_storage_path_source.proto", fileDescriptor_0651e15b76c19a4e)
 }
 
-var fileDescriptor_static_storage_path_source_1b6368ec621b1d6b = []byte{
+var fileDescriptor_0651e15b76c19a4e = []byte{
 	// 191 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x8e, 0xb1, 0xce, 0x82, 0x30,
 	0x14, 0x46, 0xd3, 0x9f, 0xe4, 0x4f, 0xac, 0xb8, 0x74, 0x62, 0x31, 0xa2, 0x2e, 0x4c, 0x30, 0xf8,

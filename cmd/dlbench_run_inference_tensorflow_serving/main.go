@@ -12,12 +12,13 @@ import (
 	"github.com/filipecosta90/dlbench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
-	tfcoreframework "github.com/tensorflow/tensorflow/tensorflow/go/core/framework"
+	tfcoreframework "tensorflow/core/framework"
 	"google.golang.org/grpc"
 	"log"
 	"strconv"
 	"sync"
 	tensorflowserving "tensorflow_serving/apis"
+
 	"time"
 )
 
@@ -46,7 +47,6 @@ func init() {
 
 	flag.StringVar(&redis_host, "redis-host", "localhost:6379", "Redis host address and port")
 	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "localhost:10000", "TensorFlow serving host address and port")
-
 	flag.StringVar(&model, "model", "", "model name")
 
 	flag.Parse()
@@ -108,6 +108,8 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	request := &tensorflowserving.PredictRequest{
 		ModelSpec: &tensorflowserving.ModelSpec{
 			Name: model,
+			SignatureName: "predict_images",
+
 		},
 		Inputs: map[string]*tfcoreframework.TensorProto{
 			"transacation:" + q[0]: {

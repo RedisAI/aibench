@@ -1,11 +1,10 @@
-# FTSB outputs #
-################
+# DLBench outputs #
+###################
 
-cmd/dlbench_generate_data/dlbench_generate_data
-cmd/dlbench_generate_queries/dlbench_generate_queries
-cmd/dlbench_load_redisai/dlbench_load_redisai
+cmd/dlbench_load_referencedata/dlbench_load_referencedata
 cmd/dlbench_run_inference_redisai/dlbench_run_inference_redisai
-cmd/dlbench_load_referencedata_redisai/dlbench_load_referencedata_redisai
+cmd/dlbench_run_inference_tensorflow_serving/dlbench_run_inference_tensorflow_serving
+
 
 *.txt
 *.csv

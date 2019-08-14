@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type LogCollectorConfig struct {
 	// Identifies the type of the LogCollector we will use to collect these logs.
@@ -32,16 +34,17 @@ func (m *LogCollectorConfig) Reset()         { *m = LogCollectorConfig{} }
 func (m *LogCollectorConfig) String() string { return proto.CompactTextString(m) }
 func (*LogCollectorConfig) ProtoMessage()    {}
 func (*LogCollectorConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_log_collector_config_a9d600f2cc100ed5, []int{0}
+	return fileDescriptor_f4f82912e099f4ae, []int{0}
 }
+
 func (m *LogCollectorConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LogCollectorConfig.Unmarshal(m, b)
 }
 func (m *LogCollectorConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_LogCollectorConfig.Marshal(b, m, deterministic)
 }
-func (dst *LogCollectorConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LogCollectorConfig.Merge(dst, src)
+func (m *LogCollectorConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogCollectorConfig.Merge(m, src)
 }
 func (m *LogCollectorConfig) XXX_Size() int {
 	return xxx_messageInfo_LogCollectorConfig.Size(m)
@@ -71,10 +74,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/config/log_collector_config.proto", fileDescriptor_log_collector_config_a9d600f2cc100ed5)
+	proto.RegisterFile("tensorflow_serving/config/log_collector_config.proto", fileDescriptor_f4f82912e099f4ae)
 }
 
-var fileDescriptor_log_collector_config_a9d600f2cc100ed5 = []byte{
+var fileDescriptor_f4f82912e099f4ae = []byte{
 	// 150 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0x29, 0x49, 0xcd, 0x2b,
 	0xce, 0x2f, 0x4a, 0xcb, 0xc9, 0x2f, 0x8f, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0xcc, 0x4b, 0xd7, 0x4f,

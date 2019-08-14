@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,15 +18,14 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // A single class.
 type Class struct {
 	// Label or name of the class.
 	Label string `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
 	// Score for this class (e.g., the probability the item belongs to this
-	// class). As per the proto3 default-value semantics, if the score is missing,
-	// it should be treated as 0.
+	// class).
 	Score                float32  `protobuf:"fixed32,2,opt,name=score,proto3" json:"score,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -35,16 +36,17 @@ func (m *Class) Reset()         { *m = Class{} }
 func (m *Class) String() string { return proto.CompactTextString(m) }
 func (*Class) ProtoMessage()    {}
 func (*Class) Descriptor() ([]byte, []int) {
-	return fileDescriptor_classification_c9f5ef047d12d857, []int{0}
+	return fileDescriptor_ca7d76edb0ae62d6, []int{0}
 }
+
 func (m *Class) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Class.Unmarshal(m, b)
 }
 func (m *Class) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Class.Marshal(b, m, deterministic)
 }
-func (dst *Class) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Class.Merge(dst, src)
+func (m *Class) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Class.Merge(m, src)
 }
 func (m *Class) XXX_Size() int {
 	return xxx_messageInfo_Class.Size(m)
@@ -81,16 +83,17 @@ func (m *Classifications) Reset()         { *m = Classifications{} }
 func (m *Classifications) String() string { return proto.CompactTextString(m) }
 func (*Classifications) ProtoMessage()    {}
 func (*Classifications) Descriptor() ([]byte, []int) {
-	return fileDescriptor_classification_c9f5ef047d12d857, []int{1}
+	return fileDescriptor_ca7d76edb0ae62d6, []int{1}
 }
+
 func (m *Classifications) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Classifications.Unmarshal(m, b)
 }
 func (m *Classifications) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Classifications.Marshal(b, m, deterministic)
 }
-func (dst *Classifications) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Classifications.Merge(dst, src)
+func (m *Classifications) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Classifications.Merge(m, src)
 }
 func (m *Classifications) XXX_Size() int {
 	return xxx_messageInfo_Classifications.Size(m)
@@ -121,16 +124,17 @@ func (m *ClassificationResult) Reset()         { *m = ClassificationResult{} }
 func (m *ClassificationResult) String() string { return proto.CompactTextString(m) }
 func (*ClassificationResult) ProtoMessage()    {}
 func (*ClassificationResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_classification_c9f5ef047d12d857, []int{2}
+	return fileDescriptor_ca7d76edb0ae62d6, []int{2}
 }
+
 func (m *ClassificationResult) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClassificationResult.Unmarshal(m, b)
 }
 func (m *ClassificationResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClassificationResult.Marshal(b, m, deterministic)
 }
-func (dst *ClassificationResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClassificationResult.Merge(dst, src)
+func (m *ClassificationResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClassificationResult.Merge(m, src)
 }
 func (m *ClassificationResult) XXX_Size() int {
 	return xxx_messageInfo_ClassificationResult.Size(m)
@@ -163,16 +167,17 @@ func (m *ClassificationRequest) Reset()         { *m = ClassificationRequest{} }
 func (m *ClassificationRequest) String() string { return proto.CompactTextString(m) }
 func (*ClassificationRequest) ProtoMessage()    {}
 func (*ClassificationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_classification_c9f5ef047d12d857, []int{3}
+	return fileDescriptor_ca7d76edb0ae62d6, []int{3}
 }
+
 func (m *ClassificationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClassificationRequest.Unmarshal(m, b)
 }
 func (m *ClassificationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClassificationRequest.Marshal(b, m, deterministic)
 }
-func (dst *ClassificationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClassificationRequest.Merge(dst, src)
+func (m *ClassificationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClassificationRequest.Merge(m, src)
 }
 func (m *ClassificationRequest) XXX_Size() int {
 	return xxx_messageInfo_ClassificationRequest.Size(m)
@@ -211,16 +216,17 @@ func (m *ClassificationResponse) Reset()         { *m = ClassificationResponse{}
 func (m *ClassificationResponse) String() string { return proto.CompactTextString(m) }
 func (*ClassificationResponse) ProtoMessage()    {}
 func (*ClassificationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_classification_c9f5ef047d12d857, []int{4}
+	return fileDescriptor_ca7d76edb0ae62d6, []int{4}
 }
+
 func (m *ClassificationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClassificationResponse.Unmarshal(m, b)
 }
 func (m *ClassificationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClassificationResponse.Marshal(b, m, deterministic)
 }
-func (dst *ClassificationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClassificationResponse.Merge(dst, src)
+func (m *ClassificationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClassificationResponse.Merge(m, src)
 }
 func (m *ClassificationResponse) XXX_Size() int {
 	return xxx_messageInfo_ClassificationResponse.Size(m)
@@ -254,10 +260,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/classification.proto", fileDescriptor_classification_c9f5ef047d12d857)
+	proto.RegisterFile("tensorflow_serving/apis/classification.proto", fileDescriptor_ca7d76edb0ae62d6)
 }
 
-var fileDescriptor_classification_c9f5ef047d12d857 = []byte{
+var fileDescriptor_ca7d76edb0ae62d6 = []byte{
 	// 303 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xc1, 0x4a, 0xf3, 0x40,
 	0x14, 0x85, 0x99, 0x96, 0xf6, 0xa7, 0xb7, 0x8b, 0xc2, 0xd0, 0x5f, 0xaa, 0x20, 0x94, 0x74, 0x93,

@@ -3,10 +3,12 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import wrappers "github.com/golang/protobuf/ptypes/wrappers"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,26 +19,14 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Metadata for an inference request such as the model name and version.
 type ModelSpec struct {
 	// Required servable name.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional choice of which version of the model to use.
-	//
-	// Recommended to be left unset in the common case. Should be specified only
-	// when there is a strong version consistency requirement.
-	//
-	// When left unspecified, the system will serve the best available version.
-	// This is typically the latest version, though during version transitions,
-	// notably when serving on a fleet of instances, may be either the previous or
-	// new version.
-	//
-	// Types that are valid to be assigned to VersionChoice:
-	//	*ModelSpec_Version
-	//	*ModelSpec_VersionLabel
-	VersionChoice isModelSpec_VersionChoice `protobuf_oneof:"version_choice"`
+	// Optional version.
+	Version *wrappers.Int64Value `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 	// A named signature to evaluate. If unspecified, the default signature will
 	// be used.
 	SignatureName        string   `protobuf:"bytes,3,opt,name=signature_name,json=signatureName,proto3" json:"signature_name,omitempty"`
@@ -49,16 +39,17 @@ func (m *ModelSpec) Reset()         { *m = ModelSpec{} }
 func (m *ModelSpec) String() string { return proto.CompactTextString(m) }
 func (*ModelSpec) ProtoMessage()    {}
 func (*ModelSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_model_a173b55ba7867bf3, []int{0}
+	return fileDescriptor_371147c41a4c13ea, []int{0}
 }
+
 func (m *ModelSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ModelSpec.Unmarshal(m, b)
 }
 func (m *ModelSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ModelSpec.Marshal(b, m, deterministic)
 }
-func (dst *ModelSpec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ModelSpec.Merge(dst, src)
+func (m *ModelSpec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModelSpec.Merge(m, src)
 }
 func (m *ModelSpec) XXX_Size() int {
 	return xxx_messageInfo_ModelSpec.Size(m)
@@ -76,41 +67,11 @@ func (m *ModelSpec) GetName() string {
 	return ""
 }
 
-type isModelSpec_VersionChoice interface {
-	isModelSpec_VersionChoice()
-}
-
-type ModelSpec_Version struct {
-	Version *wrappers.Int64Value `protobuf:"bytes,2,opt,name=version,proto3,oneof"`
-}
-
-type ModelSpec_VersionLabel struct {
-	VersionLabel string `protobuf:"bytes,4,opt,name=version_label,json=versionLabel,proto3,oneof"`
-}
-
-func (*ModelSpec_Version) isModelSpec_VersionChoice() {}
-
-func (*ModelSpec_VersionLabel) isModelSpec_VersionChoice() {}
-
-func (m *ModelSpec) GetVersionChoice() isModelSpec_VersionChoice {
-	if m != nil {
-		return m.VersionChoice
-	}
-	return nil
-}
-
 func (m *ModelSpec) GetVersion() *wrappers.Int64Value {
-	if x, ok := m.GetVersionChoice().(*ModelSpec_Version); ok {
-		return x.Version
+	if m != nil {
+		return m.Version
 	}
 	return nil
-}
-
-func (m *ModelSpec) GetVersionLabel() string {
-	if x, ok := m.GetVersionChoice().(*ModelSpec_VersionLabel); ok {
-		return x.VersionLabel
-	}
-	return ""
 }
 
 func (m *ModelSpec) GetSignatureName() string {
@@ -120,99 +81,27 @@ func (m *ModelSpec) GetSignatureName() string {
 	return ""
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*ModelSpec) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _ModelSpec_OneofMarshaler, _ModelSpec_OneofUnmarshaler, _ModelSpec_OneofSizer, []interface{}{
-		(*ModelSpec_Version)(nil),
-		(*ModelSpec_VersionLabel)(nil),
-	}
-}
-
-func _ModelSpec_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*ModelSpec)
-	// version_choice
-	switch x := m.VersionChoice.(type) {
-	case *ModelSpec_Version:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Version); err != nil {
-			return err
-		}
-	case *ModelSpec_VersionLabel:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.VersionLabel)
-	case nil:
-	default:
-		return fmt.Errorf("ModelSpec.VersionChoice has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _ModelSpec_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*ModelSpec)
-	switch tag {
-	case 2: // version_choice.version
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(wrappers.Int64Value)
-		err := b.DecodeMessage(msg)
-		m.VersionChoice = &ModelSpec_Version{msg}
-		return true, err
-	case 4: // version_choice.version_label
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.VersionChoice = &ModelSpec_VersionLabel{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _ModelSpec_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*ModelSpec)
-	// version_choice
-	switch x := m.VersionChoice.(type) {
-	case *ModelSpec_Version:
-		s := proto.Size(x.Version)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *ModelSpec_VersionLabel:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.VersionLabel)))
-		n += len(x.VersionLabel)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
 func init() {
 	proto.RegisterType((*ModelSpec)(nil), "tensorflow.serving.ModelSpec")
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/model.proto", fileDescriptor_model_a173b55ba7867bf3)
+	proto.RegisterFile("tensorflow_serving/apis/model.proto", fileDescriptor_371147c41a4c13ea)
 }
 
-var fileDescriptor_model_a173b55ba7867bf3 = []byte{
-	// 233 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x44, 0x8e, 0xc1, 0x4b, 0xc3, 0x30,
-	0x14, 0xc6, 0x17, 0x37, 0x94, 0x45, 0x37, 0x24, 0xa7, 0xa2, 0x20, 0x43, 0x19, 0xec, 0x94, 0x80,
-	0x8a, 0xde, 0x77, 0x9a, 0xa0, 0x1e, 0x2a, 0x78, 0x2d, 0x69, 0x7d, 0x8b, 0x81, 0x34, 0x2f, 0x24,
-	0xe9, 0xfa, 0xaf, 0xf9, 0xa7, 0x79, 0x94, 0xa6, 0xad, 0xbb, 0x7d, 0x7c, 0xfc, 0xde, 0xef, 0x7b,
-	0xf4, 0x2e, 0x82, 0x0d, 0xe8, 0xf7, 0x06, 0xdb, 0x22, 0x80, 0x3f, 0x68, 0xab, 0x84, 0x74, 0x3a,
-	0x88, 0x1a, 0xbf, 0xc0, 0x70, 0xe7, 0x31, 0x22, 0x63, 0x47, 0x88, 0x0f, 0xd0, 0xd5, 0x8d, 0x42,
-	0x54, 0x06, 0x44, 0x22, 0xca, 0x66, 0x2f, 0x5a, 0x2f, 0x9d, 0x03, 0x1f, 0xfa, 0x9b, 0xdb, 0x1f,
-	0x42, 0xe7, 0x6f, 0x9d, 0xe3, 0xc3, 0x41, 0xc5, 0x18, 0x9d, 0x59, 0x59, 0x43, 0x46, 0x56, 0x64,
-	0x33, 0xcf, 0x53, 0x66, 0xcf, 0xf4, 0xec, 0x00, 0x3e, 0x68, 0xb4, 0xd9, 0xc9, 0x8a, 0x6c, 0xce,
-	0xef, 0xaf, 0x79, 0xef, 0xe4, 0xa3, 0x93, 0xbf, 0xd8, 0xf8, 0xf4, 0xf8, 0x29, 0x4d, 0x03, 0xbb,
-	0x49, 0x3e, 0xd2, 0x6c, 0x4d, 0x17, 0x43, 0x2c, 0x8c, 0x2c, 0xc1, 0x64, 0xb3, 0xce, 0xba, 0x9b,
-	0xe4, 0x17, 0x43, 0xfd, 0xda, 0xb5, 0x6c, 0x4d, 0x97, 0x41, 0x2b, 0x2b, 0x63, 0xe3, 0xa1, 0x48,
-	0xeb, 0xd3, 0xb4, 0xbe, 0xf8, 0x6f, 0xdf, 0x65, 0x0d, 0xdb, 0x4b, 0xba, 0x1c, 0x6d, 0xd5, 0x37,
-	0xea, 0x0a, 0xb6, 0xd3, 0x5f, 0x42, 0xca, 0xd3, 0xf4, 0xc4, 0xc3, 0x5f, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xd5, 0x26, 0x44, 0xd1, 0x21, 0x01, 0x00, 0x00,
+var fileDescriptor_371147c41a4c13ea = []byte{
+	// 197 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2e, 0x49, 0xcd, 0x2b,
+	0xce, 0x2f, 0x4a, 0xcb, 0xc9, 0x2f, 0x8f, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0xcc, 0x4b, 0xd7, 0x4f,
+	0x2c, 0xc8, 0x2c, 0xd6, 0xcf, 0xcd, 0x4f, 0x49, 0xcd, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
+	0x12, 0x42, 0x28, 0xd2, 0x83, 0x2a, 0x92, 0x92, 0x4b, 0xcf, 0xcf, 0x4f, 0xcf, 0x49, 0xd5, 0x07,
+	0xab, 0x48, 0x2a, 0x4d, 0xd3, 0x2f, 0x2f, 0x4a, 0x2c, 0x28, 0x48, 0x2d, 0x2a, 0x86, 0xe8, 0x51,
+	0xaa, 0xe5, 0xe2, 0xf4, 0x05, 0x19, 0x11, 0x5c, 0x90, 0x9a, 0x2c, 0x24, 0xc4, 0xc5, 0x92, 0x97,
+	0x98, 0x9b, 0x2a, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x19, 0x04, 0x66, 0x0b, 0x99, 0x72, 0xb1, 0x97,
+	0xa5, 0x16, 0x15, 0x67, 0xe6, 0xe7, 0x49, 0x30, 0x29, 0x30, 0x6a, 0x70, 0x1b, 0x49, 0xeb, 0x41,
+	0x8c, 0xd4, 0x83, 0x19, 0xa9, 0xe7, 0x99, 0x57, 0x62, 0x66, 0x12, 0x96, 0x98, 0x53, 0x9a, 0x1a,
+	0x04, 0x53, 0x2b, 0xa4, 0xca, 0xc5, 0x57, 0x9c, 0x99, 0x9e, 0x97, 0x58, 0x52, 0x5a, 0x94, 0x1a,
+	0x0f, 0x36, 0x94, 0x19, 0x6c, 0x28, 0x2f, 0x5c, 0xd4, 0x2f, 0x31, 0x37, 0xd5, 0x89, 0xf9, 0x07,
+	0x23, 0x63, 0x12, 0x1b, 0xd8, 0x24, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x70, 0xc7, 0x1e,
+	0xc1, 0xe5, 0x00, 0x00, 0x00,
 }

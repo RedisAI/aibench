@@ -3,10 +3,12 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import any "github.com/golang/protobuf/ptypes/any"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	any "github.com/golang/protobuf/ptypes/any"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Config1 struct {
 	StringField          string   `protobuf:"bytes,1,opt,name=string_field,json=stringField,proto3" json:"string_field,omitempty"`
@@ -30,16 +32,17 @@ func (m *Config1) Reset()         { *m = Config1{} }
 func (m *Config1) String() string { return proto.CompactTextString(m) }
 func (*Config1) ProtoMessage()    {}
 func (*Config1) Descriptor() ([]byte, []int) {
-	return fileDescriptor_class_registration_test_c34ca27f0d4bd8fd, []int{0}
+	return fileDescriptor_2a1690d17e90f318, []int{0}
 }
+
 func (m *Config1) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Config1.Unmarshal(m, b)
 }
 func (m *Config1) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Config1.Marshal(b, m, deterministic)
 }
-func (dst *Config1) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Config1.Merge(dst, src)
+func (m *Config1) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Config1.Merge(m, src)
 }
 func (m *Config1) XXX_Size() int {
 	return xxx_messageInfo_Config1.Size(m)
@@ -68,16 +71,17 @@ func (m *Config2) Reset()         { *m = Config2{} }
 func (m *Config2) String() string { return proto.CompactTextString(m) }
 func (*Config2) ProtoMessage()    {}
 func (*Config2) Descriptor() ([]byte, []int) {
-	return fileDescriptor_class_registration_test_c34ca27f0d4bd8fd, []int{1}
+	return fileDescriptor_2a1690d17e90f318, []int{1}
 }
+
 func (m *Config2) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Config2.Unmarshal(m, b)
 }
 func (m *Config2) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Config2.Marshal(b, m, deterministic)
 }
-func (dst *Config2) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Config2.Merge(dst, src)
+func (m *Config2) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Config2.Merge(m, src)
 }
 func (m *Config2) XXX_Size() int {
 	return xxx_messageInfo_Config2.Size(m)
@@ -106,16 +110,17 @@ func (m *MessageWithAny) Reset()         { *m = MessageWithAny{} }
 func (m *MessageWithAny) String() string { return proto.CompactTextString(m) }
 func (*MessageWithAny) ProtoMessage()    {}
 func (*MessageWithAny) Descriptor() ([]byte, []int) {
-	return fileDescriptor_class_registration_test_c34ca27f0d4bd8fd, []int{2}
+	return fileDescriptor_2a1690d17e90f318, []int{2}
 }
+
 func (m *MessageWithAny) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MessageWithAny.Unmarshal(m, b)
 }
 func (m *MessageWithAny) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_MessageWithAny.Marshal(b, m, deterministic)
 }
-func (dst *MessageWithAny) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MessageWithAny.Merge(dst, src)
+func (m *MessageWithAny) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageWithAny.Merge(m, src)
 }
 func (m *MessageWithAny) XXX_Size() int {
 	return xxx_messageInfo_MessageWithAny.Size(m)
@@ -140,10 +145,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/util/class_registration_test.proto", fileDescriptor_class_registration_test_c34ca27f0d4bd8fd)
+	proto.RegisterFile("tensorflow_serving/util/class_registration_test.proto", fileDescriptor_2a1690d17e90f318)
 }
 
-var fileDescriptor_class_registration_test_c34ca27f0d4bd8fd = []byte{
+var fileDescriptor_2a1690d17e90f318 = []byte{
 	// 198 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x8e, 0x31, 0x4b, 0x04, 0x31,
 	0x10, 0x46, 0xb9, 0x46, 0xbd, 0x9c, 0x58, 0x04, 0x0b, 0xb5, 0x52, 0x2b, 0x0b, 0x49, 0xb8, 0x13,

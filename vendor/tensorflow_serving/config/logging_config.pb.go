@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type SamplingConfig struct {
 	// Requests will be logged uniformly at random with this probability. Valid
@@ -31,16 +33,17 @@ func (m *SamplingConfig) Reset()         { *m = SamplingConfig{} }
 func (m *SamplingConfig) String() string { return proto.CompactTextString(m) }
 func (*SamplingConfig) ProtoMessage()    {}
 func (*SamplingConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logging_config_f393ede2e75e5405, []int{0}
+	return fileDescriptor_7e467ec096fa84f9, []int{0}
 }
+
 func (m *SamplingConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SamplingConfig.Unmarshal(m, b)
 }
 func (m *SamplingConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SamplingConfig.Marshal(b, m, deterministic)
 }
-func (dst *SamplingConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SamplingConfig.Merge(dst, src)
+func (m *SamplingConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SamplingConfig.Merge(m, src)
 }
 func (m *SamplingConfig) XXX_Size() int {
 	return xxx_messageInfo_SamplingConfig.Size(m)
@@ -71,16 +74,17 @@ func (m *LoggingConfig) Reset()         { *m = LoggingConfig{} }
 func (m *LoggingConfig) String() string { return proto.CompactTextString(m) }
 func (*LoggingConfig) ProtoMessage()    {}
 func (*LoggingConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logging_config_f393ede2e75e5405, []int{1}
+	return fileDescriptor_7e467ec096fa84f9, []int{1}
 }
+
 func (m *LoggingConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LoggingConfig.Unmarshal(m, b)
 }
 func (m *LoggingConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_LoggingConfig.Marshal(b, m, deterministic)
 }
-func (dst *LoggingConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LoggingConfig.Merge(dst, src)
+func (m *LoggingConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LoggingConfig.Merge(m, src)
 }
 func (m *LoggingConfig) XXX_Size() int {
 	return xxx_messageInfo_LoggingConfig.Size(m)
@@ -111,10 +115,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/config/logging_config.proto", fileDescriptor_logging_config_f393ede2e75e5405)
+	proto.RegisterFile("tensorflow_serving/config/logging_config.proto", fileDescriptor_7e467ec096fa84f9)
 }
 
-var fileDescriptor_logging_config_f393ede2e75e5405 = []byte{
+var fileDescriptor_7e467ec096fa84f9 = []byte{
 	// 203 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0x2b, 0x49, 0xcd, 0x2b,
 	0xce, 0x2f, 0x4a, 0xcb, 0xc9, 0x2f, 0x8f, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0xcc, 0x4b, 0xd7, 0x4f,

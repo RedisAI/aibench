@@ -3,11 +3,13 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import config "tensorflow_serving/config"
-import util "tensorflow_serving/util"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	config "tensorflow_serving/config"
+	util "tensorflow_serving/util"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +20,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type ReloadConfigRequest struct {
 	Config               *config.ModelServerConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
@@ -31,16 +33,17 @@ func (m *ReloadConfigRequest) Reset()         { *m = ReloadConfigRequest{} }
 func (m *ReloadConfigRequest) String() string { return proto.CompactTextString(m) }
 func (*ReloadConfigRequest) ProtoMessage()    {}
 func (*ReloadConfigRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_model_management_005114a80c2faab2, []int{0}
+	return fileDescriptor_abcd87c5decbd4dd, []int{0}
 }
+
 func (m *ReloadConfigRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ReloadConfigRequest.Unmarshal(m, b)
 }
 func (m *ReloadConfigRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ReloadConfigRequest.Marshal(b, m, deterministic)
 }
-func (dst *ReloadConfigRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ReloadConfigRequest.Merge(dst, src)
+func (m *ReloadConfigRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReloadConfigRequest.Merge(m, src)
 }
 func (m *ReloadConfigRequest) XXX_Size() int {
 	return xxx_messageInfo_ReloadConfigRequest.Size(m)
@@ -69,16 +72,17 @@ func (m *ReloadConfigResponse) Reset()         { *m = ReloadConfigResponse{} }
 func (m *ReloadConfigResponse) String() string { return proto.CompactTextString(m) }
 func (*ReloadConfigResponse) ProtoMessage()    {}
 func (*ReloadConfigResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_model_management_005114a80c2faab2, []int{1}
+	return fileDescriptor_abcd87c5decbd4dd, []int{1}
 }
+
 func (m *ReloadConfigResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ReloadConfigResponse.Unmarshal(m, b)
 }
 func (m *ReloadConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ReloadConfigResponse.Marshal(b, m, deterministic)
 }
-func (dst *ReloadConfigResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ReloadConfigResponse.Merge(dst, src)
+func (m *ReloadConfigResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReloadConfigResponse.Merge(m, src)
 }
 func (m *ReloadConfigResponse) XXX_Size() int {
 	return xxx_messageInfo_ReloadConfigResponse.Size(m)
@@ -102,10 +106,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/model_management.proto", fileDescriptor_model_management_005114a80c2faab2)
+	proto.RegisterFile("tensorflow_serving/apis/model_management.proto", fileDescriptor_abcd87c5decbd4dd)
 }
 
-var fileDescriptor_model_management_005114a80c2faab2 = []byte{
+var fileDescriptor_abcd87c5decbd4dd = []byte{
 	// 208 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x8e, 0x31, 0x6b, 0xc3, 0x30,
 	0x14, 0x84, 0x11, 0x05, 0x0f, 0xea, 0xa6, 0x76, 0x28, 0x5e, 0x5a, 0x4c, 0x0b, 0x9d, 0x64, 0xa8,

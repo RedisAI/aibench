@@ -3,10 +3,12 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import framework "github.com/tensorflow/tensorflow/tensorflow/go/core/framework"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	framework "tensorflow/core/framework"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // PredictRequest specifies which TensorFlow model to run, as well as
 // how inputs are mapped to tensors and how outputs are filtered before
@@ -48,16 +50,17 @@ func (m *PredictRequest) Reset()         { *m = PredictRequest{} }
 func (m *PredictRequest) String() string { return proto.CompactTextString(m) }
 func (*PredictRequest) ProtoMessage()    {}
 func (*PredictRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_predict_c7be2766375a6de4, []int{0}
+	return fileDescriptor_d0799bd5d5992a93, []int{0}
 }
+
 func (m *PredictRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PredictRequest.Unmarshal(m, b)
 }
 func (m *PredictRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PredictRequest.Marshal(b, m, deterministic)
 }
-func (dst *PredictRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PredictRequest.Merge(dst, src)
+func (m *PredictRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PredictRequest.Merge(m, src)
 }
 func (m *PredictRequest) XXX_Size() int {
 	return xxx_messageInfo_PredictRequest.Size(m)
@@ -104,16 +107,17 @@ func (m *PredictResponse) Reset()         { *m = PredictResponse{} }
 func (m *PredictResponse) String() string { return proto.CompactTextString(m) }
 func (*PredictResponse) ProtoMessage()    {}
 func (*PredictResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_predict_c7be2766375a6de4, []int{1}
+	return fileDescriptor_d0799bd5d5992a93, []int{1}
 }
+
 func (m *PredictResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PredictResponse.Unmarshal(m, b)
 }
 func (m *PredictResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PredictResponse.Marshal(b, m, deterministic)
 }
-func (dst *PredictResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PredictResponse.Merge(dst, src)
+func (m *PredictResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PredictResponse.Merge(m, src)
 }
 func (m *PredictResponse) XXX_Size() int {
 	return xxx_messageInfo_PredictResponse.Size(m)
@@ -146,10 +150,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/predict.proto", fileDescriptor_predict_c7be2766375a6de4)
+	proto.RegisterFile("tensorflow_serving/apis/predict.proto", fileDescriptor_d0799bd5d5992a93)
 }
 
-var fileDescriptor_predict_c7be2766375a6de4 = []byte{
+var fileDescriptor_d0799bd5d5992a93 = []byte{
 	// 325 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0x4f, 0x4b, 0xfb, 0x40,
 	0x14, 0x64, 0x13, 0x7e, 0xfd, 0xd1, 0xd7, 0xfa, 0x87, 0xbd, 0x18, 0x02, 0x42, 0x69, 0x51, 0x7a,

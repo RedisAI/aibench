@@ -3,11 +3,13 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import any "github.com/golang/protobuf/ptypes/any"
-import protobuf "github.com/tensorflow/tensorflow/tensorflow/go/core/protobuf"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	any "github.com/golang/protobuf/ptypes/any"
+	math "math"
+	protobuf "tensorflow/core/protobuf"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +20,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Message returned for "signature_def" field.
 type SignatureDefMap struct {
@@ -32,16 +34,17 @@ func (m *SignatureDefMap) Reset()         { *m = SignatureDefMap{} }
 func (m *SignatureDefMap) String() string { return proto.CompactTextString(m) }
 func (*SignatureDefMap) ProtoMessage()    {}
 func (*SignatureDefMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_get_model_metadata_02a8be3af7ceac7e, []int{0}
+	return fileDescriptor_4f6b64919204d6ed, []int{0}
 }
+
 func (m *SignatureDefMap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SignatureDefMap.Unmarshal(m, b)
 }
 func (m *SignatureDefMap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SignatureDefMap.Marshal(b, m, deterministic)
 }
-func (dst *SignatureDefMap) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SignatureDefMap.Merge(dst, src)
+func (m *SignatureDefMap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignatureDefMap.Merge(m, src)
 }
 func (m *SignatureDefMap) XXX_Size() int {
 	return xxx_messageInfo_SignatureDefMap.Size(m)
@@ -74,16 +77,17 @@ func (m *GetModelMetadataRequest) Reset()         { *m = GetModelMetadataRequest
 func (m *GetModelMetadataRequest) String() string { return proto.CompactTextString(m) }
 func (*GetModelMetadataRequest) ProtoMessage()    {}
 func (*GetModelMetadataRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_get_model_metadata_02a8be3af7ceac7e, []int{1}
+	return fileDescriptor_4f6b64919204d6ed, []int{1}
 }
+
 func (m *GetModelMetadataRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetModelMetadataRequest.Unmarshal(m, b)
 }
 func (m *GetModelMetadataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetModelMetadataRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetModelMetadataRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetModelMetadataRequest.Merge(dst, src)
+func (m *GetModelMetadataRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetModelMetadataRequest.Merge(m, src)
 }
 func (m *GetModelMetadataRequest) XXX_Size() int {
 	return xxx_messageInfo_GetModelMetadataRequest.Size(m)
@@ -124,16 +128,17 @@ func (m *GetModelMetadataResponse) Reset()         { *m = GetModelMetadataRespon
 func (m *GetModelMetadataResponse) String() string { return proto.CompactTextString(m) }
 func (*GetModelMetadataResponse) ProtoMessage()    {}
 func (*GetModelMetadataResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_get_model_metadata_02a8be3af7ceac7e, []int{2}
+	return fileDescriptor_4f6b64919204d6ed, []int{2}
 }
+
 func (m *GetModelMetadataResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetModelMetadataResponse.Unmarshal(m, b)
 }
 func (m *GetModelMetadataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetModelMetadataResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetModelMetadataResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetModelMetadataResponse.Merge(dst, src)
+func (m *GetModelMetadataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetModelMetadataResponse.Merge(m, src)
 }
 func (m *GetModelMetadataResponse) XXX_Size() int {
 	return xxx_messageInfo_GetModelMetadataResponse.Size(m)
@@ -167,10 +172,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/get_model_metadata.proto", fileDescriptor_get_model_metadata_02a8be3af7ceac7e)
+	proto.RegisterFile("tensorflow_serving/apis/get_model_metadata.proto", fileDescriptor_4f6b64919204d6ed)
 }
 
-var fileDescriptor_get_model_metadata_02a8be3af7ceac7e = []byte{
+var fileDescriptor_4f6b64919204d6ed = []byte{
 	// 376 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x52, 0x4f, 0x4b, 0xe3, 0x40,
 	0x1c, 0x65, 0x12, 0x76, 0xd9, 0x4e, 0xb6, 0xbb, 0x1a, 0x04, 0x63, 0x40, 0x08, 0x15, 0x21, 0x7a,

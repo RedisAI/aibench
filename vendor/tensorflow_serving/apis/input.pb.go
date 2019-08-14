@@ -3,10 +3,12 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import example "github.com/tensorflow/tensorflow/tensorflow/go/core/example"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	example "tensorflow/core/example"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Specifies one or more fully independent input Examples.
 // See examples at:
@@ -33,16 +35,17 @@ func (m *ExampleList) Reset()         { *m = ExampleList{} }
 func (m *ExampleList) String() string { return proto.CompactTextString(m) }
 func (*ExampleList) ProtoMessage()    {}
 func (*ExampleList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_input_5973379ac05a40eb, []int{0}
+	return fileDescriptor_68144b991b8eca1f, []int{0}
 }
+
 func (m *ExampleList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExampleList.Unmarshal(m, b)
 }
 func (m *ExampleList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExampleList.Marshal(b, m, deterministic)
 }
-func (dst *ExampleList) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExampleList.Merge(dst, src)
+func (m *ExampleList) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExampleList.Merge(m, src)
 }
 func (m *ExampleList) XXX_Size() int {
 	return xxx_messageInfo_ExampleList.Size(m)
@@ -70,37 +73,31 @@ func (m *ExampleList) GetExamples() []*example.Example {
 // to perform some inference on.
 //
 // context: {
-//   features: {
-//     feature: {
-//       key  : "query"
-//       value: {
-//         bytes_list: {
-//           value: [ "pizza" ]
-//         }
+//   feature: {
+//     key  : "query"
+//     value: {
+//       bytes_list: {
+//         value: [ "pizza" ]
 //       }
 //     }
 //   }
 // }
 // examples: {
-//   features: {
-//     feature: {
-//       key  : "cuisine"
-//       value: {
-//         bytes_list: {
-//           value: [ "Pizzeria" ]
-//         }
+//   feature: {
+//     key  : "cuisine"
+//     value: {
+//       bytes_list: {
+//         value: [ "Pizzeria" ]
 //       }
 //     }
 //   }
 // }
 // examples: {
-//   features: {
-//     feature: {
-//       key  : "cuisine"
-//       value: {
-//         bytes_list: {
-//           value: [ "Taqueria" ]
-//         }
+//   feature: {
+//     key  : "cuisine"
+//     value: {
+//       bytes_list: {
+//         value: [ "Taqueria" ]
 //       }
 //     }
 //   }
@@ -125,16 +122,17 @@ func (m *ExampleListWithContext) Reset()         { *m = ExampleListWithContext{}
 func (m *ExampleListWithContext) String() string { return proto.CompactTextString(m) }
 func (*ExampleListWithContext) ProtoMessage()    {}
 func (*ExampleListWithContext) Descriptor() ([]byte, []int) {
-	return fileDescriptor_input_5973379ac05a40eb, []int{1}
+	return fileDescriptor_68144b991b8eca1f, []int{1}
 }
+
 func (m *ExampleListWithContext) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExampleListWithContext.Unmarshal(m, b)
 }
 func (m *ExampleListWithContext) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExampleListWithContext.Marshal(b, m, deterministic)
 }
-func (dst *ExampleListWithContext) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExampleListWithContext.Merge(dst, src)
+func (m *ExampleListWithContext) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExampleListWithContext.Merge(m, src)
 }
 func (m *ExampleListWithContext) XXX_Size() int {
 	return xxx_messageInfo_ExampleListWithContext.Size(m)
@@ -173,16 +171,17 @@ func (m *Input) Reset()         { *m = Input{} }
 func (m *Input) String() string { return proto.CompactTextString(m) }
 func (*Input) ProtoMessage()    {}
 func (*Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_input_5973379ac05a40eb, []int{2}
+	return fileDescriptor_68144b991b8eca1f, []int{2}
 }
+
 func (m *Input) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Input.Unmarshal(m, b)
 }
 func (m *Input) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Input.Marshal(b, m, deterministic)
 }
-func (dst *Input) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Input.Merge(dst, src)
+func (m *Input) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Input.Merge(m, src)
 }
 func (m *Input) XXX_Size() int {
 	return xxx_messageInfo_Input.Size(m)
@@ -230,78 +229,12 @@ func (m *Input) GetExampleListWithContext() *ExampleListWithContext {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*Input) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Input_OneofMarshaler, _Input_OneofUnmarshaler, _Input_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Input) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*Input_ExampleList)(nil),
 		(*Input_ExampleListWithContext)(nil),
 	}
-}
-
-func _Input_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Input)
-	// kind
-	switch x := m.Kind.(type) {
-	case *Input_ExampleList:
-		b.EncodeVarint(1<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ExampleList); err != nil {
-			return err
-		}
-	case *Input_ExampleListWithContext:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ExampleListWithContext); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("Input.Kind has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _Input_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Input)
-	switch tag {
-	case 1: // kind.example_list
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(ExampleList)
-		err := b.DecodeMessage(msg)
-		m.Kind = &Input_ExampleList{msg}
-		return true, err
-	case 2: // kind.example_list_with_context
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(ExampleListWithContext)
-		err := b.DecodeMessage(msg)
-		m.Kind = &Input_ExampleListWithContext{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _Input_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Input)
-	// kind
-	switch x := m.Kind.(type) {
-	case *Input_ExampleList:
-		s := proto.Size(x.ExampleList)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *Input_ExampleListWithContext:
-		s := proto.Size(x.ExampleListWithContext)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 func init() {
@@ -311,10 +244,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/input.proto", fileDescriptor_input_5973379ac05a40eb)
+	proto.RegisterFile("tensorflow_serving/apis/input.proto", fileDescriptor_68144b991b8eca1f)
 }
 
-var fileDescriptor_input_5973379ac05a40eb = []byte{
+var fileDescriptor_68144b991b8eca1f = []byte{
 	// 242 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x2e, 0x49, 0xcd, 0x2b,
 	0xce, 0x2f, 0x4a, 0xcb, 0xc9, 0x2f, 0x8f, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0xcc, 0x4b, 0xd7, 0x4f,

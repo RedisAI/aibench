@@ -25,7 +25,8 @@ In order to make a Go client, we must compile the protobuf files first to genera
 The simplest way to get it, is to run
 
  ```bash
- $ go get -u github.com/golang/protobuf/protoc-gen-go
+ $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
+ $ go get -u google.golang.org/grpc
  ```
 
  
@@ -33,26 +34,27 @@ The simplest way to get it, is to run
 
 
 ```bash
-$ mkdir tmp 
-$ cd tmp
-$ git clone --branch 1.14.0 --depth 1 https://github.com/tensorflow/serving.git
-$ git clone --branch v1.13.2 --depth 1 https://github.com/tensorflow/tensorflow.git
+cd $GOPATH/src/github.com/filipecosta90/dlbench
+mkdir -p tmp && cd tmp
+git clone -b r1.7 --depth 1 https://github.com/tensorflow/serving.git
+git clone -b r1.7 --depth 1 https://github.com/tensorflow/tensorflow.git
 
-$ mkdir -p vendor
-$ PROTOC_OPTS=' -I serving -I tensorflow --go_out=plugins=grpc:vendor'
-$ protoc $PROTOC_OPTS serving/tensorflow_serving/apis/*.proto
-$ protoc $PROTOC_OPTS serving/tensorflow_serving/config/*.proto
-$ protoc $PROTOC_OPTS serving/tensorflow_serving/util/*.proto
-$ protoc $PROTOC_OPTS serving/tensorflow_serving/sources/storage_path/*.proto
-$ protoc $PROTOC_OPTS tensorflow/tensorflow/core/framework/*.proto
-$ protoc $PROTOC_OPTS tensorflow/tensorflow/core/example/*.proto
-$ protoc $PROTOC_OPTS tensorflow/tensorflow/core/lib/core/*.proto
-$ protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
+mkdir -p vendor
+PROTOC_OPTS=' -I serving -I tensorflow --go_out=plugins=grpc:vendor'
+protoc $PROTOC_OPTS serving/tensorflow_serving/apis/*.proto
+protoc $PROTOC_OPTS serving/tensorflow_serving/config/*.proto
+protoc $PROTOC_OPTS serving/tensorflow_serving/util/*.proto
+protoc $PROTOC_OPTS serving/tensorflow_serving/sources/storage_path/*.proto
+protoc $PROTOC_OPTS tensorflow/tensorflow/core/framework/*.proto
+protoc $PROTOC_OPTS tensorflow/tensorflow/core/example/*.proto
+protoc $PROTOC_OPTS tensorflow/tensorflow/core/lib/core/*.proto
+protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
 
 # move vendor folder to $GOPATH/src/github.com/filipecosta90/dlbench
-$ mv vendor $GOPATH/src/github.com/filipecosta90/dlbench/.
+rm -rf $GOPATH/src/github.com/filipecosta90/dlbench/vendor
+mv vendor $GOPATH/src/github.com/filipecosta90/dlbench/.
 # remove tmp dir
-$ rm -rf tmp
+$ cd .. && rm -rf tmp
  ```
  
  

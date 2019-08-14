@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Inference request such as classification, regression, etc...
 type InferenceTask struct {
@@ -37,16 +39,17 @@ func (m *InferenceTask) Reset()         { *m = InferenceTask{} }
 func (m *InferenceTask) String() string { return proto.CompactTextString(m) }
 func (*InferenceTask) ProtoMessage()    {}
 func (*InferenceTask) Descriptor() ([]byte, []int) {
-	return fileDescriptor_inference_b982ce6dc92f0b42, []int{0}
+	return fileDescriptor_4842740eef0fb1a6, []int{0}
 }
+
 func (m *InferenceTask) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_InferenceTask.Unmarshal(m, b)
 }
 func (m *InferenceTask) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_InferenceTask.Marshal(b, m, deterministic)
 }
-func (dst *InferenceTask) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InferenceTask.Merge(dst, src)
+func (m *InferenceTask) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InferenceTask.Merge(m, src)
 }
 func (m *InferenceTask) XXX_Size() int {
 	return xxx_messageInfo_InferenceTask.Size(m)
@@ -87,16 +90,17 @@ func (m *InferenceResult) Reset()         { *m = InferenceResult{} }
 func (m *InferenceResult) String() string { return proto.CompactTextString(m) }
 func (*InferenceResult) ProtoMessage()    {}
 func (*InferenceResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_inference_b982ce6dc92f0b42, []int{1}
+	return fileDescriptor_4842740eef0fb1a6, []int{1}
 }
+
 func (m *InferenceResult) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_InferenceResult.Unmarshal(m, b)
 }
 func (m *InferenceResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_InferenceResult.Marshal(b, m, deterministic)
 }
-func (dst *InferenceResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_InferenceResult.Merge(dst, src)
+func (m *InferenceResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InferenceResult.Merge(m, src)
 }
 func (m *InferenceResult) XXX_Size() int {
 	return xxx_messageInfo_InferenceResult.Size(m)
@@ -151,78 +155,12 @@ func (m *InferenceResult) GetRegressionResult() *RegressionResult {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*InferenceResult) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _InferenceResult_OneofMarshaler, _InferenceResult_OneofUnmarshaler, _InferenceResult_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*InferenceResult) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*InferenceResult_ClassificationResult)(nil),
 		(*InferenceResult_RegressionResult)(nil),
 	}
-}
-
-func _InferenceResult_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*InferenceResult)
-	// result
-	switch x := m.Result.(type) {
-	case *InferenceResult_ClassificationResult:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ClassificationResult); err != nil {
-			return err
-		}
-	case *InferenceResult_RegressionResult:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.RegressionResult); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("InferenceResult.Result has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _InferenceResult_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*InferenceResult)
-	switch tag {
-	case 2: // result.classification_result
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(ClassificationResult)
-		err := b.DecodeMessage(msg)
-		m.Result = &InferenceResult_ClassificationResult{msg}
-		return true, err
-	case 3: // result.regression_result
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(RegressionResult)
-		err := b.DecodeMessage(msg)
-		m.Result = &InferenceResult_RegressionResult{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _InferenceResult_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*InferenceResult)
-	// result
-	switch x := m.Result.(type) {
-	case *InferenceResult_ClassificationResult:
-		s := proto.Size(x.ClassificationResult)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *InferenceResult_RegressionResult:
-		s := proto.Size(x.RegressionResult)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Inference request containing one or more requests.
@@ -240,16 +178,17 @@ func (m *MultiInferenceRequest) Reset()         { *m = MultiInferenceRequest{} }
 func (m *MultiInferenceRequest) String() string { return proto.CompactTextString(m) }
 func (*MultiInferenceRequest) ProtoMessage()    {}
 func (*MultiInferenceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_inference_b982ce6dc92f0b42, []int{2}
+	return fileDescriptor_4842740eef0fb1a6, []int{2}
 }
+
 func (m *MultiInferenceRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MultiInferenceRequest.Unmarshal(m, b)
 }
 func (m *MultiInferenceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_MultiInferenceRequest.Marshal(b, m, deterministic)
 }
-func (dst *MultiInferenceRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MultiInferenceRequest.Merge(dst, src)
+func (m *MultiInferenceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MultiInferenceRequest.Merge(m, src)
 }
 func (m *MultiInferenceRequest) XXX_Size() int {
 	return xxx_messageInfo_MultiInferenceRequest.Size(m)
@@ -288,16 +227,17 @@ func (m *MultiInferenceResponse) Reset()         { *m = MultiInferenceResponse{}
 func (m *MultiInferenceResponse) String() string { return proto.CompactTextString(m) }
 func (*MultiInferenceResponse) ProtoMessage()    {}
 func (*MultiInferenceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_inference_b982ce6dc92f0b42, []int{3}
+	return fileDescriptor_4842740eef0fb1a6, []int{3}
 }
+
 func (m *MultiInferenceResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MultiInferenceResponse.Unmarshal(m, b)
 }
 func (m *MultiInferenceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_MultiInferenceResponse.Marshal(b, m, deterministic)
 }
-func (dst *MultiInferenceResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MultiInferenceResponse.Merge(dst, src)
+func (m *MultiInferenceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MultiInferenceResponse.Merge(m, src)
 }
 func (m *MultiInferenceResponse) XXX_Size() int {
 	return xxx_messageInfo_MultiInferenceResponse.Size(m)
@@ -323,10 +263,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/inference.proto", fileDescriptor_inference_b982ce6dc92f0b42)
+	proto.RegisterFile("tensorflow_serving/apis/inference.proto", fileDescriptor_4842740eef0fb1a6)
 }
 
-var fileDescriptor_inference_b982ce6dc92f0b42 = []byte{
+var fileDescriptor_4842740eef0fb1a6 = []byte{
 	// 362 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x92, 0xb1, 0x4e, 0xe3, 0x40,
 	0x10, 0x86, 0xcf, 0x89, 0x92, 0xbb, 0x8c, 0x75, 0xba, 0xbb, 0xd5, 0xe5, 0x94, 0x8b, 0x84, 0x08,

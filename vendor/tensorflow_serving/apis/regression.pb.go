@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Regression result for a single item (tensorflow.Example).
 type Regression struct {
@@ -30,16 +32,17 @@ func (m *Regression) Reset()         { *m = Regression{} }
 func (m *Regression) String() string { return proto.CompactTextString(m) }
 func (*Regression) ProtoMessage()    {}
 func (*Regression) Descriptor() ([]byte, []int) {
-	return fileDescriptor_regression_0f3e75a0dfe5eb5a, []int{0}
+	return fileDescriptor_d9691657f3048b95, []int{0}
 }
+
 func (m *Regression) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Regression.Unmarshal(m, b)
 }
 func (m *Regression) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Regression.Marshal(b, m, deterministic)
 }
-func (dst *Regression) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Regression.Merge(dst, src)
+func (m *Regression) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Regression.Merge(m, src)
 }
 func (m *Regression) XXX_Size() int {
 	return xxx_messageInfo_Regression.Size(m)
@@ -70,16 +73,17 @@ func (m *RegressionResult) Reset()         { *m = RegressionResult{} }
 func (m *RegressionResult) String() string { return proto.CompactTextString(m) }
 func (*RegressionResult) ProtoMessage()    {}
 func (*RegressionResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_regression_0f3e75a0dfe5eb5a, []int{1}
+	return fileDescriptor_d9691657f3048b95, []int{1}
 }
+
 func (m *RegressionResult) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RegressionResult.Unmarshal(m, b)
 }
 func (m *RegressionResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_RegressionResult.Marshal(b, m, deterministic)
 }
-func (dst *RegressionResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RegressionResult.Merge(dst, src)
+func (m *RegressionResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RegressionResult.Merge(m, src)
 }
 func (m *RegressionResult) XXX_Size() int {
 	return xxx_messageInfo_RegressionResult.Size(m)
@@ -112,16 +116,17 @@ func (m *RegressionRequest) Reset()         { *m = RegressionRequest{} }
 func (m *RegressionRequest) String() string { return proto.CompactTextString(m) }
 func (*RegressionRequest) ProtoMessage()    {}
 func (*RegressionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_regression_0f3e75a0dfe5eb5a, []int{2}
+	return fileDescriptor_d9691657f3048b95, []int{2}
 }
+
 func (m *RegressionRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RegressionRequest.Unmarshal(m, b)
 }
 func (m *RegressionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_RegressionRequest.Marshal(b, m, deterministic)
 }
-func (dst *RegressionRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RegressionRequest.Merge(dst, src)
+func (m *RegressionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RegressionRequest.Merge(m, src)
 }
 func (m *RegressionRequest) XXX_Size() int {
 	return xxx_messageInfo_RegressionRequest.Size(m)
@@ -159,16 +164,17 @@ func (m *RegressionResponse) Reset()         { *m = RegressionResponse{} }
 func (m *RegressionResponse) String() string { return proto.CompactTextString(m) }
 func (*RegressionResponse) ProtoMessage()    {}
 func (*RegressionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_regression_0f3e75a0dfe5eb5a, []int{3}
+	return fileDescriptor_d9691657f3048b95, []int{3}
 }
+
 func (m *RegressionResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RegressionResponse.Unmarshal(m, b)
 }
 func (m *RegressionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_RegressionResponse.Marshal(b, m, deterministic)
 }
-func (dst *RegressionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_RegressionResponse.Merge(dst, src)
+func (m *RegressionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RegressionResponse.Merge(m, src)
 }
 func (m *RegressionResponse) XXX_Size() int {
 	return xxx_messageInfo_RegressionResponse.Size(m)
@@ -201,10 +207,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/apis/regression.proto", fileDescriptor_regression_0f3e75a0dfe5eb5a)
+	proto.RegisterFile("tensorflow_serving/apis/regression.proto", fileDescriptor_d9691657f3048b95)
 }
 
-var fileDescriptor_regression_0f3e75a0dfe5eb5a = []byte{
+var fileDescriptor_d9691657f3048b95 = []byte{
 	// 260 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x91, 0xb1, 0x4e, 0xc3, 0x30,
 	0x10, 0x40, 0xe5, 0x54, 0xad, 0xc4, 0x65, 0x01, 0x8b, 0x21, 0x20, 0x81, 0x2a, 0xc3, 0x90, 0x29,

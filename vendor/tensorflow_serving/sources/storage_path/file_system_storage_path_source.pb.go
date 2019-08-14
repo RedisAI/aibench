@@ -3,9 +3,11 @@
 
 package tensorflow_serving
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Config proto for FileSystemStoragePathSource.
 type FileSystemStoragePathSourceConfig struct {
@@ -30,43 +32,34 @@ type FileSystemStoragePathSourceConfig struct {
 	// How long to wait between file-system polling to look for children of
 	// 'base_path', in seconds.
 	//
-	// If set to zero, filesystem will be polled exactly once. If set to a
-	// negative value (for testing use only), polling will be entirely disabled.
+	// For testing use only: a negative value disables the polling thread.
 	FileSystemPollWaitSeconds int64 `protobuf:"varint,3,opt,name=file_system_poll_wait_seconds,json=fileSystemPollWaitSeconds,proto3" json:"file_system_poll_wait_seconds,omitempty"`
 	// If true, then FileSystemStoragePathSource::Create() and ::UpdateConfig()
 	// fail if, for any configured servables, the file system doesn't currently
 	// contain at least one version under the base path.
 	// (Otherwise, it will emit a warning and keep pinging the file system to
 	// check for a version to appear later.)
-	// DEPRECATED: Use 'servable_versions_always_present' instead, which includes
-	// this behavior.
-	// TODO(b/30898016): Remove 2019-10-31 or later.
-	FailIfZeroVersionsAtStartup bool `protobuf:"varint,4,opt,name=fail_if_zero_versions_at_startup,json=failIfZeroVersionsAtStartup,proto3" json:"fail_if_zero_versions_at_startup,omitempty"` // Deprecated: Do not use.
-	// If true, the servable is always expected to exist on the underlying
-	// filesystem. FileSystemStoragePathSource::Create() and ::UpdateConfig() will
-	// fail if, for any configured servables, the file system doesn't currently
-	// contain at least one version under the base path. In addition, if a polling
-	// loop find the base path empty, it will not unload existing servables.
-	ServableVersionsAlwaysPresent bool     `protobuf:"varint,6,opt,name=servable_versions_always_present,json=servableVersionsAlwaysPresent,proto3" json:"servable_versions_always_present,omitempty"`
-	XXX_NoUnkeyedLiteral          struct{} `json:"-"`
-	XXX_unrecognized              []byte   `json:"-"`
-	XXX_sizecache                 int32    `json:"-"`
+	FailIfZeroVersionsAtStartup bool     `protobuf:"varint,4,opt,name=fail_if_zero_versions_at_startup,json=failIfZeroVersionsAtStartup,proto3" json:"fail_if_zero_versions_at_startup,omitempty"`
+	XXX_NoUnkeyedLiteral        struct{} `json:"-"`
+	XXX_unrecognized            []byte   `json:"-"`
+	XXX_sizecache               int32    `json:"-"`
 }
 
 func (m *FileSystemStoragePathSourceConfig) Reset()         { *m = FileSystemStoragePathSourceConfig{} }
 func (m *FileSystemStoragePathSourceConfig) String() string { return proto.CompactTextString(m) }
 func (*FileSystemStoragePathSourceConfig) ProtoMessage()    {}
 func (*FileSystemStoragePathSourceConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0}
+	return fileDescriptor_300b419ac6423181, []int{0}
 }
+
 func (m *FileSystemStoragePathSourceConfig) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig.Size(m)
@@ -107,17 +100,9 @@ func (m *FileSystemStoragePathSourceConfig) GetFileSystemPollWaitSeconds() int64
 	return 0
 }
 
-// Deprecated: Do not use.
 func (m *FileSystemStoragePathSourceConfig) GetFailIfZeroVersionsAtStartup() bool {
 	if m != nil {
 		return m.FailIfZeroVersionsAtStartup
-	}
-	return false
-}
-
-func (m *FileSystemStoragePathSourceConfig) GetServableVersionsAlwaysPresent() bool {
-	if m != nil {
-		return m.ServableVersionsAlwaysPresent
 	}
 	return false
 }
@@ -142,16 +127,17 @@ func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) String() strin
 }
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy) ProtoMessage() {}
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0, 0}
+	return fileDescriptor_300b419ac6423181, []int{0, 0}
 }
+
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy.Size(m)
@@ -215,97 +201,13 @@ func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy) GetSpecific() 
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofMarshaler, _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofUnmarshaler, _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest_)(nil),
 		(*FileSystemStoragePathSourceConfig_ServableVersionPolicy_All_)(nil),
 		(*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific_)(nil),
 	}
-}
-
-func _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileSystemStoragePathSourceConfig_ServableVersionPolicy)
-	// policy_choice
-	switch x := m.PolicyChoice.(type) {
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest_:
-		b.EncodeVarint(100<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Latest); err != nil {
-			return err
-		}
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All_:
-		b.EncodeVarint(101<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.All); err != nil {
-			return err
-		}
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific_:
-		b.EncodeVarint(102<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Specific); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileSystemStoragePathSourceConfig_ServableVersionPolicy.PolicyChoice has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileSystemStoragePathSourceConfig_ServableVersionPolicy)
-	switch tag {
-	case 100: // policy_choice.latest
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest)
-		err := b.DecodeMessage(msg)
-		m.PolicyChoice = &FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest_{msg}
-		return true, err
-	case 101: // policy_choice.all
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileSystemStoragePathSourceConfig_ServableVersionPolicy_All)
-		err := b.DecodeMessage(msg)
-		m.PolicyChoice = &FileSystemStoragePathSourceConfig_ServableVersionPolicy_All_{msg}
-		return true, err
-	case 102: // policy_choice.specific
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific)
-		err := b.DecodeMessage(msg)
-		m.PolicyChoice = &FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific_{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileSystemStoragePathSourceConfig_ServableVersionPolicy_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileSystemStoragePathSourceConfig_ServableVersionPolicy)
-	// policy_choice
-	switch x := m.PolicyChoice.(type) {
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest_:
-		s := proto.Size(x.Latest)
-		n += 2 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All_:
-		s := proto.Size(x.All)
-		n += 2 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific_:
-		s := proto.Size(x.Specific)
-		n += 2 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Serve the latest versions (i.e. the ones with the highest version
@@ -328,16 +230,17 @@ func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) String(
 }
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) ProtoMessage() {}
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0, 0, 0}
+	return fileDescriptor_300b419ac6423181, []int{0, 0, 0}
 }
+
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Latest.Size(m)
@@ -370,16 +273,17 @@ func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) String() s
 }
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) ProtoMessage() {}
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0, 0, 1}
+	return fileDescriptor_300b419ac6423181, []int{0, 0, 1}
 }
+
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_All.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_All.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_All.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_All.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_All) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_All.Size(m)
@@ -411,16 +315,17 @@ func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) Strin
 }
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) ProtoMessage() {}
 func (*FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0, 0, 2}
+	return fileDescriptor_300b419ac6423181, []int{0, 0, 2}
 }
+
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableVersionPolicy_Specific.Size(m)
@@ -461,16 +366,17 @@ func (m *FileSystemStoragePathSourceConfig_ServableToMonitor) String() string {
 }
 func (*FileSystemStoragePathSourceConfig_ServableToMonitor) ProtoMessage() {}
 func (*FileSystemStoragePathSourceConfig_ServableToMonitor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_system_storage_path_source_4a96949868121d26, []int{0, 1}
+	return fileDescriptor_300b419ac6423181, []int{0, 1}
 }
+
 func (m *FileSystemStoragePathSourceConfig_ServableToMonitor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableToMonitor.Unmarshal(m, b)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableToMonitor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableToMonitor.Marshal(b, m, deterministic)
 }
-func (dst *FileSystemStoragePathSourceConfig_ServableToMonitor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableToMonitor.Merge(dst, src)
+func (m *FileSystemStoragePathSourceConfig_ServableToMonitor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableToMonitor.Merge(m, src)
 }
 func (m *FileSystemStoragePathSourceConfig_ServableToMonitor) XXX_Size() int {
 	return xxx_messageInfo_FileSystemStoragePathSourceConfig_ServableToMonitor.Size(m)
@@ -512,42 +418,41 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("tensorflow_serving/sources/storage_path/file_system_storage_path_source.proto", fileDescriptor_file_system_storage_path_source_4a96949868121d26)
+	proto.RegisterFile("tensorflow_serving/sources/storage_path/file_system_storage_path_source.proto", fileDescriptor_300b419ac6423181)
 }
 
-var fileDescriptor_file_system_storage_path_source_4a96949868121d26 = []byte{
-	// 527 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0xd1, 0x6e, 0xd3, 0x3e,
-	0x14, 0xc6, 0x9b, 0xa5, 0xab, 0x52, 0x77, 0xd5, 0xff, 0x8f, 0xa5, 0x89, 0x90, 0x69, 0x22, 0x03,
-	0x09, 0x22, 0x21, 0xa5, 0x52, 0x79, 0x01, 0x3a, 0x24, 0xd6, 0x01, 0x83, 0xca, 0x99, 0x40, 0xe2,
-	0xc6, 0x72, 0xb3, 0x93, 0xd6, 0x92, 0x1b, 0x47, 0xb6, 0xbb, 0xaa, 0xdc, 0xf2, 0x78, 0xbc, 0x02,
-	0x37, 0xbc, 0x09, 0x8a, 0xd3, 0xa6, 0xdd, 0x3a, 0x89, 0x0b, 0x7a, 0x69, 0xfb, 0x3b, 0xbf, 0x2f,
-	0xc7, 0xe7, 0x73, 0xd0, 0x95, 0x81, 0x5c, 0x4b, 0x95, 0x09, 0xb9, 0xa0, 0x1a, 0xd4, 0x2d, 0xcf,
-	0x27, 0x3d, 0x2d, 0xe7, 0x2a, 0x05, 0xdd, 0xd3, 0x46, 0x2a, 0x36, 0x01, 0x5a, 0x30, 0x33, 0xed,
-	0x65, 0x5c, 0x00, 0xd5, 0x4b, 0x6d, 0x60, 0x46, 0xb7, 0x0f, 0x68, 0xa5, 0x8e, 0x0b, 0x25, 0x8d,
-	0xc4, 0x78, 0x83, 0x8b, 0x57, 0xb8, 0x67, 0xbf, 0x3c, 0x74, 0xf6, 0x8e, 0x0b, 0x48, 0x6c, 0x71,
-	0x52, 0xd5, 0x8e, 0x98, 0x99, 0x26, 0xb6, 0xf2, 0xad, 0xcc, 0x33, 0x3e, 0xc1, 0x80, 0xda, 0x65,
-	0x01, 0x1b, 0x0b, 0xd0, 0xfe, 0x61, 0xe8, 0x46, 0x9d, 0xfe, 0x45, 0xbc, 0x4b, 0x8b, 0xff, 0x4a,
-	0x8a, 0x93, 0x15, 0xe6, 0x5a, 0x5e, 0xc9, 0x9c, 0x1b, 0xa9, 0xc8, 0x86, 0x8c, 0x5f, 0xa2, 0xee,
-	0x7a, 0x41, 0x73, 0x36, 0x03, 0xdf, 0x09, 0x9d, 0xa8, 0x7d, 0x7e, 0xe0, 0x3b, 0xe4, 0x68, 0x7d,
-	0xf0, 0x89, 0xcd, 0x00, 0x3f, 0x45, 0xed, 0x31, 0xd3, 0x55, 0x8f, 0xfe, 0x41, 0x2d, 0xf2, 0xca,
-	0xcd, 0xd2, 0x12, 0xbf, 0x41, 0xa7, 0xdb, 0x77, 0x52, 0x48, 0x21, 0xe8, 0x82, 0x71, 0x43, 0x35,
-	0xa4, 0x32, 0xbf, 0xd1, 0xbe, 0x1b, 0x3a, 0x91, 0x4b, 0x9e, 0x64, 0xf5, 0x07, 0x8f, 0xa4, 0x10,
-	0x5f, 0x19, 0x37, 0x49, 0x25, 0xc0, 0x97, 0x28, 0xcc, 0x18, 0x17, 0x94, 0x67, 0xf4, 0x3b, 0x28,
-	0x49, 0x6f, 0x41, 0x69, 0x2e, 0x73, 0x4d, 0x99, 0xa1, 0xda, 0x30, 0x65, 0xe6, 0x85, 0xdf, 0x0c,
-	0x9d, 0xc8, 0xb3, 0xce, 0x27, 0xa5, 0xf6, 0x32, 0xfb, 0x06, 0x4a, 0x7e, 0x59, 0x09, 0x07, 0x26,
-	0xa9, 0x64, 0xf8, 0x02, 0x85, 0x75, 0x5b, 0x1b, 0x8c, 0x58, 0xb0, 0xa5, 0xa6, 0x85, 0x02, 0x0d,
-	0xb9, 0xf1, 0x5b, 0x25, 0x8a, 0x9c, 0xae, 0x75, 0x35, 0xc4, 0xaa, 0x46, 0x95, 0x28, 0xf8, 0xe9,
-	0xa2, 0xe3, 0xe4, 0xae, 0x62, 0x24, 0x05, 0x4f, 0x97, 0x58, 0xa0, 0x96, 0x60, 0x06, 0xb4, 0xf1,
-	0x6f, 0x42, 0x27, 0xea, 0xf4, 0xc9, 0xbf, 0x4d, 0xe7, 0x0e, 0x3c, 0xfe, 0x68, 0xc9, 0xc3, 0x06,
-	0x59, 0x79, 0xe0, 0x14, 0xb9, 0x4c, 0x08, 0x1f, 0xac, 0xd5, 0xe7, 0x7d, 0x5a, 0x0d, 0x84, 0x18,
-	0x36, 0x48, 0x49, 0xc7, 0x0a, 0x79, 0xba, 0x80, 0x94, 0x67, 0x3c, 0xf5, 0x33, 0xeb, 0x74, 0xbd,
-	0x4f, 0xa7, 0x64, 0xc5, 0x1e, 0x36, 0x48, 0xed, 0x13, 0xbc, 0x42, 0xad, 0xaa, 0x59, 0x7c, 0x86,
-	0x8e, 0xf2, 0xf9, 0xac, 0x1e, 0x97, 0x4d, 0x62, 0x97, 0x74, 0xf2, 0xf9, 0x6c, 0x3d, 0x9a, 0xe0,
-	0x10, 0xb9, 0x03, 0x21, 0x82, 0x17, 0xc8, 0x5b, 0xb3, 0x70, 0x80, 0xbc, 0xad, 0x0a, 0x37, 0x72,
-	0x49, 0xbd, 0x3e, 0xff, 0x0f, 0x75, 0x0b, 0x6b, 0x4d, 0xd3, 0xa9, 0xe4, 0x29, 0x04, 0xbf, 0x1d,
-	0xf4, 0x68, 0xe7, 0x39, 0xe0, 0xe7, 0x0f, 0xbe, 0x81, 0x7b, 0xf9, 0x3f, 0xd9, 0xc9, 0xff, 0x56,
-	0xf6, 0x7f, 0x38, 0xe8, 0xf1, 0xfd, 0xbc, 0xd1, 0xca, 0xda, 0x26, 0xb6, 0xd3, 0xff, 0xb0, 0xc7,
-	0x8b, 0x24, 0xc7, 0xfa, 0xa1, 0xed, 0xf7, 0x4d, 0xcf, 0xfd, 0xbf, 0x39, 0x6e, 0xd9, 0x3f, 0xcf,
-	0xeb, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x73, 0xc4, 0xd3, 0x40, 0xca, 0x04, 0x00, 0x00,
+var fileDescriptor_300b419ac6423181 = []byte{
+	// 499 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0xdf, 0x8a, 0xd3, 0x40,
+	0x14, 0xc6, 0x9b, 0x4d, 0xb7, 0xa4, 0xa7, 0x5b, 0xd4, 0x81, 0xc5, 0x98, 0x45, 0xcc, 0x2a, 0x68,
+	0x40, 0x48, 0xa1, 0xbe, 0x80, 0x5d, 0x51, 0xeb, 0x9f, 0xd5, 0x32, 0x59, 0x14, 0xbc, 0x19, 0xa6,
+	0xd9, 0x93, 0x76, 0x60, 0x9a, 0x09, 0x33, 0xd3, 0x5d, 0xd6, 0x5b, 0x1f, 0xc0, 0x07, 0xf3, 0x29,
+	0x7c, 0x13, 0x69, 0x92, 0x66, 0xab, 0x5d, 0xf0, 0x62, 0x7b, 0x39, 0x73, 0xbe, 0xf3, 0xfb, 0x72,
+	0xce, 0x7c, 0x04, 0x4e, 0x2d, 0xe6, 0x46, 0xe9, 0x4c, 0xaa, 0x4b, 0x66, 0x50, 0x5f, 0x88, 0x7c,
+	0x36, 0x30, 0x6a, 0xa9, 0x53, 0x34, 0x03, 0x63, 0x95, 0xe6, 0x33, 0x64, 0x05, 0xb7, 0xf3, 0x41,
+	0x26, 0x24, 0x32, 0x73, 0x65, 0x2c, 0x2e, 0xd8, 0x66, 0x81, 0x55, 0xea, 0xb8, 0xd0, 0xca, 0x2a,
+	0x42, 0xae, 0x71, 0x71, 0x8d, 0x7b, 0xfc, 0xd3, 0x83, 0xe3, 0x37, 0x42, 0x62, 0x52, 0x36, 0x27,
+	0x55, 0xef, 0x84, 0xdb, 0x79, 0x52, 0x76, 0xbe, 0x52, 0x79, 0x26, 0x66, 0x04, 0xa1, 0xbb, 0x6a,
+	0xe0, 0x53, 0x89, 0xc6, 0xdf, 0x0f, 0xdd, 0xa8, 0x37, 0x7c, 0x1b, 0x6f, 0xd3, 0xe2, 0xff, 0x92,
+	0xe2, 0xa4, 0xc6, 0x9c, 0xa9, 0x53, 0x95, 0x0b, 0xab, 0x34, 0xbd, 0x26, 0x93, 0x67, 0xd0, 0x5f,
+	0x1f, 0x58, 0xce, 0x17, 0xe8, 0x3b, 0xa1, 0x13, 0x75, 0x4f, 0xf6, 0x7c, 0x87, 0x1e, 0xac, 0x0b,
+	0x9f, 0xf8, 0x02, 0xc9, 0x23, 0xe8, 0x4e, 0xb9, 0xa9, 0x66, 0xf4, 0xf7, 0x1a, 0x91, 0xb7, 0xba,
+	0x5c, 0x59, 0x92, 0x97, 0xf0, 0x70, 0x73, 0x27, 0x85, 0x92, 0x92, 0x5d, 0x72, 0x61, 0x99, 0xc1,
+	0x54, 0xe5, 0xe7, 0xc6, 0x77, 0x43, 0x27, 0x72, 0xe9, 0x83, 0xac, 0xf9, 0xe0, 0x89, 0x92, 0xf2,
+	0x2b, 0x17, 0x36, 0xa9, 0x04, 0xe4, 0x35, 0x84, 0x19, 0x17, 0x92, 0x89, 0x8c, 0x7d, 0x47, 0xad,
+	0xd8, 0x05, 0x6a, 0x23, 0x54, 0x6e, 0x18, 0xb7, 0xcc, 0x58, 0xae, 0xed, 0xb2, 0xf0, 0xdb, 0xa1,
+	0x13, 0x79, 0xf4, 0x68, 0xa5, 0x7b, 0x97, 0x7d, 0x43, 0xad, 0xbe, 0xd4, 0xa2, 0x91, 0x4d, 0x2a,
+	0x49, 0xf0, 0xcb, 0x85, 0xc3, 0xf5, 0xcc, 0x75, 0x75, 0xa2, 0xa4, 0x48, 0xaf, 0x88, 0x84, 0x8e,
+	0xe4, 0x16, 0x8d, 0xf5, 0xcf, 0x43, 0x27, 0xea, 0x0d, 0xe9, 0xed, 0x16, 0xfa, 0x17, 0x3c, 0xfe,
+	0x58, 0x92, 0xc7, 0x2d, 0x5a, 0x7b, 0x90, 0x14, 0x5c, 0x2e, 0xa5, 0x8f, 0xa5, 0xd5, 0xe7, 0x5d,
+	0x5a, 0x8d, 0xa4, 0x1c, 0xb7, 0xe8, 0x8a, 0x4e, 0x34, 0x78, 0xa6, 0xc0, 0x54, 0x64, 0x22, 0xf5,
+	0xb3, 0xd2, 0xe9, 0x6c, 0x97, 0x4e, 0x49, 0xcd, 0x1e, 0xb7, 0x68, 0xe3, 0x13, 0x3c, 0x87, 0x4e,
+	0x35, 0x2c, 0x39, 0x86, 0x83, 0x7c, 0xb9, 0x68, 0x1e, 0xaa, 0x0c, 0x4f, 0x9f, 0xf6, 0xf2, 0xe5,
+	0x62, 0xfd, 0x2c, 0xc1, 0x3e, 0xb8, 0x23, 0x29, 0x83, 0xa7, 0xe0, 0xad, 0x59, 0x24, 0x00, 0x6f,
+	0xa3, 0xc3, 0x8d, 0x5c, 0xda, 0x9c, 0x4f, 0xee, 0x40, 0xbf, 0x28, 0xad, 0x59, 0x3a, 0x57, 0x22,
+	0xc5, 0xe0, 0xb7, 0x03, 0xf7, 0xb6, 0x12, 0x4c, 0x9e, 0xdc, 0x18, 0xdb, 0x7f, 0x22, 0x7b, 0xb4,
+	0x15, 0xd9, 0x8d, 0xb8, 0xfe, 0x70, 0xe0, 0x7e, 0x83, 0xa8, 0xed, 0x59, 0x65, 0x5d, 0x86, 0xac,
+	0x37, 0xfc, 0xb0, 0xc3, 0x45, 0xd2, 0x43, 0x73, 0xd3, 0xf5, 0xfb, 0xb6, 0xe7, 0xde, 0x6d, 0x4f,
+	0x3b, 0xe5, 0xcf, 0xe2, 0xc5, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3c, 0x9c, 0x7a, 0xf7, 0x7d,
+	0x04, 0x00, 0x00,
 }
