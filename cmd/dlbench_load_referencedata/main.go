@@ -63,7 +63,7 @@ func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 func randReferenceData(n int) []string {
 	res := make([]string, n)
 	for i := range res {
-		res[i] = fmt.Sprintf("%f", rand.Float64())
+		res[i] = fmt.Sprintf("%f", float32(rand.Float64()))
 	}
 	return res
 }

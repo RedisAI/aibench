@@ -27,7 +27,7 @@ $ go get github.com/filipecosta90/dlbench
 $ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
 $ go get ./...
 
-# Install desired binaries. At a minimum this includes one dlbench_run_inference_*
+# Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_*
 # binary:
 $ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
 $ cd dlbench_load_referencedata && go install

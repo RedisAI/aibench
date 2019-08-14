@@ -1,15 +1,39 @@
-# DLBench Supplemental Guide: TFServing and Redis
+# DLBench Supplemental Guide: Tensorflow Serving and Redis
 
-TBD
+### Benchmarking inference performance -- TFServing and Redis Benchmark Go program
 
+To measure inference performance in DLBench, you first need to load
+the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/dlbench#reference-data-loading). 
 
+Once the data is loaded,
+just use the corresponding `dlbench_run_inference_tensorflow_serving` binary for the DL Solution
+being tested:
+
+```bash
+# make sure you're on the root project folder
+$ cd $GOPATH/src/github.com/filipecosta90/dlbench
+$ cat ./data/creditcard.csv.gz \
+        | gunzip \
+        | dlbench_run_inference_tensorflow_serving \
+         -max-queries 10000 -workers 16 -print-interval 2000 \
+         -model financialNet \
+         -tensorflow-serving-host 127.0.0.1:9000 \
+         -redis-host 127.0.0.1:6379 
+```
+
+#### Sequence diagram - Tensorflow Serving and Redis Solution
+
+The following diagram illustrates the sequence of requests made for each inference.
+
+![Sequence diagram - Tensorflow Serving and Redis Solution][dlbench_client_tfserving]
+
+[dlbench_client_tfserving]: ./dlbench_client_tfserving.png
+
+---
+
+## Installation
 
 ### Prerequisites
-
-#### Tensorflow Serving Installation
-
-TBD
-
 
 #### Go support for Protocol buffers (Google's data interchange format)
                                                                                                         
@@ -58,3 +82,19 @@ $ cd .. && rm -rf tmp
  ```
  
  
+## Installation -- TFServing and Redis Benchmark Go program
+After installing all Prerequisites from the previous section, the easiest way to get and install the TFServing and Redis Benchmark Go program is to use
+`go get` and then `go install`. :
+
+```bash
+# Fetch DLBench and its dependencies
+$ go get github.com/filipecosta90/dlbench
+$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+$ go get ./...
+
+# Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_* binary:
+$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+$ cd dlbench_load_referencedata && go install
+$ cd ../dlbench_run_inference_tensorflow_serving && go install
+```
+
