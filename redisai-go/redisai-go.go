@@ -1,6 +1,6 @@
 package redisai_go
 
-func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions []int, values []string) []interface{} {
+func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions []int, datafmt string, values []string) []interface{} {
 
 	args := make([]interface{}, (4 + len(dimensions) + len(values)))
 	args[0] = "AI.TENSORSET"
@@ -10,7 +10,7 @@ func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions [
 		args[3+i] = dimensions[i]
 	}
 	padding := 3 + len(dimensions)
-	args[padding] = "VALUES"
+	args[padding] = datafmt
 	padding = padding + 1
 	for i := range values {
 		args[padding+i] = values[i]
@@ -18,11 +18,28 @@ func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions [
 	return args
 }
 
-func Generate_AI_TensorGet_Args(tensorName string) []interface{} {
+
+func Generate_AI_TensorSetBLOB_Args(tensorName string, datatype string, dimensions []int, datafmt string, blob []byte) []interface{} {
+
+	args := make([]interface{}, (4 + len(dimensions) + 1))
+	args[0] = "AI.TENSORSET"
+	args[1] = tensorName
+	args[2] = datatype
+	for i := range dimensions {
+		args[3+i] = dimensions[i]
+	}
+	padding := 3 + len(dimensions)
+	args[padding] = datafmt
+	padding = padding + 1
+	args[padding] = blob
+	return args
+}
+
+func Generate_AI_TensorGet_Args(tensorName string, datafmt string) []interface{} {
 	tensorArgs := make([]interface{}, 3)
 	tensorArgs[0] = "AI.TENSORGET"
 	tensorArgs[1] = tensorName
-	tensorArgs[2] = "VALUES"
+	tensorArgs[2] = datafmt
 	return tensorArgs
 }
 

@@ -74,7 +74,7 @@ func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 	referenceDataKeyName := "referenceKey:" + q[0]
 	//referenceDataListName := "referenceList:" + q[0]
 	refData := randReferenceData(256)
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{256}, refData)
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT",  []int{256}, "VALUES", refData)
 	errTensorSet := client.Do(tensorset_args...).Err()
 	if errTensorSet != nil {
 		log.Fatalf("Command TensorSet:%v\n", errTensorSet)
