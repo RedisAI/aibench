@@ -91,7 +91,7 @@ cd $GOPATH/src/github.com/filipecosta90/dlbench
 # Location of credit card fraud model
 TESTDATA="$(pwd)/models/tensorflow"
 
-# Start TensorFlow Serving container and open the REST API port
+# Start TensorFlow Serving container and open the GRPC and REST API ports
 docker run -t --rm -p 8500:8500 -p 8501:8501 \
     -v "$TESTDATA:/models/financialNet" \
     -e MODEL_NAME=financialNet \
