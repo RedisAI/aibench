@@ -46,7 +46,7 @@ func init() {
 	runner = inference.NewBenchmarkRunner()
 
 	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
-	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "127.0.0.1:9000", "TensorFlow serving host address and port")
+	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
 
 	flag.Parse()

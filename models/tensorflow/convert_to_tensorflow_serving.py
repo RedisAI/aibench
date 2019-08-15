@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import tag_constants
 
-export_dir = './00000001'
+export_dir = './00000002'
 graph_pb = './creditcardfraud.pb'
 
 builder = tf.saved_model.builder.SavedModelBuilder(export_dir)
