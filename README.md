@@ -23,15 +23,15 @@ scripts). The easiest way to get and install the Go programs is to use
 `go get` and then `go install`:
 ```bash
 # Fetch DLBench and its dependencies
-$ go get github.com/filipecosta90/dlbench
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-$ go get ./...
+go get github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+go get ./...
 
 # Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_*
 # binary:
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-$ cd dlbench_load_referencedata && go install
-$ cd ../dlbench_run_inference_redisai && go install
+cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+cd dlbench_load_referencedata && go install
+cd ../dlbench_run_inference_redisai && go install
 ```
 
 ## How to use DLBench
@@ -45,11 +45,13 @@ Using DLBench for benchmarking involves 3 phases: model setup, reference data lo
 So for setting up the model Redis using RedisAI use:
 ```bash
 # flush the database
-$ redis-cli flushall 
+redis-cli flushall 
 
-# create the index
-$ redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
-$ redis-cli -x AI.MODELSET financialNet \
+# load the correct AI backend
+redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
+
+# set the Model
+redis-cli -x AI.MODELSET financialNet \
             TF CPU INPUTS transaction reference \
             OUTPUTS output < ./models/tensorflow/creditcardfraud.pb
 ```
@@ -58,8 +60,8 @@ $ redis-cli -x AI.MODELSET financialNet \
 
 ```bash
 # make sure you're on the root project folder
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench
-$ cat ./data/creditcard.csv.gz \
+cd $GOPATH/src/github.com/filipecosta90/dlbench
+cat ./data/creditcard.csv.gz \
         | gunzip \
         | dlbench_load_referencedata \
           -workers 16 
@@ -75,8 +77,8 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench
-$ cat ./data/creditcard.csv.gz \
+cd $GOPATH/src/github.com/filipecosta90/dlbench
+cat ./data/creditcard.csv.gz \
         | gunzip \
         | dlbench_run_inference_redisai \
        -max-queries 10000 -workers 16 -print-interval 2000 -model financialNet

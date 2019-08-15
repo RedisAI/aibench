@@ -11,14 +11,14 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench
-$ cat ./data/creditcard.csv.gz \
+cd $GOPATH/src/github.com/filipecosta90/dlbench
+cat ./data/creditcard.csv.gz \
         | gunzip \
         | dlbench_run_inference_tensorflow_serving \
          -max-queries 10000 -workers 16 -print-interval 2000 \
-         -model financialNet \
-         -tensorflow-serving-host 127.0.0.1:9000 \
-         -redis-host 127.0.0.1:6379 
+         -model financialNet -model-version 2 \
+         -tensorflow-serving-host localhost:8500 \
+         -redis-host localhost:6379 
 ```
 
 #### Sequence diagram - Tensorflow Serving and Redis Solution
@@ -49,8 +49,8 @@ In order to make a Go client, we must compile the protobuf files first to genera
 The simplest way to get it, is to run
 
  ```bash
- $ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
- $ go get -u google.golang.org/grpc
+ go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
+ go get -u google.golang.org/grpc
  ```
 
  
@@ -77,8 +77,9 @@ protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
 # move vendor folder to $GOPATH/src/github.com/filipecosta90/dlbench
 rm -rf $GOPATH/src/github.com/filipecosta90/dlbench/vendor
 mv vendor $GOPATH/src/github.com/filipecosta90/dlbench/.
+
 # remove tmp dir
-$ cd .. && rm -rf tmp
+cd .. && rm -rf tmp
  ```
  
 ## Installation -- Serve the Tensorflow model locally
@@ -113,13 +114,12 @@ After installing all Prerequisites from the previous section, the easiest way to
 
 ```bash
 # Fetch DLBench and its dependencies
-$ go get github.com/filipecosta90/dlbench
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-$ go get ./...
+go get github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+go get ./...
 
 # Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_* binary:
-$ cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-$ cd dlbench_load_referencedata && go install
-$ cd ../dlbench_run_inference_tensorflow_serving && go install
+cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+cd dlbench_load_referencedata && go install
+cd ../dlbench_run_inference_tensorflow_serving && go install
 ```
-

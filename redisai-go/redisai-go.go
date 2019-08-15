@@ -1,6 +1,6 @@
 package redisai_go
 
-func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions []int, datafmt string, values []string) []interface{} {
+func Generate_AI_TensorSet_Args(tensorName string, datatype string, dimensions []int, datafmt string, values []float32) []interface{} {
 
 	args := make([]interface{}, (4 + len(dimensions) + len(values)))
 	args[0] = "AI.TENSORSET"

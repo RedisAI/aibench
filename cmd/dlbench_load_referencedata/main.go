@@ -14,6 +14,8 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"math/rand"
+	"strconv"
+
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
@@ -68,12 +70,21 @@ func randReferenceData(n int) []string {
 	return res
 }
 
+func convertSliceStringToFloat(transactionDataString []string) []float32 {
+	res := make([]float32, len(transactionDataString))
+	for i := range transactionDataString {
+		value, _ := strconv.ParseFloat(transactionDataString[i], 64)
+		res[i] = float32(value)
+	}
+	return res
+}
+
 func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 
 	referenceDataTensorName := "referenceTensor:" + q[0]
 	referenceDataKeyName := "referenceKey:" + q[0]
 	//referenceDataListName := "referenceList:" + q[0]
-	refData := randReferenceData(256)
+	refData := convertSliceStringToFloat(randReferenceData(256))
 	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT",  []int{256}, "VALUES", refData)
 	errTensorSet := client.Do(tensorset_args...).Err()
 	if errTensorSet != nil {

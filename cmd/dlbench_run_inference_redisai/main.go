@@ -104,13 +104,13 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	took := 0.0
 	queryType := "RedisAI Query"
 	// BLOB
+	qfloat := convertSliceStringToFloat( q[1:31] )
 
 	if blob {
 		transactionTensorBLOBName := "transacationBLOB:" + q[0]
 		modelrunBLOB_args := redisai.Generate_AI_ModelRun_Args(model, []string{transactionTensorBLOBName, referenceDataTensorName}, []string{classificationTensorName})
 		tensorget_args := redisai.Generate_AI_TensorGet_Args(classificationTensorName, "VALUES")
 		start := time.Now()
-		qfloat := convertSliceStringToFloat( q[1:31] )
 		qbytes := Float32bytes(qfloat[0])
 		for _, value := range qfloat[1:30] {
 			qbytes = append( qbytes, Float32bytes(value)... )
@@ -129,7 +129,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		// VALUES
 	} else {
 		transactionTensorName := "transacation:" + q[0]
-		tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{1, 30}, "VALUES", q[1:31])
+		tensorset_args := redisai.Generate_AI_TensorSet_Args(transactionTensorName, "FLOAT", []int{1, 30}, "VALUES", qfloat)
 		tensorget_args := redisai.Generate_AI_TensorGet_Args(classificationTensorName, "VALUES")
 		modelrun_args := redisai.Generate_AI_ModelRun_Args(model, []string{transactionTensorName, referenceDataTensorName}, []string{classificationTensorName})
 		start := time.Now()

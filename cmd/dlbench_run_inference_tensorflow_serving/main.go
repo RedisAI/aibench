@@ -9,6 +9,8 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
+
+	//"fmt"
 	"github.com/filipecosta90/dlbench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
@@ -18,6 +20,7 @@ import (
 	"strconv"
 	"sync"
 	tensorflowserving "tensorflow_serving/apis"
+	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
 
 	"time"
 )
@@ -27,6 +30,7 @@ var (
 	redis_host              string
 	tensorflow_serving_host string
 	model                   string
+	version int
 
 	showExplain bool
 )
@@ -38,7 +42,8 @@ var (
 
 var (
 	redisClient             *redis.Client
-	predictionServiceClient tensorflowserving.PredictionServiceClient
+	//predictionServiceClient tensorflowserving.PredictionServiceClient
+	//grpcClientConn grpc.ClientConn
 )
 
 // Parse args:
@@ -48,18 +53,15 @@ func init() {
 	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
 	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
+	flag.IntVar(&version, "model-version", 1, "Model version")
+
 
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redis_host,
 	})
 
-	grpcConn, err := grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
-	}
-	defer grpcConn.Close()
-	predictionServiceClient = tensorflowserving.NewPredictionServiceClient(grpcConn)
+
 
 }
 
@@ -84,6 +86,11 @@ func newProcessor() inference.Processor { return &Processor{} }
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.Wg = wg
 	p.Metrics = m
+	p.opts = &queryExecutorOptions{
+		showExplain:   showExplain,
+		debug:         runner.DebugLevel() > 0,
+		printResponse: runner.DoPrintResponses(),
+	}
 }
 
 func convertSliceStringToFloat(transactionDataString []string) []float32 {
@@ -105,17 +112,42 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	referenceDataKeyName := "referenceKey:" + q[0]
 	referenceKeySlice := []float32{}
 
+	grpcClientConn, err := grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
+	}
+	defer grpcClientConn.Close()
+
+	predictionServiceClient := tensorflowserving.NewPredictionServiceClient(grpcClientConn)
+
+
+	start := time.Now()
+	redisRespBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+	if redisErr != nil {
+		log.Fatalln(redisErr)
+	}
+	//fmt.Println(redisRespBytes)
+	reader := bytes.NewReader(redisRespBytes)
+	dec := gob.NewDecoder(reader)
+	if err := dec.Decode(&referenceKeySlice); err != nil {
+		log.Fatalf("Unable to decode %s. Error:%v\n", referenceDataKeyName, err)
+	}
 	request := &tensorflowserving.PredictRequest{
 		ModelSpec: &tensorflowserving.ModelSpec{
 			Name: model,
-			SignatureName: "predict_images",
+			Version: &google_protobuf.Int64Value{
+				Value: int64(version),
+			},
 
 		},
 		Inputs: map[string]*tfcoreframework.TensorProto{
-			"transacation:" + q[0]: {
+			"transaction": {
 				Dtype: tfcoreframework.DataType_DT_FLOAT,
 				TensorShape: &tfcoreframework.TensorShapeProto{
 					Dim: []*tfcoreframework.TensorShapeProto_Dim{
+						{
+							Size: int64(1),
+						},
 						{
 							Size: int64(30),
 						},
@@ -123,23 +155,31 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 				},
 				FloatVal: convertSliceStringToFloat(q[1:31]),
 			},
+			"reference" : {
+				Dtype: tfcoreframework.DataType_DT_FLOAT,
+				TensorShape: &tfcoreframework.TensorShapeProto{
+					Dim: []*tfcoreframework.TensorShapeProto_Dim{
+						{
+							Size: int64(256),
+						},
+					},
+				},
+				FloatVal: referenceKeySlice,
+			},
 		},
 	}
+	//fmt.Println(request)
 
-	start := time.Now()
-	redisRespBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
-	if redisErr != nil {
-		log.Fatalln(redisErr)
-	}
-	b := bytes.NewBuffer(redisRespBytes)
-	gob.NewDecoder(b).Decode(&referenceKeySlice)
-	fmt.Println(referenceKeySlice)
-
-	_, err := predictionServiceClient.Predict(context.Background(), request)
+	PredictResponse, err := predictionServiceClient.Predict(context.Background(), request)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Prediction failed:%v\n", err)
 	}
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
+
+	if p.opts.printResponse {
+		fmt.Println("RESPONSE: ", PredictResponse)
+	}
+
 	if err != nil {
 		log.Fatalf("Command failed:%v\n", err)
 	}
