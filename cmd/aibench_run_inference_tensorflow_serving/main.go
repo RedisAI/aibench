@@ -4,9 +4,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
 	"flag"
 	"fmt"
 	"google.golang.org/grpc/connectivity"
@@ -48,17 +46,14 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-
 	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
 	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
 	flag.IntVar(&version, "model-version", 1, "Model version")
-
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redis_host,
 	})
-
 }
 
 func main() {
@@ -124,19 +119,13 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 	}
 
-	referenceDataKeyName := "referenceKey:" + q[0]
-	referenceKeySlice := []float32{}
+	referenceDataKeyName := "referenceBLOB:" + q[0]
+	transactionSlice := convertSliceStringToFloat(q[1:31])
 
 	start := time.Now()
-	redisRespBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
 		log.Fatalln(redisErr)
-	}
-	//fmt.Println(redisRespBytes)
-	reader := bytes.NewReader(redisRespBytes)
-	dec := gob.NewDecoder(reader)
-	if err := dec.Decode(&referenceKeySlice); err != nil {
-		log.Fatalf("Unable to decode %s. Error:%v\n", referenceDataKeyName, err)
 	}
 	request := &tensorflowserving.PredictRequest{
 		ModelSpec: &tensorflowserving.ModelSpec{
@@ -158,7 +147,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 						},
 					},
 				},
-				FloatVal: convertSliceStringToFloat(q[1:31]),
+				FloatVal: transactionSlice,
 			},
 			"reference": {
 				Dtype: tfcoreframework.DataType_DT_FLOAT,
@@ -169,23 +158,20 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 						},
 					},
 				},
-				FloatVal: referenceKeySlice,
+				TensorContent: redisRespReferenceBytes,
 			},
 		},
 	}
-	//fmt.Println(request)
 	PredictResponse, err := p.predictionServiceClient.Predict(context.Background(), request)
+	took := float64(time.Since(start).Nanoseconds()) / 1e6
 	if err != nil {
 		log.Fatalf("Prediction failed:%v\n", err)
 	}
-	took := float64(time.Since(start).Nanoseconds()) / 1e6
-
 	if p.opts.printResponse {
 		fmt.Println("RESPONSE: ", PredictResponse)
 	}
 
 	stat := inference.GetStat()
 	stat.Init([]byte("TensorFlow serving Query"), took, uint64(0), false, "")
-
 	return []*inference.Stat{stat}, nil
 }

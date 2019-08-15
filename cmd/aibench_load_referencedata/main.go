@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"flag"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	math2 "math"
 
 	//ignoring until we get the correct model
 	//"log"
@@ -79,12 +81,24 @@ func convertSliceStringToFloat(transactionDataString []string) []float32 {
 	return res
 }
 
+
+func Float32bytes(float float32) []byte {
+	bits := math2.Float32bits(float)
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, bits)
+	return bytes
+}
+
 func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 
 	referenceDataTensorName := "referenceTensor:" + q[0]
-	referenceDataKeyName := "referenceKey:" + q[0]
-	//referenceDataListName := "referenceList:" + q[0]
+	referenceDataKeyBLOBName := "referenceBLOB:" + q[0]
 	refData := convertSliceStringToFloat(randReferenceData(256))
+
+	qbytes := Float32bytes(refData[0])
+	for _, value := range refData[1:256] {
+		qbytes = append( qbytes, Float32bytes(value)... )
+	}
 	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT",  []int{256}, "VALUES", refData)
 	errTensorSet := client.Do(tensorset_args...).Err()
 	if errTensorSet != nil {
@@ -94,12 +108,7 @@ func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 	buffer := &bytes.Buffer{}
 
 	gob.NewEncoder(buffer).Encode(refData)
-	refDataBytes := buffer.Bytes()
-	//errLPush := client.RPush( referenceDataListName, refData ).Err()
-	//if errLPush != nil {
-	//	log.Fatalf("Command RPush:%v\n", errLPush)
-	//}
-	errSet := client.Set(referenceDataKeyName, refDataBytes, 0).Err()
+	errSet := client.Set(referenceDataKeyBLOBName, qbytes, 0).Err()
 	if errSet != nil {
 		log.Fatalf("Command Set:%v\n", errSet)
 	}
