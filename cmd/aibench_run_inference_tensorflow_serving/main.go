@@ -9,18 +9,19 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
+	"google.golang.org/grpc/connectivity"
 
 	//"fmt"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
+	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/lib/pq"
-	tfcoreframework "tensorflow/core/framework"
 	"google.golang.org/grpc"
 	"log"
 	"strconv"
 	"sync"
+	tfcoreframework "tensorflow/core/framework"
 	tensorflowserving "tensorflow_serving/apis"
-	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
 
 	"time"
 )
@@ -30,7 +31,7 @@ var (
 	redis_host              string
 	tensorflow_serving_host string
 	model                   string
-	version int
+	version                 int
 
 	showExplain bool
 )
@@ -41,9 +42,7 @@ var (
 )
 
 var (
-	redisClient             *redis.Client
-	//predictionServiceClient tensorflowserving.PredictionServiceClient
-	//grpcClientConn grpc.ClientConn
+	redisClient *redis.Client
 )
 
 // Parse args:
@@ -55,13 +54,10 @@ func init() {
 	flag.StringVar(&model, "model", "", "Model name")
 	flag.IntVar(&version, "model-version", 1, "Model version")
 
-
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redis_host,
 	})
-
-
 
 }
 
@@ -76,9 +72,11 @@ type queryExecutorOptions struct {
 }
 
 type Processor struct {
-	opts    *queryExecutorOptions
-	Metrics chan uint64
-	Wg      *sync.WaitGroup
+	opts                    *queryExecutorOptions
+	Metrics                 chan uint64
+	Wg                      *sync.WaitGroup
+	predictionServiceClient tensorflowserving.PredictionServiceClient
+	grpcClientConn          *grpc.ClientConn
 }
 
 func newProcessor() inference.Processor { return &Processor{} }
@@ -91,6 +89,13 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 		debug:         runner.DebugLevel() > 0,
 		printResponse: runner.DoPrintResponses(),
 	}
+	var err error = nil
+	p.grpcClientConn, err = grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
+	}
+	defer p.grpcClientConn.Close()
+	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 }
 
 func convertSliceStringToFloat(transactionDataString []string) []float32 {
@@ -108,18 +113,19 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
+	// reconnect if the connection was shutdown
+	if p.grpcClientConn.GetState() == connectivity.Shutdown {
+		var err error = nil
+		p.grpcClientConn, err = grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("Cannot connect to the grpc server: %v\n", err)
+		}
+		defer p.grpcClientConn.Close()
+		p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
+	}
 
 	referenceDataKeyName := "referenceKey:" + q[0]
 	referenceKeySlice := []float32{}
-
-	grpcClientConn, err := grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
-	}
-	defer grpcClientConn.Close()
-
-	predictionServiceClient := tensorflowserving.NewPredictionServiceClient(grpcClientConn)
-
 
 	start := time.Now()
 	redisRespBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
@@ -138,7 +144,6 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 			Version: &google_protobuf.Int64Value{
 				Value: int64(version),
 			},
-
 		},
 		Inputs: map[string]*tfcoreframework.TensorProto{
 			"transaction": {
@@ -155,7 +160,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 				},
 				FloatVal: convertSliceStringToFloat(q[1:31]),
 			},
-			"reference" : {
+			"reference": {
 				Dtype: tfcoreframework.DataType_DT_FLOAT,
 				TensorShape: &tfcoreframework.TensorShapeProto{
 					Dim: []*tfcoreframework.TensorShapeProto_Dim{
@@ -169,8 +174,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		},
 	}
 	//fmt.Println(request)
-
-	PredictResponse, err := predictionServiceClient.Predict(context.Background(), request)
+	PredictResponse, err := p.predictionServiceClient.Predict(context.Background(), request)
 	if err != nil {
 		log.Fatalf("Prediction failed:%v\n", err)
 	}
@@ -180,9 +184,6 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		fmt.Println("RESPONSE: ", PredictResponse)
 	}
 
-	if err != nil {
-		log.Fatalf("Command failed:%v\n", err)
-	}
 	stat := inference.GetStat()
 	stat.Init([]byte("TensorFlow serving Query"), took, uint64(0), false, "")
 
