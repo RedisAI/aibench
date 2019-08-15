@@ -1,20 +1,20 @@
-# DLBench Supplemental Guide: Tensorflow Serving and Redis
+# AIBench Supplemental Guide: Tensorflow Serving and Redis
 
 ### Benchmarking inference performance -- TFServing and Redis Benchmark Go program
 
-To measure inference performance in DLBench, you first need to load
-the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/dlbench#reference-data-loading). 
+To measure inference performance in AIBench, you first need to load
+the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/AIBench#reference-data-loading). 
 
 Once the data is loaded,
-just use the corresponding `dlbench_run_inference_tensorflow_serving` binary for the DL Solution
+just use the corresponding `aibench_run_inference_tensorflow_serving` binary for the DL Solution
 being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 cat ./data/creditcard.csv.gz \
         | gunzip \
-        | dlbench_run_inference_tensorflow_serving \
+        | aibench_run_inference_tensorflow_serving \
          -max-queries 10000 -workers 16 -print-interval 2000 \
          -model financialNet -model-version 2 \
          -tensorflow-serving-host localhost:8500 \
@@ -25,9 +25,9 @@ cat ./data/creditcard.csv.gz \
 
 The following diagram illustrates the sequence of requests made for each inference.
 
-![Sequence diagram - Tensorflow Serving and Redis Solution][dlbench_client_tfserving]
+![Sequence diagram - Tensorflow Serving and Redis Solution][aibench_client_tfserving]
 
-[dlbench_client_tfserving]: ./dlbench_client_tfserving.png
+[aibench_client_tfserving]: ./aibench_client_tfserving.png
 
 ---
 
@@ -58,7 +58,7 @@ The simplest way to get it, is to run
 
 
 ```bash
-cd $GOPATH/src/github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 mkdir -p tmp && cd tmp
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/serving.git
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/tensorflow.git
@@ -74,9 +74,9 @@ protoc $PROTOC_OPTS tensorflow/tensorflow/core/example/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/lib/core/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
 
-# move vendor folder to $GOPATH/src/github.com/filipecosta90/dlbench
-rm -rf $GOPATH/src/github.com/filipecosta90/dlbench/vendor
-mv vendor $GOPATH/src/github.com/filipecosta90/dlbench/.
+# move vendor folder to $GOPATH/src/github.com/filipecosta90/AIBench
+rm -rf $GOPATH/src/github.com/filipecosta90/AIBench/vendor
+mv vendor $GOPATH/src/github.com/filipecosta90/AIBench/.
 
 # remove tmp dir
 cd .. && rm -rf tmp
@@ -87,7 +87,7 @@ cd .. && rm -rf tmp
 ### Local Installation -- Download the TensorFlow Serving Docker image and repo
 ```bash
 docker pull tensorflow/serving
-cd $GOPATH/src/github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 
 # Location of credit card fraud model
 TESTDATA="$(pwd)/models/tensorflow"
@@ -113,13 +113,13 @@ After installing all Prerequisites from the previous section, the easiest way to
 `go get` and then `go install`. :
 
 ```bash
-# Fetch DLBench and its dependencies
-go get github.com/filipecosta90/dlbench
-cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+# Fetch AIBench and its dependencies
+go get github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
 go get ./...
 
-# Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_* binary:
-cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-cd dlbench_load_referencedata && go install
-cd ../dlbench_run_inference_tensorflow_serving && go install
+# Install desired binaries. At a minimum this includes aibench_load_referencedata, and one aibench_run_inference_* binary:
+cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+cd aibench_load_referencedata && go install
+cd ../aibench_run_inference_tensorflow_serving && go install
 ```

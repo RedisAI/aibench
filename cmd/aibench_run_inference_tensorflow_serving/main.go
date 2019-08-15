@@ -11,7 +11,7 @@ import (
 	"fmt"
 
 	//"fmt"
-	"github.com/filipecosta90/dlbench/inference"
+	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 	tfcoreframework "tensorflow/core/framework"

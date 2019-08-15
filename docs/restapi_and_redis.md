@@ -1,4 +1,4 @@
-# DLBench Supplemental Guide: DL REST API and Redis
+# AIBench Supplemental Guide: DL REST API and Redis
 
 TBD
 

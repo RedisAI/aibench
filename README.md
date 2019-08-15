@@ -1,4 +1,4 @@
-# DLBench - DL Benchmark
+# AIBench
 This repo contains code for benchmarking deep learning solutions,
 including RedisAI.
 This code is based on a fork of work initially made public by TSBS
@@ -13,30 +13,30 @@ Current DL solutions supported:
 ## Current use cases
 
 
-Currently, DLBench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
+Currently, AIBench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
 
 
 ## Installation
 
-DLBench is a collection of Go programs (with some auxiliary bash and Python
+AIBench is a collection of Go programs (with some auxiliary bash and Python
 scripts). The easiest way to get and install the Go programs is to use
 `go get` and then `go install`:
 ```bash
-# Fetch DLBench and its dependencies
-go get github.com/filipecosta90/dlbench
-cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
+# Fetch AIBench and its dependencies
+go get github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
 go get ./...
 
-# Install desired binaries. At a minimum this includes dlbench_load_referencedata, and one dlbench_run_inference_*
+# Install desired binaries. At a minimum this includes aibench_load_referencedata, and one aibench_run_inference_*
 # binary:
-cd $GOPATH/src/github.com/filipecosta90/dlbench/cmd
-cd dlbench_load_referencedata && go install
-cd ../dlbench_run_inference_redisai && go install
+cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+cd aibench_load_referencedata && go install
+cd ../aibench_run_inference_redisai && go install
 ```
 
-## How to use DLBench
+## How to use AIBench
 
-Using DLBench for benchmarking involves 3 phases: model setup, reference data loading, and inference query execution.
+Using AIBench for benchmarking involves 3 phases: model setup, reference data loading, and inference query execution.
 
 ### Model setup
 
@@ -60,27 +60,27 @@ redis-cli -x AI.MODELSET financialNet \
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 cat ./data/creditcard.csv.gz \
         | gunzip \
-        | dlbench_load_referencedata \
+        | aibench_load_referencedata \
           -workers 16 
 ```
 
 ### Benchmarking inference performance
 
-To measure inference performance in DLBench, you first need to load
+To measure inference performance in AIBench, you first need to load
 the data using the previous section and generate the queries as
 described earlier. Once the data is loaded and the queries are generated,
-just use the corresponding `dlbench_run_inference_` binary for the database
+just use the corresponding `aibench_run_inference_` binary for the database
 being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/dlbench
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 cat ./data/creditcard.csv.gz \
         | gunzip \
-        | dlbench_run_inference_redisai \
+        | aibench_run_inference_redisai \
        -max-queries 10000 -workers 16 -print-interval 2000 -model financialNet
 ```
 

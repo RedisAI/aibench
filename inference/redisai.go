@@ -6,7 +6,7 @@ import (
 )
 
 // RedisAI encodes a RedisAI request. This will be serialized for use
-// by the dlbench_run_inference_redisai program.
+// by the aibench_run_inference_redisai program.
 type RedisAI struct {
 	HumanLabel       []byte
 	HumanDescription []byte

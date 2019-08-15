@@ -1,9 +1,9 @@
-# DLBench outputs #
+# AIBench outputs #
 ###################
 
-cmd/dlbench_load_referencedata/dlbench_load_referencedata
-cmd/dlbench_run_inference_redisai/dlbench_run_inference_redisai
-cmd/dlbench_run_inference_tensorflow_serving/dlbench_run_inference_tensorflow_serving
+cmd/aibench_load_referencedata/aibench_load_referencedata
+cmd/aibench_run_inference_redisai/aibench_run_inference_redisai
+cmd/aibench_run_inference_tensorflow_serving/aibench_run_inference_tensorflow_serving
 
 
 *.txt
