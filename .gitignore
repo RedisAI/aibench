@@ -4,7 +4,7 @@
 cmd/aibench_load_referencedata/aibench_load_referencedata
 cmd/aibench_run_inference_redisai/aibench_run_inference_redisai
 cmd/aibench_run_inference_tensorflow_serving/aibench_run_inference_tensorflow_serving
-
+cmd/aibench_run_inference_flask_tensorflow/aibench_run_inference_flask_tensorflow
 
 *.txt
 *.csv

@@ -5,9 +5,9 @@ import logging
 
 import os
 
-tf_model_path = '/Users/filipeoliveria/go/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb'
-
-#tf_model_path = '/root/data/creditcardfraud.pb'
+#change it to local
+#tf_model_path = '~/go/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb'
+tf_model_path = os.getenv('TF_MODEL_PATH', '/root/data/creditcardfraud.pb' )
 
 with tf.io.gfile.GFile(tf_model_path, "rb") as f:
     restored_graph_def = tf.compat.v1.GraphDef()

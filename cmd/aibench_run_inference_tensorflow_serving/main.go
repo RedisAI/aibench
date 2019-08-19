@@ -8,8 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"google.golang.org/grpc/connectivity"
-
-	//"fmt"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
@@ -20,7 +18,6 @@ import (
 	"sync"
 	tfcoreframework "tensorflow/core/framework"
 	tensorflowserving "tensorflow_serving/apis"
-
 	"time"
 )
 

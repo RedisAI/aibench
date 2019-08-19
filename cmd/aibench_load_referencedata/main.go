@@ -14,14 +14,13 @@ import (
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 	"log"
+	math2 "math"
 	"math/rand"
 	"strconv"
-	math2 "math"
 
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
-
 )
 
 // Program option vars:
@@ -81,7 +80,6 @@ func convertSliceStringToFloat(transactionDataString []string) []float32 {
 	return res
 }
 
-
 func Float32bytes(float float32) []byte {
 	bits := math2.Float32bits(float)
 	bytes := make([]byte, 4)
@@ -97,9 +95,9 @@ func (p *Loader) ProcessLoadQuery(q []string) ([]*inference.Stat, error) {
 
 	qbytes := Float32bytes(refData[0])
 	for _, value := range refData[1:256] {
-		qbytes = append( qbytes, Float32bytes(value)... )
+		qbytes = append(qbytes, Float32bytes(value)...)
 	}
-	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT",  []int{256}, "VALUES", refData)
+	tensorset_args := redisai.Generate_AI_TensorSet_Args(referenceDataTensorName, "FLOAT", []int{256}, "VALUES", refData)
 	errTensorSet := client.Do(tensorset_args...).Err()
 	if errTensorSet != nil {
 		log.Fatalf("Command TensorSet:%v\n", errTensorSet)
