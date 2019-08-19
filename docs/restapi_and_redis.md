@@ -31,7 +31,37 @@ The following diagram illustrates the sequence of requests made for each inferen
 
 ---
 
-### Local Installation -- tensorwerk flask-optim-cpu Docker image
+### Local Installation -- with wsgi + flask for Development mode
+
+```bash
+cd $GOPATH/src/github.com/filipecosta90/AIBench/tests/servers/flask
+
+# Install requirements
+pip install -r requirements
+
+# set environment variable with location of credit card fraud model
+export TF_MODEL_PATH=$GOPATH/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb
+
+# Start WSGI+Flask+TF Backend REST API serving
+python3 server.py
+
+# Query the model using the predict API
+curl  -H "Content-Type: application/json" \
+      --data @$TESTDATA/models/tensorflow/tensorflow_serving_inference_payload.json \
+      -X POST http://localhost:8000/predict
+
+# Returns => {
+               "outputs": [
+                 [
+                   0.9055531620979309, 
+                   0.09444686770439148
+                 ]
+               ]
+             }
+
+```
+
+### Local Installation -- with tensorwerk flask-optim-cpu Docker image
 
 ```bash
 docker pull tensorwerk/raibenchmarks:flask-optim-cpu
