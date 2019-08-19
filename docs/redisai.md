@@ -13,7 +13,7 @@ being tested:
 ```bash
 # make sure you're on the root project folder
 $ cd $GOPATH/src/github.com/filipecosta90/AIBench
-$ cat ./data/creditcard.csv.gz \
+$ cat ./tests/data/creditcard.csv.gz \
         | gunzip \
         | aibench_run_inference_redisai \
          -max-queries 10000 -workers 16 -print-interval 2000 \

@@ -82,15 +82,16 @@ mv vendor $GOPATH/src/github.com/filipecosta90/AIBench/.
 cd .. && rm -rf tmp
  ```
  
-## Installation -- Serve the Tensorflow model locally
+## Installation 
 
 ### Local Installation -- Download the TensorFlow Serving Docker image and repo
+
 ```bash
 docker pull tensorflow/serving
 cd $GOPATH/src/github.com/filipecosta90/AIBench
 
 # Location of credit card fraud model
-TESTDATA="$(pwd)/models/tensorflow"
+TESTDATA="$(pwd)/tests/models/tensorflow"
 
 # Start TensorFlow Serving container and open the GRPC and REST API ports
 docker run -t --rm -p 8500:8500 -p 8501:8501 \

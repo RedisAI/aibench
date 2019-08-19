@@ -8,7 +8,7 @@ Current DL solutions supported:
 
 + RedisAI [(supplemental docs)](docs/redisai.md)
 + TFServing + Redis [(supplemental docs)](docs/tfserving_and_redis.md)
-+ Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
++ [TODO] Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
 
 ## Current use cases
 
@@ -53,7 +53,7 @@ redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
 # set the Model
 redis-cli -x AI.MODELSET financialNet \
             TF CPU INPUTS transaction reference \
-            OUTPUTS output < ./models/tensorflow/creditcardfraud.pb
+            OUTPUTS output < ./tests/models/tensorflow/creditcardfraud.pb
 ```
 
 ### Reference Data Loading
@@ -61,7 +61,7 @@ redis-cli -x AI.MODELSET financialNet \
 ```bash
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/filipecosta90/AIBench
-cat ./data/creditcard.csv.gz \
+cat ./tests/data/creditcard.csv.gz \
         | gunzip \
         | aibench_load_referencedata \
           -workers 16 
@@ -78,7 +78,7 @@ being tested:
 ```bash
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/filipecosta90/AIBench
-cat ./data/creditcard.csv.gz \
+cat ./tests/data/creditcard.csv.gz \
         | gunzip \
         | aibench_run_inference_redisai \
        -max-queries 10000 -workers 16 -print-interval 2000 -model financialNet
