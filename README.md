@@ -8,7 +8,7 @@ Current DL solutions supported:
 
 + RedisAI [(supplemental docs)](docs/redisai.md)
 + TFServing + Redis [(supplemental docs)](docs/tfserving_and_redis.md)
-+ [TODO] Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
++ Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
 
 ## Current use cases
 
