@@ -18,6 +18,7 @@ cat ./tests/data/creditcard.csv.gz \
         | aibench_run_inference_flask_tensorflow \
          -max-queries 10000 -workers 16 -print-interval 2000 \
          -restapi-host localhost:8000 \
+         -restapi-request-uri /predict \
          -redis-host localhost:6379 
 ```
 
