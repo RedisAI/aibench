@@ -9,6 +9,7 @@ import (
 	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/filipecosta90/redisai-go/redisai"
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
 
@@ -29,6 +30,7 @@ var (
 var (
 	runner *inference.BenchmarkRunner
 	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
+	cpool *redis.Pool
 
 )
 
@@ -36,9 +38,15 @@ var (
 func init() {
 	runner = inference.NewBenchmarkRunner()
 
+
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
 	flag.StringVar(&model, "model", "", "model name")
 	flag.Parse()
+	cpool = &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
+	}
 
 }
 
@@ -75,7 +83,7 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 	p.Wg = wg
 	p.Metrics = m
-	p.pclient = redisai.ConnectPipelined(host, 3)
+	p.pclient = redisai.ConnectPipelined(host, 3, cpool )
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
