@@ -7,12 +7,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"google.golang.org/grpc/connectivity"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"log"
 	"strconv"
 	"sync"
@@ -69,6 +69,9 @@ type Processor struct {
 	Wg                      *sync.WaitGroup
 	predictionServiceClient tensorflowserving.PredictionServiceClient
 	grpcClientConn          *grpc.ClientConn
+}
+
+func (p *Processor) Close() {
 }
 
 func newProcessor() inference.Processor { return &Processor{} }

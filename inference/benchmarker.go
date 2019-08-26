@@ -93,6 +93,9 @@ type Processor interface {
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
 	ProcessInferenceQuery(q []string, isWarm bool) ([]*Stat, error)
+
+	// Close forces any work buffered to be sent to the DB being tested prior to going further
+	Close()
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -197,6 +200,9 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 		}
 		queryPool.Put(query)
 	}
+
+	processor.Close()
+
 
 	//pwg.Wait()
 	close(metricsChan)

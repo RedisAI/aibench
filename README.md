@@ -41,7 +41,6 @@ Using AIBench for benchmarking involves 3 phases: model setup, reference data lo
 ### Model setup
 
 
-
 So for setting up the model Redis using RedisAI use:
 ```bash
 # flush the database
@@ -51,6 +50,7 @@ redis-cli flushall
 redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
 
 # set the Model
+cd $GOPATH/src/github.com/filipecosta90/AIBench
 redis-cli -x AI.MODELSET financialNet \
             TF CPU INPUTS transaction reference \
             OUTPUTS output < ./tests/models/tensorflow/creditcardfraud.pb

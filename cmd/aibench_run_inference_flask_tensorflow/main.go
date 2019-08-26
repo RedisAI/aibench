@@ -75,6 +75,10 @@ type Processor struct {
 	httpclient *fasthttp.HostClient
 }
 
+func (p *Processor) Close() {
+
+}
+
 func newProcessor() inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
