@@ -1,10 +1,9 @@
 package inference
 
 import (
-	"encoding/csv"
 	"io"
 	"log"
-	"strconv"
+	"os"
 	"sync"
 )
 
@@ -26,9 +25,22 @@ func (s *producer) setReader(r io.Reader) *producer {
 	return s
 }
 
+func readNextBytes(file *os.File, number int) []byte {
+	bytes := make([]byte, number)
+
+	_, err := file.Read(bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return bytes
+}
+
 // produce reads encoded inference queries and places them into a channel
-func (s *producer) produce(pool *sync.Pool, c chan []string, skip_first bool) uint64 {
-	reader := csv.NewReader(s.r)
+func (s *producer) produce(pool *sync.Pool, c chan []byte, skipFirst bool) uint64 {
+	nbytes := 8 + 120 + 1024
+	bytes := make([]byte, nbytes)
+
 	n := uint64(0)
 
 	for {
@@ -36,19 +48,16 @@ func (s *producer) produce(pool *sync.Pool, c chan []string, skip_first bool) ui
 			// request queries limit reached, time to quit
 			break
 		}
-
-		line, error := reader.Read()
-		if error == io.EOF {
+		_, err := s.r.Read(bytes)
+		if err != nil {
 			break
-		} else if error != nil {
-			log.Fatal(error)
 		}
-		if n > 0 && skip_first == true || skip_first == false {
-			ns := []string{strconv.FormatUint(n, 10)}
-			ns = append(ns, line...)
-			c <- ns
 
-		}
+
+
+			c <- bytes
+
+
 
 		n++
 	}

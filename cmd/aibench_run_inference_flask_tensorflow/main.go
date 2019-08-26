@@ -13,7 +13,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"log"
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,17 +20,17 @@ import (
 
 // Program option vars:
 var (
-	redis_host   string
-	restapi_host string
-	restapi_request_uri string
-	model        string
-	version      int
- strPost = []byte("POST")
-	strContentType = []byte("application/json")
+	redisHost         string
+	restapiHost       string
+	restapiRequestUri string
+	_                 string
+	_                 int
+	strPost                                                         = []byte("POST")
+	strContentType                      = []byte("application/json")
 
 	strRequestURI = []byte("")
-	strHost = []byte("")
-	showExplain bool
+	strHost       = []byte("")
+	showExplain   bool
 )
 
 // Global vars:
@@ -46,18 +45,18 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
-	flag.StringVar(&restapi_host, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
-	flag.StringVar(&restapi_request_uri, "restapi-request-uri", "/predict", "REST API request URI")
+	flag.StringVar(&redisHost, "redis-host", "127.0.0.1:6379", "Redis host address and port")
+	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
+	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/predict", "REST API request URI")
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
-		Addr: redis_host,
+		Addr: redisHost,
 	})
 }
 
 func main() {
-	strRequestURI = []byte(restapi_request_uri)
-	strHost = []byte(restapi_host)
+	strRequestURI = []byte(restapiRequestUri)
+	strHost = []byte(restapiHost)
 
 	runner.Run(&inference.RedisAIPool, newProcessor)
 }
@@ -90,17 +89,8 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 		printResponse: runner.DoPrintResponses(),
 	}
 	p.httpclient = &fasthttp.HostClient{
-		Addr: restapi_host,
+		Addr: restapiHost,
 	}
-}
-
-func convertSliceStringToFloat(transactionDataString []string) []float32 {
-	res := make([]float32, len(transactionDataString))
-	for i := range transactionDataString {
-		value, _ := strconv.ParseFloat(transactionDataString[i], 64)
-		res[i] = float32(value)
-	}
-	return res
 }
 
 func Float32frombytes(bytes []byte) float32 {
@@ -123,24 +113,24 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
 	res := fasthttp.AcquireResponse()
-	transaction_string := strings.Join(q[1:31], ",")
+	transactionString := strings.Join(q[1:31], ",")
 
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
 		log.Fatalln(redisErr)
 	}
-	referenceFloats := []string{}
+	var referenceFloats []string
 	for i := 0; i < 256; i++ {
-		value := Float32frombytes(redisRespReferenceBytes[4*i:4*(i+1)])
-		referenceFloats = append(referenceFloats,fmt.Sprintf("%f", value))
+		value := Float32frombytes(redisRespReferenceBytes[4*i : 4*(i+1)])
+		referenceFloats = append(referenceFloats, fmt.Sprintf("%f", value))
 	}
-	bodyJSON := []byte(fmt.Sprintf(`{"inputs":{"transaction":[[%s]],"reference":[%s]}}`,transaction_string, strings.Join(referenceFloats, ",") ))
+	bodyJSON := []byte(fmt.Sprintf(`{"inputs":{"transaction":[[%s]],"reference":[%s]}}`, transactionString, strings.Join(referenceFloats, ",")))
 	req.SetBody(bodyJSON)
 	if err := p.httpclient.Do(req, res); err != nil {
 		fasthttp.ReleaseResponse(res)
 		log.Fatalln(err)
-		}
+	}
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
 	fasthttp.ReleaseRequest(req)
 	if p.opts.printResponse {

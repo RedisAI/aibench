@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
-	google_protobuf "github.com/golang/protobuf/ptypes/wrappers"
+	googleprotobuf "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -23,10 +23,10 @@ import (
 
 // Program option vars:
 var (
-	redis_host              string
-	tensorflow_serving_host string
-	model                   string
-	version                 int
+	redisHost             string
+	tensorflowServingHost string
+	model                 string
+	version               int
 
 	showExplain bool
 )
@@ -43,13 +43,13 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
-	flag.StringVar(&tensorflow_serving_host, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
+	flag.StringVar(&redisHost, "redis-host", "127.0.0.1:6379", "Redis host address and port")
+	flag.StringVar(&tensorflowServingHost, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
 	flag.IntVar(&version, "model-version", 1, "Model version")
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
-		Addr: redis_host,
+		Addr: redisHost,
 	})
 }
 
@@ -85,7 +85,7 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 		printResponse: runner.DoPrintResponses(),
 	}
 	var err error = nil
-	p.grpcClientConn, err = grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
+	p.grpcClientConn, err = grpc.Dial(tensorflowServingHost, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 	}
@@ -111,7 +111,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	// reconnect if the connection was shutdown
 	if p.grpcClientConn.GetState() == connectivity.Shutdown {
 		var err error = nil
-		p.grpcClientConn, err = grpc.Dial(tensorflow_serving_host, grpc.WithInsecure())
+		p.grpcClientConn, err = grpc.Dial(tensorflowServingHost, grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 		}
@@ -130,7 +130,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 	request := &tensorflowserving.PredictRequest{
 		ModelSpec: &tensorflowserving.ModelSpec{
 			Name: model,
-			Version: &google_protobuf.Int64Value{
+			Version: &googleprotobuf.Int64Value{
 				Value: int64(version),
 			},
 		},

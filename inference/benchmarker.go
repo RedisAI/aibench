@@ -38,7 +38,7 @@ type BenchmarkRunner struct {
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *producer
-	ch      chan []string
+	ch      chan []byte
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -92,7 +92,7 @@ type Processor interface {
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessInferenceQuery(q []string, isWarm bool) ([]*Stat, error)
+	ProcessInferenceQuery(q []byte, isWarm bool) ([]*Stat, error)
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
@@ -129,7 +129,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	if b.sp.burnIn > b.limit {
 		panic("burn-in is larger than limit")
 	}
-	b.ch = make(chan []string, b.workers)
+	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
 	go b.sp.process(b.workers)
@@ -166,8 +166,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
+		_ = pprof.WriteHeapProfile(f)
+		_ = f.Close()
 	}
 }
 
@@ -202,7 +202,6 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	}
 
 	processor.Close()
-
 
 	//pwg.Wait()
 	close(metricsChan)

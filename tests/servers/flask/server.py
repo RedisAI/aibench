@@ -1,9 +1,8 @@
-from flask import Flask, request, jsonify
-import numpy as np
-import tensorflow as tf
 import logging
-
+import numpy as np
 import os
+import tensorflow as tf
+from flask import Flask, request, jsonify
 
 #change it to local
 #tf_model_path = '~/go/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb'

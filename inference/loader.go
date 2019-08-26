@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-const (
-	defaultLoadSize = 4 << 20 // 4 MB
-)
-
 // LoadRunner contains the common components for running a inference benchmarking
 // program against a database.
 type LoadRunner struct {
@@ -29,7 +25,7 @@ type LoadRunner struct {
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *producer
-	ch      chan []string
+	ch      chan []byte
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -62,7 +58,8 @@ type Loader interface {
 	Init(workerNum int, wg *sync.WaitGroup)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessLoadQuery(q []string) ([]*Stat, error)
+	ProcessLoadQuery(q []byte) ([]*Stat, error)
+	Close()
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -71,6 +68,7 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 		if len(b.fileName) > 0 {
 			// Read from specified file
 			file, err := os.Open(b.fileName)
+
 			if err != nil {
 				panic(fmt.Sprintf("cannot open file for read %s: %v", b.fileName, err))
 			}
@@ -93,7 +91,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	if b.workers == 0 {
 		panic("must have at least one worker")
 	}
-	b.ch = make(chan []string, b.workers)
+	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
 	go b.sp.process(b.workers)
@@ -138,6 +136,8 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 			panic(err)
 		}
 	}
+
+	processor.Close()
 
 	//pwg.Wait()
 
