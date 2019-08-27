@@ -21,23 +21,21 @@ import (
 
 // Program option vars:
 var (
-	host  string
-	model string
+	host        string
+	model       string
 	showExplain bool
 )
 
 // Global vars:
 var (
-	runner *inference.BenchmarkRunner
+	runner        *inference.BenchmarkRunner
 	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
-	cpool *redis.Pool
-
+	cpool         *redis.Pool
 )
 
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-
 
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
 	flag.StringVar(&model, "model", "", "model name")
@@ -83,7 +81,7 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 	p.Wg = wg
 	p.Metrics = m
-	p.pclient = redisai.ConnectPipelined(host, 3, cpool )
+	p.pclient = redisai.ConnectPipelined(host, 3, cpool)
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {

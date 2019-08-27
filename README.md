@@ -1,4 +1,4 @@
-# AIBench
+# aibench
 This repo contains code for benchmarking deep learning solutions,
 including RedisAI.
 This code is based on a fork of work initially made public by TSBS
@@ -13,30 +13,30 @@ Current DL solutions supported:
 ## Current use cases
 
 
-Currently, AIBench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
+Currently, aibench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
 
 
 ## Installation
 
-AIBench is a collection of Go programs (with some auxiliary bash and Python
+aibench is a collection of Go programs (with some auxiliary bash and Python
 scripts). The easiest way to get and install the Go programs is to use
 `go get` and then `go install`:
 ```bash
-# Fetch AIBench and its dependencies
-cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+# Fetch aibench and its dependencies
+cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
 go get ./...
 
 # Install desired binaries. At a minimum this includes aibench_load_data, and one aibench_run_inference_*
 # binary:
-cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
 cd aibench_generate_data && go install
 cd ../aibench_load_data && go install
 cd ../aibench_run_inference_redisai && go install
 ```
 
-## How to use AIBench
+## How to use aibench
 
-Using AIBench for benchmarking inference performance involves 4 phases: model setup, transaction data parsing and consequent reference data generation, reference data loading, and inference query execution.
+Using aibench for benchmarking inference performance involves 4 phases: model setup, transaction data parsing and consequent reference data generation, reference data loading, and inference query execution.
 
 ### 1. Model setup 
 This step is specific for each DL solution being tested ( see Current DL solutions supported above ). 
@@ -50,7 +50,7 @@ redis-cli flushall
 redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
 
 # set the Model
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 redis-cli -x AI.MODELSET financialNet \
             TF CPU INPUTS transaction reference \
             OUTPUTS output < ./tests/models/tensorflow/creditcardfraud.pb
@@ -58,7 +58,7 @@ redis-cli -x AI.MODELSET financialNet \
 
 ### 2. Transaction data parsing and Reference Data Generation
 
-So that benchmarking results are not affected by generating data on-the-fly, with AIBench you generate the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking phases. 
+So that benchmarking results are not affected by generating data on-the-fly, with aibench you generate the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking phases. 
 
 The following subsection describes in detail the data parsing and data generation required for each specific use case.
 
@@ -74,38 +74,40 @@ Likewise, for each **Transaction data**, we generate random deterministic **Refe
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 gunzip -c ./tests/data/creditcard.csv.gz > /tmp/creditcard.csv
 aibench_generate_data \
           -input-file /tmp/creditcard.csv \
           -use-case="creditcard-fraud" \
           -seed=12345 \
-          -output-file /tmp/aibench_generate_data-creditcard-fraud.bin
+          | gzip > /tmp/aibench_generate_data-creditcard-fraud.dat.gz
 ```
 
 ### 3. Reference Data Loading
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/AIBench 
-aibench_load_data \
-        -file /tmp/aibench_generate_data-creditcard-fraud.bin \
+cd $GOPATH/src/github.com/filipecosta90/aibench 
+cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
+        | gunzip \
+        | aibench_load_data \
           -workers 16 
 ```
 
 ### 4. Benchmarking inference performance
 
-To measure inference performance in AIBench, you first need to load
+To measure inference performance in aibench, you first need to load
 the data using the previous sections. Once the data is loaded,
 just use the corresponding `aibench_run_inference_` binary for the database
 being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/AIBench
-cat /tmp/aibench_generate_data-creditcard-fraud.bin \
+cd $GOPATH/src/github.com/filipecosta90/aibench
+cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
+        | gunzip \
         | aibench_run_inference_redisai \
-       -max-queries 10000 -workers 16 -print-interval 10000 -model financialNet
+          -max-queries 10000 -workers 16 -print-interval 10000 -model financialNet
 ```
 
 You can change the value of the `-workers` flag to

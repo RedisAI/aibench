@@ -16,8 +16,9 @@ const (
 	labelAllQueries  = "All queries"
 	labelColdQueries = "Cold queries"
 	labelWarmQueries = "Warm queries"
+	rowBenchmarkNBytes = 8 + 120 + 1024
+	defaultReadSize    = 4 << 20 // 4 MB
 
-	defaultReadSize = 4 << 20 // 4 MB
 )
 
 // LoadRunner contains the common components for running a inference benchmarking
@@ -31,7 +32,6 @@ type BenchmarkRunner struct {
 	printResponses bool
 	debug          int
 	fileName       string
-	skipFirstLine  bool
 	seed           int64
 
 	// non-flag fields
@@ -56,7 +56,6 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
-	flag.BoolVar(&runner.skipFirstLine, "skip-first-line", true, "Skip first line of csv (default true).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
@@ -145,7 +144,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Wall clock start time
 	wallStart := time.Now()
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, b.skipFirstLine)
+	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:

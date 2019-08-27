@@ -199,7 +199,7 @@ func runSimulator(sim common.Simulator, serializer serialize.TransactionSerializ
 func getConfig(useCase string) common.SimulatorConfig {
 	switch useCase {
 	case useCaseFraud:
-		return &fraud.AIBenchSimulatorConfig{
+		return &fraud.AibenchSimulatorConfig{
 			InputFilename: outputFileName,
 		}
 	default:

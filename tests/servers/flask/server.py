@@ -5,7 +5,7 @@ import tensorflow as tf
 from flask import Flask, request, jsonify
 
 #change it to local
-#tf_model_path = '~/go/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb'
+#tf_model_path = '~/go/src/github.com/filipecosta90/aibench/tests/models/tensorflow/creditcardfraud.pb'
 tf_model_path = os.getenv('TF_MODEL_PATH', '/root/data/creditcardfraud.pb' )
 
 with tf.io.gfile.GFile(tf_model_path, "rb") as f:

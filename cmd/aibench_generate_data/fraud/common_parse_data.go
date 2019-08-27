@@ -4,12 +4,12 @@ import (
 	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/serialize"
 )
 
-type commonAIBenchSimulatorConfig struct {
+type commonaibenchSimulatorConfig struct {
 	InputFilename string
 	// Start is the beginning time for the Simulator
 }
 
-type commonAIBenchSimulator struct {
+type commonaibenchSimulator struct {
 	madeTransactions uint64
 	maxTransactions  uint64
 	recordIndex      uint64
@@ -17,6 +17,6 @@ type commonAIBenchSimulator struct {
 }
 
 // Finished tells whether we have simulated all the necessary documents
-func (s *commonAIBenchSimulator) Finished() bool {
+func (s *commonaibenchSimulator) Finished() bool {
 	return s.madeTransactions >= s.maxTransactions
 }

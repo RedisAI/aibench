@@ -7,6 +7,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	googleprotobuf "github.com/golang/protobuf/ptypes/wrappers"
@@ -14,7 +15,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"log"
-	"strconv"
 	"sync"
 	tfcoreframework "tensorflow/core/framework"
 	tensorflowserving "tensorflow_serving/apis"
@@ -72,6 +72,7 @@ type Processor struct {
 }
 
 func (p *Processor) Close() {
+	p.grpcClientConn.Close()
 }
 
 func newProcessor() inference.Processor { return &Processor{} }
@@ -89,20 +90,11 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	if err != nil {
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 	}
-	defer p.grpcClientConn.Close()
+	//defer p.grpcClientConn.Close()
 	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 }
 
-func convertSliceStringToFloat(transactionDataString []string) []float32 {
-	res := make([]float32, len(transactionDataString))
-	for i := range transactionDataString {
-		value, _ := strconv.ParseFloat(transactionDataString[i], 64)
-		res[i] = float32(value)
-	}
-	return res
-}
-
-func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -119,8 +111,11 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 		p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 	}
 
-	referenceDataKeyName := "referenceBLOB:" + q[0]
-	transactionSlice := convertSliceStringToFloat(q[1:31])
+	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idS := fmt.Sprintf("%d", idUint64)
+	transactionValues := q[8:128]
+
+	referenceDataKeyName := "referenceBLOB:" + idS
 
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
@@ -147,7 +142,7 @@ func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference
 						},
 					},
 				},
-				FloatVal: transactionSlice,
+				TensorContent: transactionValues,
 			},
 			"reference": {
 				Dtype: tfcoreframework.DataType_DT_FLOAT,

@@ -1,10 +1,10 @@
-# AIBench Supplemental Guide: DL REST API and Redis
+# aibench Supplemental Guide: DL REST API and Redis
 
 
 ### Benchmarking inference performance -- DL REST API and Redis Benchmark Go program
 
-To measure inference performance in AIBench, you first need to load
-the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/AIBench#reference-data-loading). 
+To measure inference performance in aibench, you first need to load
+the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/aibench#reference-data-loading). 
 
 Once the data is loaded,
 just use the corresponding `aibench_run_inference_flask_tensorflow` binary for the DL Solution
@@ -12,7 +12,7 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 cat ./tests/data/creditcard.csv.gz \
         | gunzip \
         | aibench_run_inference_flask_tensorflow \
@@ -35,13 +35,13 @@ The following diagram illustrates the sequence of requests made for each inferen
 ### Local Installation -- with wsgi + flask for Development mode
 
 ```bash
-cd $GOPATH/src/github.com/filipecosta90/AIBench/tests/servers/flask
+cd $GOPATH/src/github.com/filipecosta90/aibench/tests/servers/flask
 
 # Install requirements
 pip install -r requirements
 
 # set environment variable with location of credit card fraud model
-export TF_MODEL_PATH=$GOPATH/src/github.com/filipecosta90/AIBench/tests/models/tensorflow/creditcardfraud.pb
+export TF_MODEL_PATH=$GOPATH/src/github.com/filipecosta90/aibench/tests/models/tensorflow/creditcardfraud.pb
 
 # Start WSGI+Flask+TF Backend REST API serving
 python3 server.py
@@ -66,7 +66,7 @@ curl  -H "Content-Type: application/json" \
 
 ```bash
 docker pull tensorwerk/raibenchmarks:flask-optim-cpu
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 
 # Location of credit card fraud model
 TESTDATA="$(pwd)/tests"

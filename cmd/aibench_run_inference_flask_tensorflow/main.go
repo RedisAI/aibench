@@ -25,8 +25,8 @@ var (
 	restapiRequestUri string
 	_                 string
 	_                 int
-	strPost                                                         = []byte("POST")
-	strContentType                      = []byte("application/json")
+	strPost           = []byte("POST")
+	strContentType    = []byte("application/json")
 
 	strRequestURI = []byte("")
 	strHost       = []byte("")
@@ -78,7 +78,7 @@ func (p *Processor) Close() {
 
 }
 
-func newProcessor() inference.Processor { return &Processor{} }
+func newProcessor() *inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.Wg = wg
@@ -99,7 +99,7 @@ func Float32frombytes(bytes []byte) float32 {
 	return float
 }
 
-func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {

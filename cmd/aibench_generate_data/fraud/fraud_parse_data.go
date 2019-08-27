@@ -16,7 +16,7 @@ import (
 // A FTSSimulator generates data similar to telemetry from Telegraf for only CPU metrics.
 // It fulfills the Simulator interface.
 type FTSSimulator struct {
-	*commonAIBenchSimulator
+	*commonaibenchSimulator
 }
 
 // Next advances a Transaction to the next state in the generator.
@@ -41,11 +41,11 @@ func (d *FTSSimulator) populateTransaction(p *serialize.Transaction) bool {
 	return ret
 }
 
-// AIBenchSimulatorConfig is used to create a FTSSimulator.
-type AIBenchSimulatorConfig commonAIBenchSimulatorConfig
+// aibenchSimulatorConfig is used to create a FTSSimulator.
+type AibenchSimulatorConfig commonaibenchSimulatorConfig
 
 // NewSimulator produces a Simulator that conforms to the given SimulatorConfig over the specified interval
-func (c *AIBenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string, debug int) common.Simulator {
+func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string, debug int) common.Simulator {
 
 	file, err := os.Open(inputFilename)
 	var transactions []serialize.Transaction
@@ -68,11 +68,11 @@ func (c *AIBenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 	}
 	for err != io.EOF && (transactionCount < limit || limit == 0) {
 
-		line, error := reader.Read()
-		if error == io.EOF {
+		line, err := reader.Read()
+		if err == io.EOF {
 			break
-		} else if error != nil {
-			log.Fatal(error)
+		} else if err != nil {
+			log.Fatal(err)
 		}
 		qfloat := ConvertSliceStringToFloat(line)
 		qbytes := Float32bytes(qfloat[0])
@@ -108,7 +108,7 @@ func (c *AIBenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 		// Set specified points number limit
 		maxPoints = limit
 	}
-	sim := &FTSSimulator{&commonAIBenchSimulator{
+	sim := &FTSSimulator{&commonaibenchSimulator{
 		madeTransactions: 0,
 		maxTransactions:  maxPoints,
 

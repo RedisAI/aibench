@@ -19,7 +19,7 @@ func NewTransaction() *Transaction {
 	return &Transaction{
 		Id:                make([]byte, 8),
 		TransactionValues: make([]byte, 120),
-		ReferenceValues:   make([]byte, 1028),
+		ReferenceValues:   make([]byte, 1024),
 	}
 }
 
