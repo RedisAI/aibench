@@ -26,7 +26,7 @@ var (
 	_                 string
 	_                 int
 	strPost           = []byte("POST")
-	strContentType    = []byte("application/json")
+	//strContentType    = []byte("multipart/mixed")
 
 	strRequestURI = []byte("")
 	strHost       = []byte("")
@@ -47,7 +47,7 @@ func init() {
 	runner = inference.NewBenchmarkRunner()
 	flag.StringVar(&redisHost, "redis-host", "127.0.0.1:6379", "Redis host address and port")
 	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
-	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/predict", "REST API request URI")
+	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v1/predict", "REST API request URI")
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redisHost,
@@ -106,12 +106,10 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	referenceDataKeyName := "referenceBLOB:" + idS
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
-	req.Header.SetContentTypeBytes(strContentType)
+
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
 	res := fasthttp.AcquireResponse()
-
-
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 	transPart, err := writer.CreateFormFile("transaction","transaction")
@@ -119,27 +117,30 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 		log.Fatalln(err)
 	}
 	transPart.Write(transactionValues)
-
-
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
 		log.Fatalln(redisErr)
 	}
-
 	refPart, err := writer.CreateFormFile("reference","reference")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	refPart.Write(redisRespReferenceBytes)
-
+	writer.Close()
+	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.SetBody(body.Bytes())
-	if err := p.httpclient.Do(req, res); err != nil {
+	err = p.httpclient.Do(req, res);
+	took := float64(time.Since(start).Nanoseconds()) / 1e6
+	fasthttp.ReleaseRequest(req)
+
+	if res.StatusCode() != 200 {
+		log.Fatalln(  fmt.Sprintf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode()  ) )
+	}
+	if err != nil {
 		fasthttp.ReleaseResponse(res)
 		log.Fatalln(err)
 	}
-	took := float64(time.Since(start).Nanoseconds()) / 1e6
-	fasthttp.ReleaseRequest(req)
 	if p.opts.printResponse {
 		body := res.Body()
 		fmt.Println("RESPONSE: ", string(body))

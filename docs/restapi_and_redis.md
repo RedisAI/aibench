@@ -18,7 +18,7 @@ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | aibench_run_inference_flask_tensorflow \
          -max-queries 10000 -workers 16 -print-interval 2000 \
          -restapi-host localhost:8000 \
-         -restapi-request-uri /predict \
+         -restapi-request-uri /v2/predict \
          -redis-host localhost:6379
 ```
 

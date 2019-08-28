@@ -18,7 +18,7 @@ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
          -max-queries 10000 -workers 16 -print-interval 2000 \
          -model financialNet -model-version 2 \
          -tensorflow-serving-host localhost:8500 \
-         -redis-host localhost:6379 
+         -redis-host localhost:6379
 ```
 
 #### Sequence diagram - Tensorflow Serving and Redis Solution
