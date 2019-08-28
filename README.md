@@ -13,7 +13,16 @@ Current DL solutions supported:
 ## Current use cases
 
 
-Currently, aibench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud). This use-case aims to detect a fraudulent transaction. The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data.
+Currently, aibench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on 
+anonymized credit card transactions and reference data. 
+
+The initial dataset from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud) contains transactions made by credit cards in September 2013 by european cardholders. 
+Transaction data contains only numerical input variables which are the result of a PCA transformation, available in the following link [csv file](https://www.kaggle.com/mlg-ulb/creditcardfraud#creditcard.csv), resulting into a numerical value input tensor of size 1 x 30.
+
+We've decided to extend the initial dataset in the sense that for each Transaction data, we generate random deterministic Reference data, commonly used to enrich financial transactions information. In the financial service industry and regulatory agencies, the reference data that defines and describes such financial transactions, can cover all relevant particulars for highly complex transactions with multiple dependencies, entities, and contingencies, thus resulting in a larger numerical value input tensor of size 1 x 256. 
+
+
+Following the previously described, the predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction (1 x 30 tensor) and reference data (1 x 256 tensor) and with a single output tensor (1 x 2 tensor), presenting the fraudulent and genuine probabilities of each financial transaction.
 
 
 ## Installation
@@ -38,7 +47,7 @@ cd ../aibench_run_inference_flask_tensorflow && go install
 
 ## How to use aibench
 
-Using aibench for benchmarking inference performance involves 4 phases: model setup, transaction data parsing and consequent reference data generation, reference data loading, and inference query execution.
+Using aibench for benchmarking inference performance involves 4 phases: model setup, transaction data parsing and consequent reference data generation, reference data loading, and inference query execution, explained in detail in the following sections.
 
 ### 1. Model setup 
 This step is specific for each DL solution being tested ( see Current DL solutions supported above ). 
@@ -60,19 +69,8 @@ redis-cli -x AI.MODELSET financialNet \
 
 ### 2. Transaction data parsing and Reference Data Generation
 
-So that benchmarking results are not affected by generating data on-the-fly, with aibench you generate the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking phases. 
+So that benchmarking results are not affected by generating data on-the-fly, with aibench you generate the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking and reference data loading phases. All inference benchamarks use the same dataset, built based uppon the [Kaggle Financial Transactions Dataset csv file](https://www.kaggle.com/mlg-ulb/creditcardfraud#creditcard.csv) and random deterministic Reference data, if using the same random seed.
 
-The following subsection describes in detail the data parsing and data generation required for each specific use case.
-
-
-#### 2.1 Creditcard-fraud from [Kaggle Competition](https://www.kaggle.com/dalpozz/creditcardfraud). 
-
-The datasets contains transactions made by credit cards in September 2013 by european cardholders. 
-The predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction and reference data. 
-
-**Transaction data** contains only numerical input variables which are the result of a PCA transformation, avaible in the following link [csv file](https://www.kaggle.com/mlg-ulb/creditcardfraud#creditcard.csv), resulting into a **1 x 30 input tensor**. 
-
-Likewise, for each **Transaction data**, we generate random deterministic **Reference data**, resulting into numerical input variables to simulated reference data features usually available from cardholders, resulting into an of **1 x 256 input tensor**.
 
 ```bash
 # make sure you're on the root project folder
@@ -86,6 +84,18 @@ aibench_generate_data \
 ```
 
 ### 3. Reference Data Loading
+
+We consider that the reference data that defines and describes the financial transactions already resides on a datastore common to all benchmarks. We've decided to use Redis as the primary (and only) datastore for the inference benchmarks. The reference data tensors will be stored in redis in two distinct formats:
+ - RedisAI BLOB Tensor, following the pattern referenceTensor:[uniqueId]. 
+ - Redis Binary-safe strings, following the pattern referenceBLOB:[uniqueId].
+ 
+ An an example for the referenceData 1 aibench_load_data will issue the following commands:
+
+ ```
+"AI.TENSORSET" "referenceTensor:1" "FLOAT" "1" "256" "BLOB" "( binary data representation of [256]float32 )"
+"SET" "referenceBLOB:1" "( binary data representation of [256]float32 )"
+ ```
+ After having executed step 2 ( aibench_generate_data ), you can proceed with the reference data loading to the primary datastore, issuing the following command:
 
 ```bash
 # make sure you're on the root project folder
