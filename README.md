@@ -124,7 +124,11 @@ cd $GOPATH/src/github.com/filipecosta90/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_redisai \
-          -max-queries 10000 -workers 16 -print-interval 10000 -model financialNet
+         -workers 16 \
+         -burn-in 10 -max-queries 100010 \
+         -print-interval 0 -reporting-period 1000ms \
+         -model financialNet \
+         -host redis://127.0.0.1:6379
 ```
 
 You can change the value of the `-workers` flag to

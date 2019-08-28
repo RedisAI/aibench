@@ -16,11 +16,14 @@ cd $GOPATH/src/github.com/filipecosta90/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_flask_tensorflow \
-         -max-queries 100000 -workers 16 -print-interval 25000 \
+         -workers 16 \
+         -burn-in 10 -max-queries 100010 \
+         -print-interval 0 -reporting-period 1000ms \
          -restapi-host localhost:8000 \
          -restapi-request-uri /v2/predict \
          -redis-host localhost:6379
 ```
+
 
 #### Sequence diagram - DL REST API Solution
 

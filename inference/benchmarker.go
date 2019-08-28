@@ -131,7 +131,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	if b.workers == 0 {
 		panic("must have at least one worker")
 	}
-	if b.sp.burnIn > b.limit {
+	if b.sp.burnIn > b.limit && b.limit > 0 {
 		panic("burn-in is larger than limit")
 	}
 	b.ch = make(chan []byte, b.workers)
@@ -230,7 +230,7 @@ func (b *BenchmarkRunner) report(period time.Duration, start time.Time ) {
 	prevTime := start
 	prevInfCount := uint64(0)
 
-	fmt.Printf("time,total inferences,instantaneous inferences/s,overall inferences/s\n")
+	fmt.Printf("time (ns),total inferences,instantaneous inferences/s,overall inferences/s\n")
 	for now := range time.NewTicker(period).C {
 		infCount := atomic.LoadUint64(&b.inferenceCount)
 
@@ -239,7 +239,7 @@ func (b *BenchmarkRunner) report(period time.Duration, start time.Time ) {
 		instantInfRate := float64(infCount-prevInfCount) / float64(took.Seconds())
 		overallInfRate := float64(infCount) / float64(sinceStart.Seconds())
 
-		fmt.Printf("%d,%d,%0.2f,%0.2f\n", now.Unix(), infCount, instantInfRate, overallInfRate)
+		fmt.Printf("%d,%d,%0.2f,%0.2f\n", now.UnixNano(), infCount, instantInfRate, overallInfRate)
 
 		prevInfCount = infCount
 		prevTime = now
