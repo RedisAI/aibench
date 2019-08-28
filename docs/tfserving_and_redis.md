@@ -108,19 +108,3 @@ curl --data @$TESTDATA/tensorflow_serving_inference_payload.json -X POST http://
 ### Production Installation -- Install TensorFlow Serving on production VM
 
 TBD
-
-## Installation -- TFServing and Redis Benchmark Go program
-After installing all Prerequisites from the previous section, the easiest way to get and install the TFServing and Redis Benchmark Go program is to use
-`go get` and then `go install`. :
-
-```bash
-# Fetch aibench and its dependencies
-go get github.com/filipecosta90/aibench
-cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
-go get ./...
-
-# Install desired binaries. At a minimum this includes aibench_load_referencedata, and one aibench_run_inference_* binary:
-cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
-cd aibench_load_referencedata && go install
-cd ../aibench_run_inference_tensorflow_serving && go install
-```

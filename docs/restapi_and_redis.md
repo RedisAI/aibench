@@ -47,51 +47,8 @@ export TF_MODEL_PATH=$GOPATH/src/github.com/filipecosta90/aibench/tests/models/t
 python3 server.py
 
 # Query the model using the predict API
-curl  -H "Content-Type: application/json" \
-      --data @$TESTDATA/models/tensorflow/tensorflow_serving_inference_payload.json \
-      -X POST http://localhost:8000/predict
-
-# Returns => {
-               "outputs": [
-                 [
-                   0.9055531620979309, 
-                   0.09444686770439148
-                 ]
-               ]
-             }
-
+# TBD
 ```
-
-### Local Installation -- with tensorwerk flask-optim-cpu Docker image
-
-```bash
-docker pull tensorwerk/raibenchmarks:flask-optim-cpu
-cd $GOPATH/src/github.com/filipecosta90/aibench
-
-# Location of credit card fraud model
-TESTDATA="$(pwd)/tests"
-
-# Start Guinicorn+Flask+ TF Backend container and open the REST API port
-docker run --read-only -v $TESTDATA/models/tensorflow:/root/data \
-    --read-only -v $TESTDATA/servers/flask:/root \
-    -p 8000:8000 --name server -d --rm tensorwerk/raibenchmarks:flask-optim-cpu
-
-# Query the model using the predict API
-curl  -H "Content-Type: application/json" \
-      --data @$TESTDATA/models/tensorflow/tensorflow_serving_inference_payload.json \
-      -X POST http://localhost:8000/predict
-
-# Returns => {
-               "outputs": [
-                 [
-                   0.9055531620979309, 
-                   0.09444686770439148
-                 ]
-               ]
-             }
-
-```
-
 
 ### Production Installation -- Install Guinicorn, Flask, and Tensorflow backend on production VM
 
