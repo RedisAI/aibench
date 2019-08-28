@@ -16,7 +16,7 @@ cd $GOPATH/src/github.com/filipecosta90/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_flask_tensorflow \
-         -max-queries 10000 -workers 16 -print-interval 2000 \
+         -max-queries 100000 -workers 16 -print-interval 25000 \
          -restapi-host localhost:8000 \
          -restapi-request-uri /v2/predict \
          -redis-host localhost:6379

@@ -16,7 +16,7 @@ cd $GOPATH/src/github.com/filipecosta90/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_redisai \
-         -max-queries 200000 -workers 16 -print-interval 100000 \
+         -max-queries 100000 -workers 16 -print-interval 25000 \
          -model financialNet \
          -host redis://127.0.0.1:6379 
 ```
