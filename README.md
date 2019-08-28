@@ -32,6 +32,8 @@ cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
 cd aibench_generate_data && go install
 cd ../aibench_load_data && go install
 cd ../aibench_run_inference_redisai && go install
+cd ../aibench_run_inference_tensorflow_serving && go install
+cd ../aibench_run_inference_flask_tensorflow && go install
 ```
 
 ## How to use aibench

@@ -4,16 +4,16 @@
 package main
 
 import (
-	"encoding/binary"
+	"bytes"
 	"flag"
 	"fmt"
+	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 	"github.com/valyala/fasthttp"
 	"log"
-	"math"
-	"strings"
+	"mime/multipart"
 	"sync"
 	"time"
 )
@@ -78,7 +78,7 @@ func (p *Processor) Close() {
 
 }
 
-func newProcessor() *inference.Processor { return &Processor{} }
+func newProcessor() inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.Wg = wg
@@ -93,11 +93,6 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 }
 
-func Float32frombytes(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
-	float := math.Float32frombits(bits)
-	return float
-}
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
 
@@ -105,28 +100,40 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-
-	referenceDataKeyName := "referenceBLOB:" + q[0]
+	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idS := fmt.Sprintf("%d", idUint64)
+	transactionValues := q[8:128]
+	referenceDataKeyName := "referenceBLOB:" + idS
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
 	req.Header.SetContentTypeBytes(strContentType)
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
 	res := fasthttp.AcquireResponse()
-	transactionString := strings.Join(q[1:31], ",")
+
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	transPart, err := writer.CreateFormFile("transaction","transaction")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	transPart.Write(transactionValues)
+
 
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
 		log.Fatalln(redisErr)
 	}
-	var referenceFloats []string
-	for i := 0; i < 256; i++ {
-		value := Float32frombytes(redisRespReferenceBytes[4*i : 4*(i+1)])
-		referenceFloats = append(referenceFloats, fmt.Sprintf("%f", value))
+
+	refPart, err := writer.CreateFormFile("reference","reference")
+	if err != nil {
+		log.Fatalln(err)
 	}
-	bodyJSON := []byte(fmt.Sprintf(`{"inputs":{"transaction":[[%s]],"reference":[%s]}}`, transactionString, strings.Join(referenceFloats, ",")))
-	req.SetBody(bodyJSON)
+	refPart.Write(redisRespReferenceBytes)
+
+	req.SetBody(body.Bytes())
 	if err := p.httpclient.Do(req, res); err != nil {
 		fasthttp.ReleaseResponse(res)
 		log.Fatalln(err)
