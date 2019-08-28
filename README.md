@@ -13,10 +13,10 @@ Current DL solutions supported:
 ## Current use cases
 
 
-Currently, aibench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on 
+Currently, aibench supports one use case -- creditcard-fraud from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on 
 anonymized credit card transactions and reference data. 
 
-The initial dataset from [Kaggle](https://www.kaggle.com/dalpozz/creditcardfraud) contains transactions made by credit cards in September 2013 by european cardholders. 
+The initial dataset from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) contains transactions made by credit cards in September 2013 by european cardholders. 
 Transaction data contains only numerical input variables which are the result of a PCA transformation, available in the following link [csv file](https://www.kaggle.com/mlg-ulb/creditcardfraud#creditcard.csv), resulting into a numerical value input tensor of size 1 x 30.
 
 We've decided to extend the initial dataset in the sense that for each Transaction data, we generate random deterministic Reference data, commonly used to enrich financial transactions information. In the financial service industry and regulatory agencies, the reference data that defines and describes such financial transactions, can cover all relevant particulars for highly complex transactions with multiple dependencies, entities, and contingencies, thus resulting in a larger numerical value input tensor of size 1 x 256. 
@@ -24,7 +24,9 @@ We've decided to extend the initial dataset in the sense that for each Transacti
 
 Following the previously described, the predictive model to be developed is a neural network implemented in tensorflow with input tensors containing both transaction (1 x 30 tensor) and reference data (1 x 256 tensor) and with a single output tensor (1 x 2 tensor), presenting the fraudulent and genuine probabilities of each financial transaction.
 
+### Transaction data dataset characteristics
 
+The creditcard-fraud dataset from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) contains transactions that occurred in two days, where we have 492 frauds out of 284,807 transactions. Each transaction data tensor represents 120 Bytes of Data ( 30 x 4 Bytes ), whereas each reference data tensor represents 1024 Bytes of Data ( 256 * 4 Bytes ). 
 ## Installation
 
 aibench is a collection of Go programs (with some auxiliary bash and Python
@@ -95,6 +97,9 @@ We consider that the reference data that defines and describes the financial tra
 "AI.TENSORSET" "referenceTensor:1" "FLOAT" "1" "256" "BLOB" "( binary data representation of [256]float32 )"
 "SET" "referenceBLOB:1" "( binary data representation of [256]float32 )"
  ```
+
+To fully contain the dataset, the datastore will require at minimum 570MB of space, which already accounts for keys used memory space. 
+
  After having executed step 2 ( aibench_generate_data ), you can proceed with the reference data loading to the primary datastore, issuing the following command:
 
 ```bash
