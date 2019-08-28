@@ -176,7 +176,7 @@ func (s *statGroup) push(n float64, totalResults uint64, timedOut bool, query st
 
 // string makes a simple description of a statGroup.
 func (s *statGroup) stringQueryLatencyStatistical() string {
-	return fmt.Sprintf("+ Query execution latency (statistical histogram):\n\tmin: %8.2f ms,  mean: %8.2f ms, q25: %8.2f ms, med(q50): %8.2f ms, q75: %8.2f ms, q99: %8.2f ms, max: %8.2f ms, stddev: %8.2fms, sum: %5.3f sec, count: %d, timedOut count: %d\n", s.min, s.mean, s.latencyStatisticalHistogram.Quantile(0.25), s.latencyStatisticalHistogram.Quantile(0.50), s.latencyStatisticalHistogram.Quantile(0.75), s.latencyStatisticalHistogram.Quantile(0.99), s.max, s.stdDev, s.sum/1e3, s.count, s.timedOutCount)
+	return fmt.Sprintf("+ Inference execution latency (statistical histogram):\n\tmin: %8.2f ms,  mean: %8.2f ms, q25: %8.2f ms, med(q50): %8.2f ms, q75: %8.2f ms, q99: %8.2f ms, max: %8.2f ms, stddev: %8.2fms, sum: %5.3f sec, count: %d, timedOut count: %d\n", s.min, s.mean, s.latencyStatisticalHistogram.Quantile(0.25), s.latencyStatisticalHistogram.Quantile(0.50), s.latencyStatisticalHistogram.Quantile(0.75), s.latencyStatisticalHistogram.Quantile(0.99), s.max, s.stdDev, s.sum/1e3, s.count, s.timedOutCount)
 }
 
 // stringQueryResponseSizeFullHistogram returns a string histogram of Query Response Size (#docs)

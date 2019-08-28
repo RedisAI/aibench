@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -33,12 +34,15 @@ type BenchmarkRunner struct {
 	debug          int
 	fileName       string
 	seed           int64
+	reportingPeriod time.Duration
 
 	// non-flag fields
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *producer
 	ch      chan []byte
+	inferenceCount uint64
+
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -59,6 +63,8 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
+	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 10*time.Second, "Period to report write stats")
+
 	return runner
 }
 
@@ -140,9 +146,17 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		go b.processorHandler(&wg, queryPool, processorCreateFn(), i)
 	}
 
+
+
 	// Read in jobs, closing the job channel when done:
 	// Wall clock start time
 	wallStart := time.Now()
+
+	// Start background reporting process
+	if b.reportingPeriod.Nanoseconds() > 0 {
+		go b.report(b.reportingPeriod, wallStart)
+	}
+
 	br := b.scanner.setReader(b.GetBufferedReader())
 	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
 	close(b.ch)
@@ -184,6 +198,8 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 		if err != nil {
 			panic(err)
 		}
+
+		atomic.AddUint64(&b.inferenceCount, 1)
 		b.sp.sendStats(stats)
 
 		// If PrewarmQueries is set, we run the inference as 'cold' first (see above),
@@ -207,4 +223,25 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	close(responseSizesChan)
 
 	wg.Done()
+}
+
+// report handles periodic reporting of loading stats
+func (b *BenchmarkRunner) report(period time.Duration, start time.Time ) {
+	prevTime := start
+	prevInfCount := uint64(0)
+
+	fmt.Printf("time,total inferences,instantaneous inferences/s,overall inferences/s\n")
+	for now := range time.NewTicker(period).C {
+		infCount := atomic.LoadUint64(&b.inferenceCount)
+
+		sinceStart := now.Sub(start)
+		took := now.Sub(prevTime)
+		instantInfRate := float64(infCount-prevInfCount) / float64(took.Seconds())
+		overallInfRate := float64(infCount) / float64(sinceStart.Seconds())
+
+		fmt.Printf("%d,%d,%0.2f,%0.2f\n", now.Unix(), infCount, instantInfRate, overallInfRate)
+
+		prevInfCount = infCount
+		prevTime = now
+	}
 }
