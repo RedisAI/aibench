@@ -27,9 +27,6 @@ var RedisAIPool = sync.Pool{
 }
 
 // NewRediSearch returns a new RedisAI Query instance
-func NewRediSearch() *RedisAI {
-	return RedisAIPool.Get().(*RedisAI)
-}
 
 // GetID returns the ID of this Query
 func (q *RedisAI) GetID() uint64 {

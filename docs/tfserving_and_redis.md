@@ -1,9 +1,9 @@
-# AIBench Supplemental Guide: Tensorflow Serving and Redis
+# aibench Supplemental Guide: Tensorflow Serving and Redis
 
 ### Benchmarking inference performance -- TFServing and Redis Benchmark Go program
 
-To measure inference performance in AIBench, you first need to load
-the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/AIBench#reference-data-loading). 
+To measure inference performance in aibench, you first need to load
+the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/aibench#reference-data-loading). 
 
 Once the data is loaded,
 just use the corresponding `aibench_run_inference_tensorflow_serving` binary for the DL Solution
@@ -11,14 +11,14 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/AIBench
-cat ./tests/data/creditcard.csv.gz \
+cd $GOPATH/src/github.com/filipecosta90/aibench
+cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_tensorflow_serving \
          -max-queries 10000 -workers 16 -print-interval 2000 \
          -model financialNet -model-version 2 \
          -tensorflow-serving-host localhost:8500 \
-         -redis-host localhost:6379 
+         -redis-host localhost:6379
 ```
 
 #### Sequence diagram - Tensorflow Serving and Redis Solution
@@ -58,7 +58,7 @@ The simplest way to get it, is to run
 
 
 ```bash
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 mkdir -p tmp && cd tmp
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/serving.git
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/tensorflow.git
@@ -74,9 +74,9 @@ protoc $PROTOC_OPTS tensorflow/tensorflow/core/example/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/lib/core/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
 
-# move vendor folder to $GOPATH/src/github.com/filipecosta90/AIBench
-rm -rf $GOPATH/src/github.com/filipecosta90/AIBench/vendor
-mv vendor $GOPATH/src/github.com/filipecosta90/AIBench/.
+# move vendor folder to $GOPATH/src/github.com/filipecosta90/aibench
+rm -rf $GOPATH/src/github.com/filipecosta90/aibench/vendor
+mv vendor $GOPATH/src/github.com/filipecosta90/aibench/.
 
 # remove tmp dir
 cd .. && rm -rf tmp
@@ -88,7 +88,7 @@ cd .. && rm -rf tmp
 
 ```bash
 docker pull tensorflow/serving
-cd $GOPATH/src/github.com/filipecosta90/AIBench
+cd $GOPATH/src/github.com/filipecosta90/aibench
 
 # Location of credit card fraud model
 TESTDATA="$(pwd)/tests/models/tensorflow"
@@ -114,13 +114,13 @@ After installing all Prerequisites from the previous section, the easiest way to
 `go get` and then `go install`. :
 
 ```bash
-# Fetch AIBench and its dependencies
-go get github.com/filipecosta90/AIBench
-cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+# Fetch aibench and its dependencies
+go get github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
 go get ./...
 
 # Install desired binaries. At a minimum this includes aibench_load_referencedata, and one aibench_run_inference_* binary:
-cd $GOPATH/src/github.com/filipecosta90/AIBench/cmd
+cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
 cd aibench_load_referencedata && go install
 cd ../aibench_run_inference_tensorflow_serving && go install
 ```

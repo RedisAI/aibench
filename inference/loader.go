@@ -5,15 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"sync"
 	"time"
 )
 
-const (
-	defaultLoadSize = 4 << 20 // 4 MB
-)
 
 // LoadRunner contains the common components for running a inference benchmarking
 // program against a database.
@@ -22,14 +18,13 @@ type LoadRunner struct {
 	limit         uint64
 	workers       uint
 	fileName      string
-	skipFirstLine bool
-	seed          int64
+	debug int
 
 	// non-flag fields
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *producer
-	ch      chan []string
+	ch      chan []byte
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -40,11 +35,11 @@ func NewLoadRunner() *LoadRunner {
 	runner.sp = &statProcessor{
 		limit: &runner.limit,
 	}
-	flag.Uint64Var(&runner.limit, "max-queries", 0, "Limit the number of queries to send, 0 = no limit")
+	flag.Uint64Var(&runner.limit, "max-inserts", 0, "Limit the number of inserts, 0 = no limit")
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
-	flag.BoolVar(&runner.skipFirstLine, "skip-first-line", true, "Skip first line of csv (default true).")
-	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
+	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
+
 	return runner
 }
 
@@ -62,7 +57,8 @@ type Loader interface {
 	Init(workerNum int, wg *sync.WaitGroup)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessLoadQuery(q []string) ([]*Stat, error)
+	ProcessLoadQuery(q []byte, debug int ) ([]*Stat, error)
+	Close()
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -71,6 +67,7 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 		if len(b.fileName) > 0 {
 			// Read from specified file
 			file, err := os.Open(b.fileName)
+
 			if err != nil {
 				panic(fmt.Sprintf("cannot open file for read %s: %v", b.fileName, err))
 			}
@@ -88,12 +85,10 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 // read in the input, execute the queries, and then does cleanup.
 func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) {
 
-	rand.Seed(b.seed)
-
 	if b.workers == 0 {
 		panic("must have at least one worker")
 	}
-	b.ch = make(chan []string, b.workers)
+	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
 	go b.sp.process(b.workers)
@@ -109,7 +104,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	// Wall clock start time
 	wallStart := time.Now()
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, b.skipFirstLine)
+	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug )
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -133,11 +128,13 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	processor.Init(workerNum, pwg)
 
 	for query := range b.ch {
-		_, err := processor.ProcessLoadQuery(query)
+		_, err := processor.ProcessLoadQuery(query, b.debug)
 		if err != nil {
 			panic(err)
 		}
 	}
+
+	processor.Close()
 
 	//pwg.Wait()
 

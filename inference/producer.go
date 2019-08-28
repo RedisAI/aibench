@@ -1,11 +1,13 @@
 package inference
 
 import (
-	"encoding/csv"
+	"fmt"
+	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"io"
-	"log"
+	"os"
 	"strconv"
 	"sync"
+	"sync/atomic"
 )
 
 // producer is used to read in TwoWordQueries from a Reader where they are
@@ -27,30 +29,33 @@ func (s *producer) setReader(r io.Reader) *producer {
 }
 
 // produce reads encoded inference queries and places them into a channel
-func (s *producer) produce(pool *sync.Pool, c chan []string, skip_first bool) uint64 {
-	reader := csv.NewReader(s.r)
+func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int) uint64 {
 	n := uint64(0)
-
 	for {
-		if *s.limit > 0 && n > *s.limit {
+		bytes := make([]byte, nbytes)
+
+		if *s.limit > 0 && n >= *s.limit {
 			// request queries limit reached, time to quit
 			break
 		}
 
-		line, error := reader.Read()
-		if error == io.EOF {
+		io.ReadFull(s.r, bytes)
+		readBytes, err := io.ReadFull(s.r, bytes)
+		if readBytes == 0 {
 			break
-		} else if error != nil {
-			log.Fatal(error)
 		}
-		if n > 0 && skip_first == true || skip_first == false {
-			ns := []string{strconv.FormatUint(n, 10)}
-			ns = append(ns, line...)
-			c <- ns
-
+		if err != nil {
+			panic(fmt.Sprintf("expected to read %d bytes but got %d on row %d", nbytes, readBytes, n))
 		}
+		row := fraud.Uint64frombytes(bytes[0:8])
 
-		n++
-	}
+		if debug > 0 {
+			if n%1000 == 0 {
+				fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(n)) + ". Sending Row: " + strconv.Itoa(int(row)) )
+			}
+		}
+		c <- bytes
+		atomic.AddUint64(&n, 1)
+		}
 	return n
 }

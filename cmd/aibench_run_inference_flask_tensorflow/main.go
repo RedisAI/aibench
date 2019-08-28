@@ -4,34 +4,33 @@
 package main
 
 import (
-	"encoding/binary"
+	"bytes"
 	"flag"
 	"fmt"
+	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 	"github.com/valyala/fasthttp"
 	"log"
-	"math"
-	"strconv"
-	"strings"
+	"mime/multipart"
 	"sync"
 	"time"
 )
 
 // Program option vars:
 var (
-	redis_host   string
-	restapi_host string
-	restapi_request_uri string
-	model        string
-	version      int
- strPost = []byte("POST")
-	strContentType = []byte("application/json")
+	redisHost         string
+	restapiHost       string
+	restapiRequestUri string
+	_                 string
+	_                 int
+	strPost           = []byte("POST")
+	//strContentType    = []byte("multipart/mixed")
 
 	strRequestURI = []byte("")
-	strHost = []byte("")
-	showExplain bool
+	strHost       = []byte("")
+	showExplain   bool
 )
 
 // Global vars:
@@ -46,18 +45,18 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&redis_host, "redis-host", "127.0.0.1:6379", "Redis host address and port")
-	flag.StringVar(&restapi_host, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
-	flag.StringVar(&restapi_request_uri, "restapi-request-uri", "/predict", "REST API request URI")
+	flag.StringVar(&redisHost, "redis-host", "127.0.0.1:6379", "Redis host address and port")
+	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
+	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v1/predict", "REST API request URI")
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
-		Addr: redis_host,
+		Addr: redisHost,
 	})
 }
 
 func main() {
-	strRequestURI = []byte(restapi_request_uri)
-	strHost = []byte(restapi_host)
+	strRequestURI = []byte(restapiRequestUri)
+	strHost = []byte(restapiHost)
 
 	runner.Run(&inference.RedisAIPool, newProcessor)
 }
@@ -75,6 +74,10 @@ type Processor struct {
 	httpclient *fasthttp.HostClient
 }
 
+func (p *Processor) Close() {
+
+}
+
 func newProcessor() inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
@@ -86,59 +89,58 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 		printResponse: runner.DoPrintResponses(),
 	}
 	p.httpclient = &fasthttp.HostClient{
-		Addr: restapi_host,
+		Addr: restapiHost,
 	}
 }
 
-func convertSliceStringToFloat(transactionDataString []string) []float32 {
-	res := make([]float32, len(transactionDataString))
-	for i := range transactionDataString {
-		value, _ := strconv.ParseFloat(transactionDataString[i], 64)
-		res[i] = float32(value)
-	}
-	return res
-}
 
-func Float32frombytes(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
-	float := math.Float32frombits(bits)
-	return float
-}
-
-func (p *Processor) ProcessInferenceQuery(q []string, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-
-	referenceDataKeyName := "referenceBLOB:" + q[0]
+	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idS := fmt.Sprintf("%d", idUint64)
+	transactionValues := q[8:128]
+	referenceDataKeyName := "referenceBLOB:" + idS
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
-	req.Header.SetContentTypeBytes(strContentType)
+
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
 	res := fasthttp.AcquireResponse()
-	transaction_string := strings.Join(q[1:31], ",")
-
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	transPart, err := writer.CreateFormFile("transaction","transaction")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	transPart.Write(transactionValues)
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
 		log.Fatalln(redisErr)
 	}
-	referenceFloats := []string{}
-	for i := 0; i < 256; i++ {
-		value := Float32frombytes(redisRespReferenceBytes[4*i:4*(i+1)])
-		referenceFloats = append(referenceFloats,fmt.Sprintf("%f", value))
-	}
-	bodyJSON := []byte(fmt.Sprintf(`{"inputs":{"transaction":[[%s]],"reference":[%s]}}`,transaction_string, strings.Join(referenceFloats, ",") ))
-	req.SetBody(bodyJSON)
-	if err := p.httpclient.Do(req, res); err != nil {
-		fasthttp.ReleaseResponse(res)
+	refPart, err := writer.CreateFormFile("reference","reference")
+	if err != nil {
 		log.Fatalln(err)
-		}
+	}
+	refPart.Write(redisRespReferenceBytes)
+	writer.Close()
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.SetBody(body.Bytes())
+	err = p.httpclient.Do(req, res);
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
 	fasthttp.ReleaseRequest(req)
+
+	if res.StatusCode() != 200 {
+		log.Fatalln(  fmt.Sprintf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode()  ) )
+	}
+	if err != nil {
+		fasthttp.ReleaseResponse(res)
+		log.Fatalln(err)
+	}
 	if p.opts.printResponse {
 		body := res.Body()
 		fmt.Println("RESPONSE: ", string(body))

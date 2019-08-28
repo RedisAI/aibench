@@ -38,11 +38,6 @@ func GetStat() *Stat {
 }
 
 // GetPartialStat returns a partial Stat for use from a pool
-func GetPartialStat() *Stat {
-	s := GetStat()
-	s.isPartial = true
-	return s
-}
 
 // Init safely initializes a Stat while minimizing heap allocations.
 func (s *Stat) Init(label []byte, value float64, totalResults uint64, timedOut bool, query string) *Stat {

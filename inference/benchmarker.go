@@ -16,8 +16,9 @@ const (
 	labelAllQueries  = "All queries"
 	labelColdQueries = "Cold queries"
 	labelWarmQueries = "Warm queries"
+	rowBenchmarkNBytes = 8 + 120 + 1024
+	defaultReadSize    = 4 << 20 // 4 MB
 
-	defaultReadSize = 4 << 20 // 4 MB
 )
 
 // LoadRunner contains the common components for running a inference benchmarking
@@ -31,14 +32,13 @@ type BenchmarkRunner struct {
 	printResponses bool
 	debug          int
 	fileName       string
-	skipFirstLine  bool
 	seed           int64
 
 	// non-flag fields
 	br      *bufio.Reader
 	sp      *statProcessor
 	scanner *producer
-	ch      chan []string
+	ch      chan []byte
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -56,7 +56,6 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
-	flag.BoolVar(&runner.skipFirstLine, "skip-first-line", true, "Skip first line of csv (default true).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
@@ -92,7 +91,10 @@ type Processor interface {
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessInferenceQuery(q []string, isWarm bool) ([]*Stat, error)
+	ProcessInferenceQuery(q []byte, isWarm bool) ([]*Stat, error)
+
+	// Close forces any work buffered to be sent to the DB being tested prior to going further
+	Close()
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -126,7 +128,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	if b.sp.burnIn > b.limit {
 		panic("burn-in is larger than limit")
 	}
-	b.ch = make(chan []string, b.workers)
+	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
 	go b.sp.process(b.workers)
@@ -142,7 +144,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Wall clock start time
 	wallStart := time.Now()
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, b.skipFirstLine)
+	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -163,8 +165,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
+		_ = pprof.WriteHeapProfile(f)
+		_ = f.Close()
 	}
 }
 
@@ -197,6 +199,8 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 		}
 		queryPool.Put(query)
 	}
+
+	processor.Close()
 
 	//pwg.Wait()
 	close(metricsChan)
