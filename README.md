@@ -77,7 +77,8 @@ So that benchmarking results are not affected by generating data on-the-fly, wit
 ```bash
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/filipecosta90/aibench
-gunzip -c ./tests/data/creditcard.csv.gz > /tmp/creditcard.csv
+cat ./tests/data/creditcard.csv.gz \
+          | gunzip > /tmp/creditcard.csv
 aibench_generate_data \
           -input-file /tmp/creditcard.csv \
           -use-case="creditcard-fraud" \
@@ -108,7 +109,8 @@ cd $GOPATH/src/github.com/filipecosta90/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_load_data \
-          -workers 16 
+          -reporting-period 1000ms \
+          -workers 16 -pipeline 100
 ```
 
 ### 4. Benchmarking inference performance

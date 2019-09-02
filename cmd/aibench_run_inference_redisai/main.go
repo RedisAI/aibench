@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
-	"github.com/filipecosta90/redisai-go/redisai"
+	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
@@ -36,7 +36,6 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
 	flag.StringVar(&model, "model", "", "model name")
 	flag.Parse()
@@ -45,7 +44,6 @@ func init() {
 		IdleTimeout: 240 * time.Second,
 		Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
 	}
-
 }
 
 func main() {
@@ -62,7 +60,7 @@ type Processor struct {
 	opts    *queryExecutorOptions
 	Metrics chan uint64
 	Wg      *sync.WaitGroup
-	pclient *redisai.PipelinedClient
+	pclient *redisai.Client
 }
 
 func (p *Processor) Close() {
@@ -81,7 +79,8 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 	p.Wg = wg
 	p.Metrics = m
-	p.pclient = redisai.ConnectPipelined(host, 3, cpool)
+	p.pclient = redisai.Connect(host, cpool)
+	p.pclient.Pipeline(3)
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
@@ -102,13 +101,13 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	p.pclient.TensorSet(transactionDataTensorName, redisai.TypeFloat, []int{1, 30}, transactionValues)
 	p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
 	p.pclient.TensorGet(classificationTensorName, redisai.TensorContentTypeValues)
-	err := p.pclient.ForceFlush()
+	err := p.pclient.Flush()
 	if err != nil {
 		log.Fatalf("Prediction failed:%v\n", err)
 	}
-	p.pclient.ActiveConn.Receive()
-	p.pclient.ActiveConn.Receive()
-	PredictResponse, err := p.pclient.ActiveConn.Receive()
+	p.pclient.Receive()
+	p.pclient.Receive()
+	PredictResponse, err := p.pclient.Receive()
 	took = float64(time.Since(start).Nanoseconds()) / 1e6
 
 	if p.opts.printResponse {

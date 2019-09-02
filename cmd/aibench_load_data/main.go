@@ -19,6 +19,7 @@ import (
 // Program option vars:
 var (
 	host string
+	pipelineSize uint
 )
 
 // Global vars:
@@ -31,6 +32,8 @@ var (
 func init() {
 	runner = inference.NewLoadRunner()
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
+	flag.UintVar(&pipelineSize, "pipeline", 10, "Redis pipeline size")
+
 	flag.Parse()
 
 	cpool = &redis.Pool{
@@ -46,23 +49,22 @@ func main() {
 
 type Loader struct {
 	Wg      *sync.WaitGroup
-	pclient *redisai.PipelinedClient
+	pclient *redisai.Client
 }
 
 func (p *Loader) Close() {
-	if p.pclient != nil {
-		p.pclient.Close()
-	}
+	p.pclient.Close()
 }
 
 func newProcessor() inference.Loader { return &Loader{} }
 
 func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 	p.Wg = wg
-	p.pclient = redisai.ConnectPipelined(host, 10, cpool)
+	p.pclient = redisai.Connect(host,  cpool)
+	p.pclient.Pipeline( uint32(pipelineSize) )
 }
 
-func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, error) {
+func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint64, error) {
 	if len(q) != (1024+8+120) {
 		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", (1024+8+120) ,  len(q) )
 	}
@@ -71,23 +73,20 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, error
 	copy(tmp, q[0:8])
 	copy(referenceValues, q[128:1152] )
 
-
-
 	idF := fraud.Uint64frombytes(tmp)
 	if debug > 0 {
 		//fmt.Printf("On Row: %d\n", idF )
 	}
 	id := "referenceTensor:" + fmt.Sprintf("%d", int(idF))
 	idBlob := "referenceBLOB:" + fmt.Sprintf("%d", int(idF))
-
-	_, errSet := cpool.Get().Do("SET", idBlob, referenceValues )
+	p.pclient.ActiveConnNX()
+	errSet := p.pclient.ActiveConn.Send( "SET", idBlob, referenceValues )
 	if errSet != nil {
 		log.Fatal(errSet)
 	}
-
 	err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 256}, referenceValues)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil, nil
+	return nil, uint64(2),nil
 }

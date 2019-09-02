@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -25,6 +26,9 @@ type LoadRunner struct {
 	sp      *statProcessor
 	scanner *producer
 	ch      chan []byte
+	reportingPeriod time.Duration
+	commandCount uint64
+
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -39,6 +43,8 @@ func NewLoadRunner() *LoadRunner {
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
+	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
+
 
 	return runner
 }
@@ -57,7 +63,7 @@ type Loader interface {
 	Init(workerNum int, wg *sync.WaitGroup)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessLoadQuery(q []byte, debug int ) ([]*Stat, error)
+	ProcessLoadQuery(q []byte, debug int ) ([]*Stat, uint64, error)
 	Close()
 }
 
@@ -91,7 +97,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
-	go b.sp.process(b.workers)
+	go b.sp.process(b.workers, false )
 
 	// Launch inference processors
 	var wg sync.WaitGroup
@@ -103,6 +109,12 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	// Read in jobs, closing the job channel when done:
 	// Wall clock start time
 	wallStart := time.Now()
+
+	// Start background reporting process
+	if b.reportingPeriod.Nanoseconds() > 0 {
+		go b.report(b.reportingPeriod, wallStart)
+	}
+
 	br := b.scanner.setReader(b.GetBufferedReader())
 	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug )
 	close(b.ch)
@@ -128,10 +140,11 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	processor.Init(workerNum, pwg)
 
 	for query := range b.ch {
-		_, err := processor.ProcessLoadQuery(query, b.debug)
+		_, ncommands, err := processor.ProcessLoadQuery(query, b.debug)
 		if err != nil {
 			panic(err)
 		}
+		atomic.AddUint64(&b.commandCount, ncommands)
 	}
 
 	processor.Close()
@@ -139,4 +152,26 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	//pwg.Wait()
 
 	wg.Done()
+}
+
+
+// report handles periodic reporting of loading stats
+func (b *LoadRunner) report(period time.Duration, start time.Time ) {
+	prevTime := start
+	prevInfCount := uint64(0)
+
+	fmt.Printf("time (ns),total commands,instantaneous commands/s,overall commands/s\n")
+	for now := range time.NewTicker(period).C {
+		infCount := atomic.LoadUint64(&b.commandCount)
+
+		sinceStart := now.Sub(start)
+		took := now.Sub(prevTime)
+		instantInfRate := float64(infCount-prevInfCount) / float64(took.Seconds())
+		overallInfRate := float64(infCount) / float64(sinceStart.Seconds())
+
+		fmt.Printf("%d,%d,%0.2f,%0.2f\n", now.UnixNano(), infCount, instantInfRate, overallInfRate)
+
+		prevInfCount = infCount
+		prevTime = now
+	}
 }

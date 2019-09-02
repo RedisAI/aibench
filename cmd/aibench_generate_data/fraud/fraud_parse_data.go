@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync/atomic"
 )
 
 // A FTSSimulator generates data similar to telemetry from Telegraf for only CPU metrics.
@@ -21,10 +22,10 @@ type FTSSimulator struct {
 
 // Next advances a Transaction to the next state in the generator.
 func (d *FTSSimulator) Next(p *serialize.Transaction) bool {
-	// Switch to the next document
-	if d.recordIndex >= uint64(len(d.records)) {
-		d.recordIndex = 0
-	}
+	//// Switch to the next document
+	//if d.recordIndex >= uint64(len(d.records)) {
+	//	d.recordIndex = 0
+	//}
 	return d.populateTransaction(p)
 }
 
@@ -35,9 +36,8 @@ func (d *FTSSimulator) populateTransaction(p *serialize.Transaction) bool {
 	p.TransactionValues = record.TransactionValues
 	p.ReferenceValues = record.ReferenceValues
 
-	ret := d.recordIndex < uint64(len(d.records))
-	d.recordIndex = d.recordIndex + 1
-	d.madeTransactions = d.madeTransactions + 1
+	ret := d.recordIndex < d.maxTransactions
+	atomic.AddUint64(&d.recordIndex, 1)
 	return ret
 }
 
@@ -62,18 +62,15 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 	}
 	transactionCount := uint64(0)
 	//skip first line
-	_, error := reader.Read()
-	if error != nil {
-		log.Fatal(error)
+	line, err := reader.Read()
+	if err != nil {
+		log.Fatal(err)
 	}
+	line, err = reader.Read()
+
 	for err != io.EOF && (transactionCount < limit || limit == 0) {
 
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-		}
+
 		qfloat := ConvertSliceStringToFloat(line)
 		qbytes := Float32bytes(qfloat[0])
 		for _, value := range qfloat[1:30] {
@@ -88,19 +85,14 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 		}
 		buf := make([]byte, 8)
 		binary.LittleEndian.PutUint64(buf, transactionCount)
-
 		transactions = append(transactions, serialize.Transaction{Id: buf, TransactionValues: qbytes, ReferenceValues: refBytes})
 		if debug > 0 {
 			if transactionCount%1000 == 0 {
 				fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(transactionCount)))
 			}
 		}
-		transactionCount++
-
-	}
-
-	if debug > 0 {
-		fmt.Fprintln(os.Stderr, "finished reading "+inputFilename)
+		atomic.AddUint64(&transactionCount, 1)
+		line, err = reader.Read()
 	}
 
 	maxPoints = uint64(len(transactions))
@@ -109,12 +101,14 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 		maxPoints = limit
 	}
 	sim := &FTSSimulator{&commonaibenchSimulator{
-		madeTransactions: 0,
 		maxTransactions:  maxPoints,
-
 		recordIndex: 0,
 		records:     transactions,
 	}}
+
+	if debug > 0 {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("finished reading %s, max transactions %d", inputFilename,maxPoints) )
+	}
 
 	return sim
 }

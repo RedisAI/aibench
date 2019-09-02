@@ -41,7 +41,7 @@ func (sp *statProcessor) sendStatsWarm(stats []*Stat) {
 
 // process collects latency results, aggregating them into summary
 // statistics. Optionally, they are printed to stderr at regular intervals.
-func (sp *statProcessor) process(workers uint) {
+func (sp *statProcessor) process(workers uint, printStats bool ) {
 	sp.c = make(chan *Stat, workers)
 	sp.wg.Add(1)
 	const allQueriesLabel = labelAllQueries
@@ -111,14 +111,16 @@ func (sp *statProcessor) process(workers uint) {
 		}
 	}
 
-	// the final stats output goes to stdout:
-	_, err := fmt.Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRun complete after %d queries with %d workers:\n", i-sp.burnIn, workers)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = writeStatGroupMap(os.Stdout, sp.StatsMapping)
-	if err != nil {
-		log.Fatal(err)
+	if printStats == true {
+		// the final stats output goes to stdout:
+		_, err := fmt.Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRun complete after %d queries with %d workers:\n", i-sp.burnIn, workers)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = writeStatGroupMap(os.Stdout, sp.StatsMapping)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	sp.wg.Done()

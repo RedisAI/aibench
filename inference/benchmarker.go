@@ -63,7 +63,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
-	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 10*time.Second, "Period to report write stats")
+	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
 
 	return runner
 }
@@ -137,7 +137,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
-	go b.sp.process(b.workers)
+	go b.sp.process(b.workers, true )
 
 	// Launch inference processors
 	var wg sync.WaitGroup

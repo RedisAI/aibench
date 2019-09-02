@@ -39,7 +39,6 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 			break
 		}
 
-		io.ReadFull(s.r, bytes)
 		readBytes, err := io.ReadFull(s.r, bytes)
 		if readBytes == 0 {
 			break

@@ -10,7 +10,6 @@ type commonaibenchSimulatorConfig struct {
 }
 
 type commonaibenchSimulator struct {
-	madeTransactions uint64
 	maxTransactions  uint64
 	recordIndex      uint64
 	records          []serialize.Transaction
@@ -18,5 +17,5 @@ type commonaibenchSimulator struct {
 
 // Finished tells whether we have simulated all the necessary documents
 func (s *commonaibenchSimulator) Finished() bool {
-	return s.madeTransactions >= s.maxTransactions
+	return s.recordIndex >= s.maxTransactions
 }
