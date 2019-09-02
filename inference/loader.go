@@ -11,24 +11,22 @@ import (
 	"time"
 )
 
-
 // LoadRunner contains the common components for running a inference benchmarking
 // program against a database.
 type LoadRunner struct {
 	// flag fields
-	limit         uint64
-	workers       uint
-	fileName      string
-	debug int
+	limit    uint64
+	workers  uint
+	fileName string
+	debug    int
 
 	// non-flag fields
-	br      *bufio.Reader
-	sp      *statProcessor
-	scanner *producer
-	ch      chan []byte
+	br              *bufio.Reader
+	sp              *statProcessor
+	scanner         *producer
+	ch              chan []byte
 	reportingPeriod time.Duration
-	commandCount uint64
-
+	commandCount    uint64
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -44,7 +42,6 @@ func NewLoadRunner() *LoadRunner {
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
-
 
 	return runner
 }
@@ -63,7 +60,7 @@ type Loader interface {
 	Init(workerNum int, wg *sync.WaitGroup)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessLoadQuery(q []byte, debug int ) ([]*Stat, uint64, error)
+	ProcessLoadQuery(q []byte, debug int) ([]*Stat, uint64, error)
 	Close()
 }
 
@@ -97,7 +94,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
-	go b.sp.process(b.workers, false )
+	go b.sp.process(b.workers, false)
 
 	// Launch inference processors
 	var wg sync.WaitGroup
@@ -116,7 +113,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) 
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug )
+	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -154,9 +151,8 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	wg.Done()
 }
 
-
 // report handles periodic reporting of loading stats
-func (b *LoadRunner) report(period time.Duration, start time.Time ) {
+func (b *LoadRunner) report(period time.Duration, start time.Time) {
 	prevTime := start
 	prevInfCount := uint64(0)
 

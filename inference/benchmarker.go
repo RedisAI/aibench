@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	labelAllQueries  = "All queries"
-	labelColdQueries = "Cold queries"
-	labelWarmQueries = "Warm queries"
+	labelAllQueries    = "All queries"
+	labelColdQueries   = "Cold queries"
+	labelWarmQueries   = "Warm queries"
 	rowBenchmarkNBytes = 8 + 120 + 1024
 	defaultReadSize    = 4 << 20 // 4 MB
 
@@ -26,23 +26,22 @@ const (
 // program against a database.
 type BenchmarkRunner struct {
 	// flag fields
-	dbName         string
-	limit          uint64
-	memProfile     string
-	workers        uint
-	printResponses bool
-	debug          int
-	fileName       string
-	seed           int64
+	dbName          string
+	limit           uint64
+	memProfile      string
+	workers         uint
+	printResponses  bool
+	debug           int
+	fileName        string
+	seed            int64
 	reportingPeriod time.Duration
 
 	// non-flag fields
-	br      *bufio.Reader
-	sp      *statProcessor
-	scanner *producer
-	ch      chan []byte
+	br             *bufio.Reader
+	sp             *statProcessor
+	scanner        *producer
+	ch             chan []byte
 	inferenceCount uint64
-
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -137,7 +136,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	b.ch = make(chan []byte, b.workers)
 
 	// Launch the stats processor:
-	go b.sp.process(b.workers, true )
+	go b.sp.process(b.workers, true)
 
 	// Launch inference processors
 	var wg sync.WaitGroup
@@ -145,8 +144,6 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		wg.Add(1)
 		go b.processorHandler(&wg, queryPool, processorCreateFn(), i)
 	}
-
-
 
 	// Read in jobs, closing the job channel when done:
 	// Wall clock start time
@@ -226,7 +223,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 }
 
 // report handles periodic reporting of loading stats
-func (b *BenchmarkRunner) report(period time.Duration, start time.Time ) {
+func (b *BenchmarkRunner) report(period time.Duration, start time.Time) {
 	prevTime := start
 	prevInfCount := uint64(0)
 

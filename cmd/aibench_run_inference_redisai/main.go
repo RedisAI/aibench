@@ -6,9 +6,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/filipecosta90/aibench/inference"
-	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
@@ -107,11 +107,18 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	}
 	p.pclient.Receive()
 	p.pclient.Receive()
-	PredictResponse, err := p.pclient.Receive()
+	resp, err := p.pclient.Receive()
+	data, err := redisai.ProcessTensorReplyMeta(resp, err)
+	PredictResponse, err := redisai.ProcessTensorReplyValues(data, err)
 	took = float64(time.Since(start).Nanoseconds()) / 1e6
-
+	if err != nil {
+		log.Fatalf("Prediction Receive() failed:%v\n", err)
+	}
 	if p.opts.printResponse {
-		fmt.Println("RESPONSE: ", PredictResponse)
+		if err != nil {
+			log.Fatalf("Response parsing failed:%v\n", err)
+		}
+		fmt.Println("RESPONSE: ", PredictResponse[2])
 	}
 	// VALUES
 	stat := inference.GetStat()

@@ -93,7 +93,6 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 }
 
-
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
@@ -112,7 +111,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	res := fasthttp.AcquireResponse()
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	transPart, err := writer.CreateFormFile("transaction","transaction")
+	transPart, err := writer.CreateFormFile("transaction", "transaction")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -122,7 +121,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	if redisErr != nil {
 		log.Fatalln(redisErr)
 	}
-	refPart, err := writer.CreateFormFile("reference","reference")
+	refPart, err := writer.CreateFormFile("reference", "reference")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -130,12 +129,12 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	writer.Close()
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.SetBody(body.Bytes())
-	err = p.httpclient.Do(req, res);
+	err = p.httpclient.Do(req, res)
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
 	fasthttp.ReleaseRequest(req)
 
 	if res.StatusCode() != 200 {
-		log.Fatalln(  fmt.Sprintf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode()  ) )
+		log.Fatalln(fmt.Sprintf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode()))
 	}
 	if err != nil {
 		fasthttp.ReleaseResponse(res)

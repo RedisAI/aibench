@@ -10,9 +10,9 @@ type commonaibenchSimulatorConfig struct {
 }
 
 type commonaibenchSimulator struct {
-	maxTransactions  uint64
-	recordIndex      uint64
-	records          []serialize.Transaction
+	maxTransactions uint64
+	recordIndex     uint64
+	records         []serialize.Transaction
 }
 
 // Finished tells whether we have simulated all the necessary documents

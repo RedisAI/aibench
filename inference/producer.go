@@ -50,11 +50,11 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 
 		if debug > 0 {
 			if n%1000 == 0 {
-				fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(n)) + ". Sending Row: " + strconv.Itoa(int(row)) )
+				fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(n))+". Sending Row: "+strconv.Itoa(int(row)))
 			}
 		}
 		c <- bytes
 		atomic.AddUint64(&n, 1)
-		}
+	}
 	return n
 }

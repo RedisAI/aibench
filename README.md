@@ -128,7 +128,7 @@ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | aibench_run_inference_redisai \
          -workers 16 \
          -burn-in 10 -max-queries 100010 \
-         -print-interval 0 -reporting-period 1000ms \
+         -print-interval 10000 -reporting-period 1000ms \
          -model financialNet \
          -host redis://127.0.0.1:6379
 ```

@@ -70,7 +70,6 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 
 	for err != io.EOF && (transactionCount < limit || limit == 0) {
 
-
 		qfloat := ConvertSliceStringToFloat(line)
 		qbytes := Float32bytes(qfloat[0])
 		for _, value := range qfloat[1:30] {
@@ -101,13 +100,13 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 		maxPoints = limit
 	}
 	sim := &FTSSimulator{&commonaibenchSimulator{
-		maxTransactions:  maxPoints,
-		recordIndex: 0,
-		records:     transactions,
+		maxTransactions: maxPoints,
+		recordIndex:     0,
+		records:         transactions,
 	}}
 
 	if debug > 0 {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("finished reading %s, max transactions %d", inputFilename,maxPoints) )
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("finished reading %s, max transactions %d", inputFilename, maxPoints))
 	}
 
 	return sim

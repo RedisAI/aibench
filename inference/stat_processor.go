@@ -41,7 +41,7 @@ func (sp *statProcessor) sendStatsWarm(stats []*Stat) {
 
 // process collects latency results, aggregating them into summary
 // statistics. Optionally, they are printed to stderr at regular intervals.
-func (sp *statProcessor) process(workers uint, printStats bool ) {
+func (sp *statProcessor) process(workers uint, printStats bool) {
 	sp.c = make(chan *Stat, workers)
 	sp.wg.Add(1)
 	const allQueriesLabel = labelAllQueries

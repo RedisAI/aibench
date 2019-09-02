@@ -18,7 +18,7 @@ import (
 
 // Program option vars:
 var (
-	host string
+	host         string
 	pipelineSize uint
 )
 
@@ -60,18 +60,18 @@ func newProcessor() inference.Loader { return &Loader{} }
 
 func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 	p.Wg = wg
-	p.pclient = redisai.Connect(host,  cpool)
-	p.pclient.Pipeline( uint32(pipelineSize) )
+	p.pclient = redisai.Connect(host, cpool)
+	p.pclient.Pipeline(uint32(pipelineSize))
 }
 
 func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint64, error) {
-	if len(q) != (1024+8+120) {
-		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", (1024+8+120) ,  len(q) )
+	if len(q) != (1024 + 8 + 120) {
+		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", (1024 + 8 + 120), len(q))
 	}
 	tmp := make([]byte, 8)
 	referenceValues := make([]byte, 1024)
 	copy(tmp, q[0:8])
-	copy(referenceValues, q[128:1152] )
+	copy(referenceValues, q[128:1152])
 
 	idF := fraud.Uint64frombytes(tmp)
 	if debug > 0 {
@@ -80,7 +80,7 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	id := "referenceTensor:" + fmt.Sprintf("%d", int(idF))
 	idBlob := "referenceBLOB:" + fmt.Sprintf("%d", int(idF))
 	p.pclient.ActiveConnNX()
-	errSet := p.pclient.ActiveConn.Send( "SET", idBlob, referenceValues )
+	errSet := p.pclient.ActiveConn.Send("SET", idBlob, referenceValues)
 	if errSet != nil {
 		log.Fatal(errSet)
 	}
@@ -88,5 +88,5 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil, uint64(2),nil
+	return nil, uint64(2), nil
 }
