@@ -138,55 +138,118 @@ control the level of parallel queries run at the same time. The
 resulting output will look similar to this:
 
 ```text
-after 2000 queries with 16 workers:
-All queries  :
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    22.70 ms, q25:    22.37 ms, med(q50):    22.71 ms, q75:    23.01 ms, q99:    24.09 ms, max:    34.71 ms, stddev:     0.77ms, sum: 45.391 sec, count: 2000, timedOut count: 0
+$ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz         | gunzip         | aibench_run_inference_redisai          -workers 16          -burn-in 10 -max-queries 100010          -print-interval 10000 -reporting-period 0ms          -model financialNet          -host redis://#########:6379 
 
-RedisAI Query:
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    22.70 ms, q25:    22.37 ms, med(q50):    22.71 ms, q75:    23.01 ms, q99:    24.09 ms, max:    34.71 ms, stddev:     0.77ms, sum: 45.391 sec, count: 2000, timedOut count: 0
+burn-in complete after 10 queries with 16 workers
+after 9990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.59 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.97 ms, q75:     1.01 ms, q99:     1.30 ms, max:     4.36 ms, stddev:     0.15ms, sum: 9.739 sec, count: 9990, timedOut count: 0
 
-
-after 4000 queries with 16 workers:
-All queries  :
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    23.34 ms, q25:    22.36 ms, med(q50):    22.71 ms, q75:    23.09 ms, q99:    32.35 ms, max:    34.71 ms, stddev:     2.44ms, sum: 93.367 sec, count: 4000, timedOut count: 0
-
-RedisAI Query:
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    23.34 ms, q25:    22.36 ms, med(q50):    22.71 ms, q75:    23.09 ms, q99:    32.35 ms, max:    34.71 ms, stddev:     2.44ms, sum: 93.367 sec, count: 4000, timedOut count: 0
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.59 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.97 ms, q75:     1.01 ms, q99:     1.30 ms, max:     4.36 ms, stddev:     0.15ms, sum: 9.739 sec, count: 9990, timedOut count: 0
 
 
-after 6000 queries with 16 workers:
-All queries  :
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.22 ms, q25:    22.36 ms, med(q50):    22.80 ms, q75:    23.94 ms, q99:    32.27 ms, max:    34.71 ms, stddev:     3.17ms, sum: 145.314 sec, count: 6000, timedOut count: 0
+after 19990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.21 ms, max:     4.36 ms, stddev:     0.12ms, sum: 19.363 sec, count: 19990, timedOut count: 0
 
-RedisAI Query:
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.22 ms, q25:    22.36 ms, med(q50):    22.80 ms, q75:    23.94 ms, q99:    32.27 ms, max:    34.71 ms, stddev:     3.17ms, sum: 145.314 sec, count: 6000, timedOut count: 0
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.21 ms, max:     4.36 ms, stddev:     0.12ms, sum: 19.363 sec, count: 19990, timedOut count: 0
 
 
-after 8000 queries with 16 workers:
-All queries  :
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.37 ms, q25:    22.44 ms, med(q50):    22.97 ms, q75:    26.48 ms, q99:    32.10 ms, max:    34.71 ms, stddev:     3.01ms, sum: 194.988 sec, count: 8000, timedOut count: 0
+after 29990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.16 ms, max:     4.36 ms, stddev:     0.10ms, sum: 28.971 sec, count: 29990, timedOut count: 0
 
-RedisAI Query:
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.37 ms, q25:    22.44 ms, med(q50):    22.97 ms, q75:    26.48 ms, q99:    32.10 ms, max:    34.71 ms, stddev:     3.01ms, sum: 194.988 sec, count: 8000, timedOut count: 0
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.16 ms, max:     4.36 ms, stddev:     0.10ms, sum: 28.971 sec, count: 29990, timedOut count: 0
+
+
+after 39990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.14 ms, max:     4.36 ms, stddev:     0.09ms, sum: 38.562 sec, count: 39990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.14 ms, max:     4.36 ms, stddev:     0.09ms, sum: 38.562 sec, count: 39990, timedOut count: 0
+
+
+after 49990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.13 ms, max:     4.36 ms, stddev:     0.09ms, sum: 48.114 sec, count: 49990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.13 ms, max:     4.36 ms, stddev:     0.09ms, sum: 48.114 sec, count: 49990, timedOut count: 0
+
+
+after 59990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 57.832 sec, count: 59990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 57.832 sec, count: 59990, timedOut count: 0
+
+
+after 69990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.97 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 67.613 sec, count: 69990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.97 ms, q25:     0.92 ms, med(q50):     0.97 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 67.613 sec, count: 69990, timedOut count: 0
+
+
+after 79990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 77.020 sec, count: 79990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 77.020 sec, count: 79990, timedOut count: 0
+
+
+after 89990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 86.538 sec, count: 89990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.48 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 86.538 sec, count: 89990, timedOut count: 0
+
+
+after 99990 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.38 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 96.015 sec, count: 99990, timedOut count: 0
+
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.38 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 96.015 sec, count: 99990, timedOut count: 0
 
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Run complete after 10000 queries with 16 workers:
-All queries  :
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.21 ms, q25:    22.50 ms, med(q50):    23.05 ms, q75:    25.40 ms, q99:    31.84 ms, max:    34.71 ms, stddev:     2.77ms, sum: 242.109 sec, count: 10000, timedOut count: 0
+Run complete after 100000 queries with 16 workers:
+All queries                                                 :
++ Inference execution latency (statistical histogram):
+	min:     0.38 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 96.024 sec, count: 100000, timedOut count: 0
 
-RedisAI Query:
-+ Query execution latency (statistical histogram):
-        min:    16.18 ms,  mean:    24.21 ms, q25:    22.50 ms, med(q50):    23.05 ms, q75:    25.40 ms, q99:    31.84 ms, max:    34.71 ms, stddev:     2.77ms, sum: 242.109 sec, count: 10000, timedOut count: 0
+RedisAI Query - with AI.TENSORSET transacation datatype BLOB:
++ Inference execution latency (statistical histogram):
+	min:     0.38 ms,  mean:     0.96 ms, q25:     0.92 ms, med(q50):     0.96 ms, q75:     1.00 ms, q99:     1.12 ms, max:     4.36 ms, stddev:     0.08ms, sum: 96.024 sec, count: 100000, timedOut count: 0
 
-Took:   15.151 sec
+Took:    6.048 sec
 ```
