@@ -60,7 +60,7 @@ As an example we will use RedisAI. In that manner, for setting up the model Redi
 redis-cli flushall 
 
 # load the correct AI backend
-redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow/redisai_tensorflow.so
+redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
 
 # set the Model
 cd $GOPATH/src/github.com/filipecosta90/aibench
