@@ -29,8 +29,10 @@ type BenchmarkRunner struct {
 	dbName          string
 	limit           uint64
 	memProfile      string
+	cpuProfile string
 	workers         uint
 	printResponses  bool
+	ignoreErrors    bool
 	debug           int
 	fileName        string
 	seed            int64
@@ -56,9 +58,11 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.Uint64Var(&runner.limit, "max-queries", 0, "Limit the number of queries to send, 0 = no limit")
 	flag.Uint64Var(&runner.sp.printInterval, "print-interval", 100, "Print timing stats to stderr after this many queries (0 to disable)")
 	flag.StringVar(&runner.memProfile, "memprofile", "", "Write a memory profile to this file.")
+	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
+	flag.BoolVar(&runner.ignoreErrors, "ignore-errors", false, "Whether to ignore the inference errors and continue. By default on error the benchmark stops (default false).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
@@ -85,6 +89,10 @@ func (b *BenchmarkRunner) DebugLevel() int {
 // ModelName returns the name of the database to run queries against
 func (b *BenchmarkRunner) DatabaseName() string {
 	return b.dbName
+}
+
+func (b *BenchmarkRunner) IgnoreErrors() bool {
+return b.ignoreErrors
 }
 
 // LoaderCreate is a function that creates a new Loader (called in Run)
@@ -124,6 +132,16 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
 func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate) {
+
+	if b.cpuProfile != "" {
+		fmt.Println(fmt.Sprintf("starting cpu profile. Saving into :%s",b.cpuProfile))
+		f, err := os.Create(b.cpuProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	rand.Seed(b.seed)
 
@@ -179,6 +197,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		_ = pprof.WriteHeapProfile(f)
 		_ = f.Close()
 	}
+
+
 }
 
 func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int) {
@@ -193,11 +213,15 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	for query := range b.ch {
 		stats, err := processor.ProcessInferenceQuery(query, false)
 		if err != nil {
-			panic(err)
+			if b.IgnoreErrors(){
+				fmt.Printf("Ignoring inference error: %v\n",err)
+			} else {
+				panic(err)
+			}
+		} else {
+			atomic.AddUint64(&b.inferenceCount, 1)
+			b.sp.sendStats(stats)
 		}
-
-		atomic.AddUint64(&b.inferenceCount, 1)
-		b.sp.sendStats(stats)
 
 		// If PrewarmQueries is set, we run the inference as 'cold' first (see above),
 		// then we immediately run it a second time and report that as the 'warm' stat.
@@ -206,9 +230,14 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 			// Warm run
 			stats, err = processor.ProcessInferenceQuery(query, true)
 			if err != nil {
-				panic(err)
+				if b.IgnoreErrors(){
+					fmt.Printf("Ignoring inference error: %v\n",err)
+				} else {
+					panic(err)
+				}
+			} else {
+				b.sp.sendStats(stats)
 			}
-			b.sp.sendStatsWarm(stats)
 		}
 		queryPool.Put(query)
 	}
