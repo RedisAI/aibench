@@ -40,9 +40,8 @@ var (
 )
 
 var (
-	redisClient *redis.Client
+	redisClient        *redis.Client
 	restapiReadTimeout time.Duration
-
 )
 
 // Parse args:
@@ -94,17 +93,14 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 
 	p.httpclient = &fasthttp.HostClient{
-		Addr: restapiHost,
-		ReadTimeout: restapiReadTimeout,
-		MaxIdleConnDuration: restapiReadTimeout,
+		Addr:                      restapiHost,
+		ReadTimeout:               restapiReadTimeout,
+		MaxIdleConnDuration:       restapiReadTimeout,
 		MaxIdemponentCallAttempts: 10,
 		Dial: func(addr string) (net.Conn, error) {
 			return fasthttp.DialTimeout(addr, restapiReadTimeout)
 		},
 	}
-
-
-
 
 }
 
@@ -134,7 +130,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 	if redisErr != nil {
-		log.Fatalln("Error on redisClient.Get",redisErr)
+		log.Fatalln("Error on redisClient.Get", redisErr)
 	}
 	refPart, err := writer.CreateFormFile("reference", "reference")
 	if err != nil {
@@ -147,7 +143,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	err = p.httpclient.DoTimeout(req, res, restapiReadTimeout)
 	if err != nil {
 		fasthttp.ReleaseResponse(res)
-		log.Fatalln("Error on httpclient.DoTimeout",err)
+		log.Fatalln("Error on httpclient.DoTimeout", err)
 	}
 	took := float64(time.Since(start).Nanoseconds()) / 1e6
 	fasthttp.ReleaseRequest(req)

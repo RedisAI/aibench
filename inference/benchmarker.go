@@ -29,7 +29,7 @@ type BenchmarkRunner struct {
 	dbName          string
 	limit           uint64
 	memProfile      string
-	cpuProfile string
+	cpuProfile      string
 	workers         uint
 	printResponses  bool
 	ignoreErrors    bool
@@ -92,7 +92,7 @@ func (b *BenchmarkRunner) DatabaseName() string {
 }
 
 func (b *BenchmarkRunner) IgnoreErrors() bool {
-return b.ignoreErrors
+	return b.ignoreErrors
 }
 
 // LoaderCreate is a function that creates a new Loader (called in Run)
@@ -134,7 +134,7 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate) {
 
 	if b.cpuProfile != "" {
-		fmt.Println(fmt.Sprintf("starting cpu profile. Saving into :%s",b.cpuProfile))
+		fmt.Println(fmt.Sprintf("starting cpu profile. Saving into :%s", b.cpuProfile))
 		f, err := os.Create(b.cpuProfile)
 		if err != nil {
 			log.Fatal(err)
@@ -198,7 +198,6 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		_ = f.Close()
 	}
 
-
 }
 
 func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int) {
@@ -213,8 +212,8 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	for query := range b.ch {
 		stats, err := processor.ProcessInferenceQuery(query, false)
 		if err != nil {
-			if b.IgnoreErrors(){
-				fmt.Printf("Ignoring inference error: %v\n",err)
+			if b.IgnoreErrors() {
+				fmt.Printf("Ignoring inference error: %v\n", err)
 			} else {
 				panic(err)
 			}
@@ -230,8 +229,8 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 			// Warm run
 			stats, err = processor.ProcessInferenceQuery(query, true)
 			if err != nil {
-				if b.IgnoreErrors(){
-					fmt.Printf("Ignoring inference error: %v\n",err)
+				if b.IgnoreErrors() {
+					fmt.Printf("Ignoring inference error: %v\n", err)
 				} else {
 					panic(err)
 				}

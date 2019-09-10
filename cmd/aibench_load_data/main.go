@@ -20,6 +20,8 @@ import (
 var (
 	host         string
 	pipelineSize uint
+	setBlob      bool
+	setTensor    bool
 )
 
 // Global vars:
@@ -33,7 +35,8 @@ func init() {
 	runner = inference.NewLoadRunner()
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
 	flag.UintVar(&pipelineSize, "pipeline", 10, "Redis pipeline size")
-
+	flag.BoolVar(&setBlob, "set-blob", true, "Set reference data in plain binary safe Redis string format")
+	flag.BoolVar(&setTensor, "set-tensor", true, "Set reference data in AI.TENSOR format")
 	flag.Parse()
 
 	cpool = &redis.Pool{
@@ -74,19 +77,24 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	copy(referenceValues, q[128:1152])
 
 	idF := fraud.Uint64frombytes(tmp)
-	if debug > 0 {
-		//fmt.Printf("On Row: %d\n", idF )
-	}
 	id := "referenceTensor:" + fmt.Sprintf("%d", int(idF))
 	idBlob := "referenceBLOB:" + fmt.Sprintf("%d", int(idF))
 	p.pclient.ActiveConnNX()
-	errSet := p.pclient.ActiveConn.Send("SET", idBlob, referenceValues)
-	if errSet != nil {
-		log.Fatal(errSet)
+	issuedCommands := 0
+	if setBlob {
+		errSet := p.pclient.ActiveConn.Send("SET", idBlob, referenceValues)
+		if errSet != nil {
+			log.Fatal(errSet)
+		}
+		issuedCommands++
 	}
-	err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 256}, referenceValues)
-	if err != nil {
-		log.Fatal(err)
+	if setTensor {
+		err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 256}, referenceValues)
+		if err != nil {
+			log.Fatal(err)
+		}
+		issuedCommands++
 	}
-	return nil, uint64(2), nil
+
+	return nil, uint64(issuedCommands), nil
 }
