@@ -11,7 +11,7 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_tensorflow_serving \
@@ -60,7 +60,7 @@ The simplest way to get it, is to run
 
 
 ```bash
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 mkdir -p tmp && cd tmp
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/serving.git
 git clone -b r1.7 --depth 1 https://github.com/tensorflow/tensorflow.git
@@ -76,9 +76,9 @@ protoc $PROTOC_OPTS tensorflow/tensorflow/core/example/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/lib/core/*.proto
 protoc $PROTOC_OPTS tensorflow/tensorflow/core/protobuf/{saver,meta_graph}.proto
 
-# move vendor folder to $GOPATH/src/github.com/filipecosta90/aibench
-rm -rf $GOPATH/src/github.com/filipecosta90/aibench/vendor
-mv vendor $GOPATH/src/github.com/filipecosta90/aibench/.
+# move vendor folder to $GOPATH/src/github.com/RedisAI/aibench
+rm -rf $GOPATH/src/github.com/RedisAI/aibench/vendor
+mv vendor $GOPATH/src/github.com/RedisAI/aibench/.
 
 # remove tmp dir
 cd .. && rm -rf tmp
@@ -90,7 +90,7 @@ cd .. && rm -rf tmp
 
 ```bash
 docker pull tensorflow/serving
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 
 # Location of credit card fraud model
 TESTDATA="$(pwd)/tests/models/tensorflow"

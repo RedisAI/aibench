@@ -34,12 +34,12 @@ scripts). The easiest way to get and install the Go programs is to use
 `go get` and then `go install`:
 ```bash
 # Fetch aibench and its dependencies
-cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
+cd $GOPATH/src/github.com/RedisAI/aibench/cmd
 go get ./...
 
 # Install desired binaries. At a minimum this includes aibench_load_data, and one aibench_run_inference_*
 # binary:
-cd $GOPATH/src/github.com/filipecosta90/aibench/cmd
+cd $GOPATH/src/github.com/RedisAI/aibench/cmd
 cd aibench_generate_data && go install
 cd ../aibench_load_data && go install
 cd ../aibench_run_inference_redisai && go install
@@ -63,7 +63,7 @@ redis-cli flushall
 redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
 
 # set the Model
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 redis-cli -x AI.MODELSET financialNet \
             TF CPU INPUTS transaction reference \
             OUTPUTS output < ./tests/models/tensorflow/creditcardfraud.pb
@@ -76,7 +76,7 @@ So that benchmarking results are not affected by generating data on-the-fly, wit
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 cat ./tests/data/creditcard.csv.gz \
           | gunzip > /tmp/creditcard.csv
 aibench_generate_data \
@@ -105,7 +105,7 @@ To fully contain the dataset, the datastore will require at minimum 570MB of spa
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench 
+cd $GOPATH/src/github.com/RedisAI/aibench 
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_load_data \
@@ -124,7 +124,7 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_redisai \

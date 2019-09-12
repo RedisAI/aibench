@@ -12,7 +12,7 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_flask_tensorflow \
@@ -39,13 +39,13 @@ The following diagram illustrates the sequence of requests made for each inferen
 ### Local Installation -- with wsgi + flask for Development mode
 
 ```bash
-cd $GOPATH/src/github.com/filipecosta90/aibench/tests/servers/flask
+cd $GOPATH/src/github.com/RedisAI/aibench/tests/servers/flask
 
 # Install requirements
 pip install -r requirements
 
 # set environment variable with location of credit card fraud model
-export TF_MODEL_PATH=$GOPATH/src/github.com/filipecosta90/aibench/tests/models/tensorflow/creditcardfraud.pb
+export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud.pb
 
 # Start WSGI+Flask+TF Backend REST API serving
 python3 server.py

@@ -12,7 +12,7 @@ being tested:
 
 ```bash
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/filipecosta90/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_redisai \
