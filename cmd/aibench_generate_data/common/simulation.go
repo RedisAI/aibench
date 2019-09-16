@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/serialize"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/serialize"
 )
 
 // SimulatorConfig is an interface to create a Simulator

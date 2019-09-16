@@ -6,9 +6,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/filipecosta90/aibench/inference"
-	"github.com/filipecosta90/redisai-go/redisai"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/inference"
+	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"

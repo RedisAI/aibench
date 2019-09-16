@@ -20,9 +20,9 @@ import (
 	"runtime/pprof"
 	"strings"
 
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/common"
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/serialize"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/common"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/serialize"
 )
 
 const (

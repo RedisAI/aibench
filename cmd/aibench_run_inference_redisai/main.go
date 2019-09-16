@@ -7,8 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/RedisAI/redisai-go/redisai"
-	"github.com/filipecosta90/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/filipecosta90/aibench/inference"
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/inference"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
@@ -103,7 +103,12 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	p.pclient.TensorGet(classificationTensorName, redisai.TensorContentTypeBlob)
 	err := p.pclient.Flush()
 	if err != nil {
-		log.Fatalf("Prediction failed:%v\n", err)
+		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
+		if runner.IgnoreErrors(){
+			fmt.Println(extendedError)
+		} else{
+			log.Fatal(extendedError )
+		}
 	}
 	p.pclient.Receive()
 	p.pclient.Receive()
@@ -112,11 +117,21 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	PredictResponse, err := redisai.ProcessTensorReplyBlob(data, err)
 	took = float64(time.Since(start).Nanoseconds()) / 1e6
 	if err != nil {
-		log.Fatalf("Prediction Receive() failed:%v\n", err)
+		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
+		if runner.IgnoreErrors(){
+			fmt.Println(extendedError)
+		} else{
+			log.Fatal(extendedError )
+		}
 	}
 	if p.opts.printResponse {
 		if err != nil {
-			log.Fatalf("Response parsing failed:%v\n", err)
+			extendedError := fmt.Errorf("Response parsing failed:%v\n", err)
+			if runner.IgnoreErrors(){
+				fmt.Println(extendedError)
+			} else{
+				log.Fatal(extendedError )
+			}
 		}
 		fmt.Println("RESPONSE: ", PredictResponse[2])
 	}
