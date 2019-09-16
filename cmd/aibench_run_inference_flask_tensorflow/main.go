@@ -113,7 +113,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	idUint64 := fraud.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
-	referenceDataKeyName := "referenceBLOB:" + idS
+	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
 

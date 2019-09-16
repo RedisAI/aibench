@@ -115,7 +115,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
 
-	referenceDataKeyName := "referenceBLOB:" + idS
+	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
 
 	start := time.Now()
 	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()

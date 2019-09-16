@@ -77,8 +77,8 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	copy(referenceValues, q[128:1152])
 
 	idF := fraud.Uint64frombytes(tmp)
-	id := "referenceTensor:" + fmt.Sprintf("%d", int(idF))
-	idBlob := "referenceBLOB:" + fmt.Sprintf("%d", int(idF))
+	id := "referenceTensor:{" + fmt.Sprintf("%d", int(idF)) + "}"
+	idBlob := "referenceBLOB:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	p.pclient.ActiveConnNX()
 	issuedCommands := 0
 	if setBlob {

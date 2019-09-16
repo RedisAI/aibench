@@ -91,9 +91,9 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	}
 	idUint64 := fraud.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
-	referenceDataTensorName := "referenceTensor:" + idS
-	classificationTensorName := "classificationTensor:" + idS
-	transactionDataTensorName := "transactionTensor:" + idS
+	referenceDataTensorName := "referenceTensor:{" + idS + "}"
+	classificationTensorName := "classificationTensor:{" + idS + "}"
+	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
 
 	took := 0.0
