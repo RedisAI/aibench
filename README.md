@@ -111,7 +111,7 @@ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | aibench_load_data \
           -reporting-period 1000ms \
           -set-blob=false -set-tensor=true \
-          -max-inserts=100000 \
+          -max-inserts=100010 \
           -workers 16 -pipeline 100
 ```
 
