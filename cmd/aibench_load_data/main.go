@@ -72,9 +72,9 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", (1024 + 8 + 120), len(q))
 	}
 	tmp := make([]byte, 8)
-	referenceValues := make([]byte, 1024)
+	referenceValues := make([]byte, 16)
 	copy(tmp, q[0:8])
-	copy(referenceValues, q[128:1152])
+	copy(referenceValues, q[128:144])
 
 	idF := fraud.Uint64frombytes(tmp)
 	id := "referenceTensor:{" + fmt.Sprintf("%d", int(idF)) + "}"
@@ -89,7 +89,7 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 		issuedCommands++
 	}
 	if setTensor {
-		err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 256}, referenceValues)
+		err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 4}, referenceValues)
 		if err != nil {
 			log.Fatal(err)
 		}

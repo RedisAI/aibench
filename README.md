@@ -111,7 +111,6 @@ cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | aibench_load_data \
           -reporting-period 1000ms \
           -set-blob=false -set-tensor=true \
-          -max-inserts=100010 \
           -workers 16 -pipeline 100
 ```
 
@@ -128,11 +127,12 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
         | gunzip \
         | aibench_run_inference_redisai \
-         -workers 16 \
+         -workers 8 \
          -burn-in 10 -max-queries 100010 \
          -print-interval 0 -reporting-period 1000ms \
          -model financialNet \
          -host redis://127.0.0.1:6379
+redis-cli info commandstats
 ```
 
 You can change the value of the `-workers` flag to
