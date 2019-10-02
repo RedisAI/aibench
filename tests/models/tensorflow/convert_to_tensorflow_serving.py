@@ -23,10 +23,10 @@ with tf.Session(graph=tf.Graph()) as sess:
 
     sigs[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY] = \
         tf.saved_model.signature_def_utils.predict_signature_def(
-            {"transaction": inp1,"reference" :inp2 }, {"output": out})
+            {"transaction": inp1, "reference": inp2}, {"output": out})
 
     builder.add_meta_graph_and_variables(sess,
-                                         [tag_constants.SERVING] ,
+                                         [tag_constants.SERVING],
                                          signature_def_map=sigs)
 
 builder.save()

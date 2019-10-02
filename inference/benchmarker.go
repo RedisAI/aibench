@@ -104,7 +104,7 @@ type Processor interface {
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessInferenceQuery(q []byte, isWarm bool) ([]*Stat, error)
+	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) ([]*Stat, error)
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
@@ -210,7 +210,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	processor.Init(workerNum, pwg, metricsChan, responseSizesChan)
 
 	for query := range b.ch {
-		stats, err := processor.ProcessInferenceQuery(query, false)
+		stats, err := processor.ProcessInferenceQuery(query, false, workerNum)
 		if err != nil {
 			if b.IgnoreErrors() {
 				fmt.Printf("Ignoring inference error: %v\n", err)
@@ -227,7 +227,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 		// This guarantees that the warm stat will reflect optimal cache performance.
 		if b.sp.prewarmQueries {
 			// Warm run
-			stats, err = processor.ProcessInferenceQuery(query, true)
+			stats, err = processor.ProcessInferenceQuery(query, true, workerNum)
 			if err != nil {
 				if b.IgnoreErrors() {
 					fmt.Printf("Ignoring inference error: %v\n", err)

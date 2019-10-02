@@ -5,8 +5,8 @@ import tensorflow as tf
 from flask import Flask, request, jsonify
 from flask_api import status
 
-#change it to local
-tf_model_path = os.getenv('TF_MODEL_PATH', '/root/data/creditcardfraud.pb' )
+# change it to local
+tf_model_path = os.getenv('TF_MODEL_PATH', '/root/data/creditcardfraud.pb')
 
 with tf.io.gfile.GFile(tf_model_path, "rb") as f:
     restored_graph_def = tf.compat.v1.GraphDef()
@@ -18,7 +18,6 @@ with tf.Graph().as_default() as graph:
         input_map=None,
         return_elements=None,
         name="")
-
 
 app = Flask(__name__)
 
@@ -38,10 +37,11 @@ output_tensor = graph.get_tensor_by_name('output:0')
 
 app.logger.info('model read from {0}'.format(tf_model_path))
 
+
 # expects application/json
 @app.route('/v1/predict', methods=['POST'])
 def v1_predict():
-    response = {'outputs':[]}
+    response = {'outputs': []}
     rcode = status.HTTP_400_BAD_REQUEST
 
     if 'inputs' in request.json:
@@ -49,16 +49,18 @@ def v1_predict():
         if 'transaction' in inputs and 'inputs' in inputs:
             transaction_data = np.array(inputs['transaction'], dtype=np.float32)
             reference_data = np.array(inputs['reference'], dtype=np.float32)
-            out = sess.run(output_tensor, feed_dict={transaction_tensor: transaction_data, reference_tensor: reference_data})
+            out = sess.run(output_tensor,
+                           feed_dict={transaction_tensor: transaction_data, reference_tensor: reference_data})
             response['outputs'] = out.tolist()
             rcode = status.HTTP_200_OK
 
-    return jsonify(response),rcode
+    return jsonify(response), rcode
+
 
 # expects multipart/form-data
 @app.route('/v2/predict', methods=['POST'])
 def v2_predict():
-    response = {'outputs':[]}
+    response = {'outputs': []}
     rcode = status.HTTP_400_BAD_REQUEST
 
     tensor_files = request.files
@@ -67,7 +69,8 @@ def v2_predict():
         ref_tensor = tensor_files['reference'].stream.read()
         transaction_data = np.frombuffer(trans_tensor, dtype=np.float32).reshape(1, 30)
         reference_data = np.frombuffer(ref_tensor, dtype=np.float32)
-        out = sess.run(output_tensor, feed_dict={transaction_tensor: transaction_data, reference_tensor: reference_data})
+        out = sess.run(output_tensor,
+                       feed_dict={transaction_tensor: transaction_data, reference_tensor: reference_data})
         response = {'outputs': out.tolist()}
         rcode = status.HTTP_200_OK
 

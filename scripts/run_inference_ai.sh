@@ -1,38 +1,36 @@
 #!/bin/bash
 
-# flush the database
-redis-cli flushall
+# Ensure generator is available
+EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_run_inference_redisai)}
+if [[ -z "${EXE_FILE_NAME}" ]]; then
+  echo "aibench_run_inference_redisai not available. It is not specified explicitly and not found in \$PATH"
+  exit 1
+fi
 
-# load the correct AI backend
-redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
+DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
+MAX_QUERIES=${MAX_QUERIES:-0}
+QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
 
-# set the Model
-cd $GOPATH/src/github.com/RedisAI/aibench
-redis-cli -x AI.MODELSET financialNet \
-            TF CPU INPUTS transaction reference \
-            OUTPUTS output < ./tests/models/tensorflow/creditcardfraud.pb
+# Load parameters - common
+EXE_DIR=${EXE_DIR:-$(dirname $0)}
+source ${EXE_DIR}/redisai_common.sh
 
-# load the reference data
-# make sure you're on the root project folder
-cd $GOPATH/src/github.com/RedisAI/aibench
-cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
-        | gunzip \
-        | aibench_load_data \
-          -reporting-period 1000ms \
-          -set-blob=false -set-tensor=true \
-          -workers 8 -pipeline 1000
-
+# Ensure data file is in place
+if [ ! -f ${DATA_FILE} ]; then
+  echo "Cannot find data file ${DATA_FILE}"
+  exit 1
+fi
 
 # benchmark inference performance
 # make sure you're on the root project folder
-redis-cli config resetstat
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
 cd $GOPATH/src/github.com/RedisAI/aibench
-cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
-        | gunzip \
-        | aibench_run_inference_redisai \
-         -workers 8 \
-         -burn-in 10 -max-queries 0 \
-         -print-interval 0 -reporting-period 1000ms \
-         -model financialNet \
-         -host redis://127.0.0.1:6379
-redis-cli info commandstats
+cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
+  gunzip |
+  ${EXE_FILE_NAME} \
+    -workers ${NUM_WORKERS} \
+    -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
+    -print-interval 0 -reporting-period 1000ms \
+    -model ${MODEL_NAME} \
+    -host redis://${DATABASE_HOST}:${DATABASE_PORT}
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats

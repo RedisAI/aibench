@@ -6,9 +6,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
+	"github.com/RedisAI/redisai-go/redisai"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
@@ -83,7 +83,7 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	p.pclient.Pipeline(3)
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -91,6 +91,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	}
 	idUint64 := fraud.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
+	//idWorkerString := fmt.Sprintf("%d", workerNum)
 	referenceDataTensorName := "referenceTensor:{" + idS + "}"
 	classificationTensorName := "classificationTensor:{" + idS + "}"
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
@@ -104,10 +105,10 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	err := p.pclient.Flush()
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
-		if runner.IgnoreErrors(){
+		if runner.IgnoreErrors() {
 			fmt.Println(extendedError)
-		} else{
-			log.Fatal(extendedError )
+		} else {
+			log.Fatal(extendedError)
 		}
 	}
 	p.pclient.Receive()
@@ -118,19 +119,19 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool) ([]*inference.S
 	took = float64(time.Since(start).Nanoseconds()) / 1e6
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
-		if runner.IgnoreErrors(){
+		if runner.IgnoreErrors() {
 			fmt.Println(extendedError)
-		} else{
-			log.Fatal(extendedError )
+		} else {
+			log.Fatal(extendedError)
 		}
 	}
 	if p.opts.printResponse {
 		if err != nil {
 			extendedError := fmt.Errorf("Response parsing failed:%v\n", err)
-			if runner.IgnoreErrors(){
+			if runner.IgnoreErrors() {
 				fmt.Println(extendedError)
-			} else{
-				log.Fatal(extendedError )
+			} else {
+				log.Fatal(extendedError)
 			}
 		}
 		fmt.Println("RESPONSE: ", PredictResponse[2])
