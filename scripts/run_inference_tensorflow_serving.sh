@@ -33,7 +33,7 @@ cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
     -workers ${NUM_WORKERS} \
     -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
     -print-interval 0 -reporting-period 1000ms \
-    -model ${MODEL_NAME} -model-version ${MODEL_VERSION} \
+    -model ${MODEL_NAME} -model-version ${TFX_MODEL_VERSION} \
     -tensorflow-serving-host ${DATABASE_HOST}:${TFX_PORT} \
     -redis-host ${DATABASE_HOST}:${DATABASE_PORT}
 
