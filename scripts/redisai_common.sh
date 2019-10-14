@@ -8,6 +8,10 @@ MODEL_NAME=${DATABASE_NAME:-"financialNet"}
 
 # Data folder
 BULK_DATA_DIR=${BULK_DATA_DIR:-"/tmp/bulk_data"}
+
+# ensure dir exists
+mkdir -p ${BULK_DATA_DIR}
+
 # Full path to data file
 DATA_FILE=${DATA_FILE:-${BULK_DATA_DIR}/${DATA_FILE_NAME}}
 
