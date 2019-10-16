@@ -18,4 +18,7 @@ DATA_FILE=${DATA_FILE:-${BULK_DATA_DIR}/${DATA_FILE_NAME}}
 # How many concurrent workers - match num of cores, or default to 4
 NUM_WORKERS=${NUM_WORKERS:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 8)}
 
+# How many INFERENCES to Generate/Run
+NUM_INFERENCES=${NUM_INFERENCES:-1000000}
+
 set -x

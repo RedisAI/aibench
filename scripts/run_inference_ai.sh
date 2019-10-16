@@ -8,7 +8,6 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
 fi
 
 DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-MAX_QUERIES=${MAX_QUERIES:-0}
 QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
 
 # Load parameters - common
@@ -29,8 +28,9 @@ cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
   gunzip |
   ${EXE_FILE_NAME} \
     -workers ${NUM_WORKERS} \
-    -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
+    -burn-in ${QUERIES_BURN_IN} -max-queries ${NUM_INFERENCES} \
     -print-interval 0 -reporting-period 1000ms \
     -model ${MODEL_NAME} \
     -host redis://${DATABASE_HOST}:${DATABASE_PORT}
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+

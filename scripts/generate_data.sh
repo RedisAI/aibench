@@ -22,6 +22,7 @@ cat ${INPUT_FILE_NAME} |
 ${EXE_FILE_NAME} \
   -input-file ${TMP_FILE_NAME} \
   -use-case="creditcard-fraud" \
+  -max-transactions=${NUM_INFERENCES} \
   -seed=${DATA_SEED} |
   gzip >${DATA_FILE}
 
