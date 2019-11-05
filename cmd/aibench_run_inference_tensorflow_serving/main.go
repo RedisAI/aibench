@@ -158,7 +158,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 		},
 	}
 	PredictResponse, err := p.predictionServiceClient.Predict(context.Background(), request)
-	took := float64(time.Since(start).Nanoseconds()) / 1e6
+	took := time.Since(start).Microseconds()
 	if err != nil {
 		log.Fatalf("Prediction failed:%v\n", err)
 	}

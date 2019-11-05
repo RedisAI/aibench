@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 // statProcessor is used to collect, analyze, and print inference execution statistics.
@@ -16,6 +18,8 @@ type statProcessor struct {
 	printInterval  uint64     // printInterval is how often print intermediate stats (number of queries)
 	wg             sync.WaitGroup
 	StatsMapping   map[string]*statGroup
+	latencyFile    string
+	opsCount       uint64
 }
 
 func (sp *statProcessor) sendStats(stats []*Stat) {
@@ -55,7 +59,11 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 	}
 
 	i := uint64(0)
+	start := time.Now()
+	prevTime := start
+	prevRequestCount := uint64(0)
 	for stat := range sp.c {
+		atomic.AddUint64(&sp.opsCount, 1)
 		if i < sp.burnIn {
 			i++
 			statPool.Put(stat)
@@ -96,10 +104,17 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 
 		// print stats to stderr (if printInterval is greater than zero):
 		if sp.printInterval > 0 && i > 0 && i%sp.printInterval == 0 && (i < *sp.limit || *sp.limit == 0) {
-			_, err := fmt.Fprintf(os.Stderr, "after %d queries with %d workers:\n", i-sp.burnIn, workers)
-			if err != nil {
-				log.Fatal(err)
-			}
+			now := time.Now()
+			sinceStart := now.Sub(start)
+			took := now.Sub(prevTime)
+			intervalQueryRate := float64(sp.opsCount-prevRequestCount) / float64(took.Seconds())
+			overallQueryRate := float64(sp.opsCount) / float64(sinceStart.Seconds())
+			_, err := fmt.Fprintf(os.Stderr, "After %d queries with %d workers:\nInterval query rate: %0.2f queries/sec\tOverall query rate: %0.2f queries/sec\n",
+				i-sp.burnIn,
+				workers,
+				intervalQueryRate,
+				overallQueryRate,
+			)
 			err = writeStatGroupMap(os.Stderr, sp.StatsMapping)
 			if err != nil {
 				log.Fatal(err)
@@ -108,12 +123,19 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 			if err != nil {
 				log.Fatal(err)
 			}
+			prevRequestCount = sp.opsCount
+			prevTime = now
 		}
 	}
 
 	if printStats == true {
+		sinceStart := time.Now().Sub(start)
+		overallQueryRate := float64(sp.opsCount) / float64(sinceStart.Seconds())
 		// the final stats output goes to stdout:
-		_, err := fmt.Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nRun complete after %d queries with %d workers:\n", i-sp.burnIn, workers)
+		_, err := fmt.Printf("Run complete after %d inferences with %d workers (Overall inference rate %0.2f inferences/sec):\n",
+			i-sp.burnIn,
+			workers,
+			overallQueryRate)
 		if err != nil {
 			log.Fatal(err)
 		}

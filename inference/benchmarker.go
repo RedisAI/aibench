@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"golang.org/x/time/rate"
+	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"runtime/pprof"
@@ -19,24 +22,26 @@ const (
 	labelWarmQueries   = "Warm queries"
 	rowBenchmarkNBytes = 8 + 120 + 1024
 	defaultReadSize    = 4 << 20 // 4 MB
-
+	Inf                = rate.Limit(math.MaxFloat64)
 )
 
 // LoadRunner contains the common components for running a inference benchmarking
 // program against a database.
 type BenchmarkRunner struct {
 	// flag fields
-	dbName          string
-	limit           uint64
-	memProfile      string
-	cpuProfile      string
-	workers         uint
-	printResponses  bool
-	ignoreErrors    bool
-	debug           int
-	fileName        string
-	seed            int64
-	reportingPeriod time.Duration
+	dbName                             string
+	limit                              uint64
+	limitrps                           uint64
+	memProfile                         string
+	cpuProfile                         string
+	workers                            uint
+	printResponses                     bool
+	ignoreErrors                       bool
+	debug                              int
+	fileName                           string
+	seed                               int64
+	reportingPeriod                    time.Duration
+	outputFileStatsResponseLatencyHist string
 
 	// non-flag fields
 	br             *bufio.Reader
@@ -44,6 +49,7 @@ type BenchmarkRunner struct {
 	scanner        *producer
 	ch             chan []byte
 	inferenceCount uint64
+	opsCount       uint64
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -59,6 +65,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.Uint64Var(&runner.sp.printInterval, "print-interval", 100, "Print timing stats to stderr after this many queries (0 to disable)")
 	flag.StringVar(&runner.memProfile, "memprofile", "", "Write a memory profile to this file.")
 	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
+	flag.Uint64Var(&runner.limitrps, "limit-rps", 0, "Limit overall RPS. 0 disables limit.")
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
@@ -67,6 +74,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
+	flag.StringVar(&runner.outputFileStatsResponseLatencyHist, "output-file-stats-hdr-response-latency-hist", "stats-response-latency-hist.txt", "File name to output the hdr response latency histogram to")
 
 	return runner
 }
@@ -157,10 +165,20 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	go b.sp.process(b.workers, true)
 
 	// Launch inference processors
+
+	var requestRate = Inf
+	var requestBurst = 1
+	if b.limitrps != 0 {
+		requestRate = rate.Limit(b.limitrps)
+		requestBurst = 1 //int(b.workers)
+	}
+
+	var rateLimiter *rate.Limiter = rate.NewLimiter(requestRate, requestBurst)
+
 	var wg sync.WaitGroup
 	for i := 0; i < int(b.workers); i++ {
 		wg.Add(1)
-		go b.processorHandler(&wg, queryPool, processorCreateFn(), i)
+		go b.processorHandler(rateLimiter, &wg, queryPool, processorCreateFn(), i)
 	}
 
 	// Read in jobs, closing the job channel when done:
@@ -188,6 +206,16 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		log.Fatal(err)
 	}
 
+	if len(b.outputFileStatsResponseLatencyHist) > 0 {
+		_, _ = fmt.Printf("Saving Query Latencies HDR Histogram to %s\n", b.outputFileStatsResponseLatencyHist)
+
+		d1 := []byte(b.sp.StatsMapping[labelAllQueries].stringQueryLatencyFullHistogram())
+		fErr := ioutil.WriteFile(b.outputFileStatsResponseLatencyHist, d1, 0644)
+		if fErr != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// (Optional) create a memory profile:
 	if len(b.memProfile) > 0 {
 		f, err := os.Create(b.memProfile)
@@ -200,7 +228,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 
 }
 
-func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int) {
+func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int) {
 	buflen := uint64(len(b.ch))
 	metricsChan := make(chan uint64, buflen)
 	pwg := &sync.WaitGroup{}
@@ -210,6 +238,8 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 	processor.Init(workerNum, pwg, metricsChan, responseSizesChan)
 
 	for query := range b.ch {
+		r := rateLimiter.ReserveN(time.Now(), 1)
+		time.Sleep(r.Delay())
 		stats, err := processor.ProcessInferenceQuery(query, false, workerNum)
 		if err != nil {
 			if b.IgnoreErrors() {
@@ -236,6 +266,7 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 				}
 			} else {
 				b.sp.sendStats(stats)
+				atomic.AddUint64(&b.inferenceCount, 1)
 			}
 		}
 		queryPool.Put(query)
@@ -253,20 +284,31 @@ func (b *BenchmarkRunner) processorHandler(wg *sync.WaitGroup, queryPool *sync.P
 // report handles periodic reporting of loading stats
 func (b *BenchmarkRunner) report(period time.Duration, start time.Time) {
 	prevTime := start
-	prevInfCount := uint64(0)
+	prevOpsCount := uint64(0)
 
-	fmt.Printf("time (ns),total inferences,instantaneous inferences/s,overall inferences/s\n")
+	fmt.Printf("time (ms),total queries,instantaneous inferences/s,overall inferences/s,overall q50 lat(ms),overall q90 lat(ms),overall q95 lat(ms),overall q99 lat(ms),overall q99.999 lat(ms)\n")
 	for now := range time.NewTicker(period).C {
-		infCount := atomic.LoadUint64(&b.inferenceCount)
+		opsCount := atomic.LoadUint64(&b.inferenceCount)
 
 		sinceStart := now.Sub(start)
 		took := now.Sub(prevTime)
-		instantInfRate := float64(infCount-prevInfCount) / float64(took.Seconds())
-		overallInfRate := float64(infCount) / float64(sinceStart.Seconds())
+		instantRate := float64(opsCount-prevOpsCount) / float64(took.Seconds())
+		overallRate := float64(opsCount) / float64(sinceStart.Seconds())
+		statHist := b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram
 
-		fmt.Printf("%d,%d,%0.2f,%0.2f\n", now.UnixNano(), infCount, instantInfRate, overallInfRate)
+		fmt.Printf("%d,%d,%0.0f,%0.0f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f\n",
+			now.UnixNano()/10e6,
+			opsCount,
+			instantRate,
+			overallRate,
+			float64(statHist.ValueAtQuantile(50.0))/10e2,
+			float64(statHist.ValueAtQuantile(90.00))/10e2,
+			float64(statHist.ValueAtQuantile(95.00))/10e2,
+			float64(statHist.ValueAtQuantile(99.00))/10e2,
+			float64(statHist.ValueAtQuantile(99.999))/10e2,
+		)
 
-		prevInfCount = infCount
+		prevOpsCount = opsCount
 		prevTime = now
 	}
 }
