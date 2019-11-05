@@ -33,4 +33,3 @@ cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
     -model ${MODEL_NAME} \
     -host redis://${DATABASE_HOST}:${DATABASE_PORT}
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
-

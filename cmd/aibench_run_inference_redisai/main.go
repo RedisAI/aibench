@@ -97,7 +97,6 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
 
-	took := 0.0
 	start := time.Now()
 	p.pclient.TensorSet(transactionDataTensorName, redisai.TypeFloat, []int{1, 30}, transactionValues)
 	p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
@@ -116,7 +115,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 	resp, err := p.pclient.Receive()
 	data, err := redisai.ProcessTensorReplyMeta(resp, err)
 	PredictResponse, err := redisai.ProcessTensorReplyBlob(data, err)
-	took = float64(time.Since(start).Nanoseconds()) / 1e6
+	took := time.Since(start).Microseconds()
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
 		if runner.IgnoreErrors() {
