@@ -13,6 +13,8 @@ DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
 
+OUTPUT_NAME_SUFIX=${OUTPUT_NAME_SUFIX:-""}
+
 # Ensure data file is in place
 if [ ! -f ${DATA_FILE} ]; then
   echo "Cannot find data file ${DATA_FILE}"
@@ -20,16 +22,16 @@ if [ ! -f ${DATA_FILE} ]; then
 fi
 
 # flush the database
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} flushall
+#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} flushall
 
 # load the correct AI backend
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
+#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
 
 # set the Model
-cd $GOPATH/src/github.com/RedisAI/aibench
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
-  TF CPU INPUTS transaction reference \
-  OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
+#cd $GOPATH/src/github.com/RedisAI/aibench
+#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
+#  TF CPU INPUTS transaction reference \
+#  OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
 
 # load the reference data
 # make sure you're on the root project folder
@@ -40,6 +42,6 @@ cat ${DATA_FILE} |
     -reporting-period 1000ms \
     -set-blob=false -set-tensor=true \
     -host redis://${DATABASE_HOST}:${DATABASE_PORT} \
-    -workers ${NUM_WORKERS} -pipeline 1000 #-max-inserts 10000
+    -workers ${NUM_WORKERS} -pipeline 1000 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
 
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
