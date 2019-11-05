@@ -13,6 +13,12 @@ TFX_MODEL_VERSION=${TFX_MODEL_VERSION:-2}
 TFX_PORT=${TFX_PORT:-8500}
 QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
 
+# Rate limit? if greater than 0 rate is limited.
+RATE_LIMIT=${RATE_LIMIT:-0}
+
+# output name
+OUTPUT_NAME_SUFIX=${OUTPUT_NAME_SUFIX:-""}
+
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
@@ -33,8 +39,10 @@ cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
     -workers ${NUM_WORKERS} \
     -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
     -print-interval 0 -reporting-period 1000ms \
+    -limit-rps ${RATE_LIMIT} \
+    -output-file-stats-hdr-response-latency-hist ~/tensorflow_serving_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
     -model ${MODEL_NAME} -model-version ${TFX_MODEL_VERSION} \
     -tensorflow-serving-host ${DATABASE_HOST}:${TFX_PORT} \
-    -redis-host ${DATABASE_HOST}:${DATABASE_PORT}
+    -redis-host ${DATABASE_HOST}:${DATABASE_PORT} 2>&1 | tee ~/tensorflow_serving_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
 
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
