@@ -48,4 +48,5 @@ docker run -t --rm -p 6379:6379
 
 ### Production Installation -- Install RedisAI on production VM
 
-TBD
+Follow [building and running from source](https://oss.redislabs.com/redisearch/Quick_Start.html#building_and_running_from_source)
+while ensuring one of the high availability methods, both [OSS](https://redis.io/topics/cluster-tutorial#redis-cluster-master-slave-model) or [Enterprise](https://redislabs.com/redis-enterprise/technology/highly-available-redis/). 

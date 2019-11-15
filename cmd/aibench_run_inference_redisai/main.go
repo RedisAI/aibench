@@ -12,25 +12,23 @@ import (
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
-
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
 	"time"
 )
 
-// Program option vars:
-var (
-	host        string
-	model       string
-	showExplain bool
-)
-
 // Global vars:
 var (
 	runner        *inference.BenchmarkRunner
-	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
 	cpool         *redis.Pool
+	host          string
+	model         string
+	showExplain   bool
+)
+
+var (
+	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
 )
 
 // Parse args:
@@ -39,6 +37,7 @@ func init() {
 	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
 	flag.StringVar(&model, "model", "", "model name")
 	flag.Parse()
+
 	cpool = &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
@@ -80,10 +79,14 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	p.Wg = wg
 	p.Metrics = m
 	p.pclient = redisai.Connect(host, cpool)
-	p.pclient.Pipeline(3)
+	var autoFlushSize uint32 = 2
+	if runner.UseReferenceData() {
+		autoFlushSize++
+	}
+	p.pclient.Pipeline(autoFlushSize)
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -91,7 +94,6 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 	}
 	idUint64 := fraud.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
-	//idWorkerString := fmt.Sprintf("%d", workerNum)
 	referenceDataTensorName := "referenceTensor:{" + idS + "}"
 	classificationTensorName := "classificationTensor:{" + idS + "}"
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
@@ -99,7 +101,11 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 
 	start := time.Now()
 	p.pclient.TensorSet(transactionDataTensorName, redisai.TypeFloat, []int{1, 30}, transactionValues)
-	p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
+	if useReferenceData == true {
+		p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
+	}else{
+		p.pclient.ModelRun(model, []string{transactionDataTensorName}, []string{classificationTensorName})
+	}
 	p.pclient.TensorGet(classificationTensorName, redisai.TensorContentTypeBlob)
 	err := p.pclient.Flush()
 	if err != nil {
@@ -117,7 +123,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 	PredictResponse, err := redisai.ProcessTensorReplyBlob(data, err)
 	took := time.Since(start).Microseconds()
 	if err != nil {
-		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
+		extendedError := fmt.Errorf("ProcessTensorReplyBlob() failed:%v\n", err)
 		if runner.IgnoreErrors() {
 			fmt.Println(extendedError)
 		} else {

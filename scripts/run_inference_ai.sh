@@ -15,6 +15,7 @@ RATE_LIMIT=${RATE_LIMIT:-0}
 
 # output name
 OUTPUT_NAME_SUFIX=${OUTPUT_NAME_SUFIX:-""}
+PRINT_RESPONSES=${PRINT_RESPONSES:-false}
 
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
@@ -26,18 +27,29 @@ if [ ! -f ${DATA_FILE} ]; then
   exit 1
 fi
 
-# benchmark inference performance
-# make sure you're on the root project folder
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
-cd $GOPATH/src/github.com/RedisAI/aibench
-cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
-  gunzip |
-  ${EXE_FILE_NAME} \
-    -workers ${NUM_WORKERS} \
-    -burn-in ${QUERIES_BURN_IN} -max-queries ${NUM_INFERENCES} \
-    -print-interval 0 -reporting-period 1000ms \
-    -limit-rps ${RATE_LIMIT} \
-    -output-file-stats-hdr-response-latency-hist ~/redisai_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
-    -model ${MODEL_NAME} \
-    -host redis://${DATABASE_HOST}:${DATABASE_PORT} 2>&1 | tee ~/redisai_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+for REFERENCE_DATA in "true" "false"; do
+  if [[ "${REFERENCE_DATA}" == "false" ]]; then
+    MODEL_NAME=$MODEL_NAME_NOREFERENCE
+  fi
+  echo "Benchmarking inference performance with reference data set to: ${REFERENCE_DATA} and model name ${MODEL_NAME}"
+  # benchmark inference performance
+  # make sure you're on the root project folder
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
+  cd $GOPATH/src/github.com/RedisAI/aibench
+  cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
+    gunzip |
+    ${EXE_FILE_NAME} \
+      -model=${MODEL_NAME} \
+      -workers=${NUM_WORKERS} \
+      -print-responses=${PRINT_RESPONSES} \
+      -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
+      -print-interval=0 -reporting-period=1000ms \
+      -limit-rps=${RATE_LIMIT} \
+      -debug=${DEBUG} \
+      -enable-reference-data=${REFERENCE_DATA} \
+      -host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
+      -output-file-stats-hdr-response-latency-hist=~/redisai_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
+      2>&1 | tee ~/redisai_referencedata_${REFERENCE_DATA}_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+
+done

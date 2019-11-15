@@ -29,20 +29,29 @@ if [ ! -f ${DATA_FILE} ]; then
   exit 1
 fi
 
-# benchmark inference performance
-# make sure you're on the root project folder
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
-cd $GOPATH/src/github.com/RedisAI/aibench
-cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
-  gunzip |
-  ${EXE_FILE_NAME} \
-    -workers ${NUM_WORKERS} \
-    -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
-    -print-interval 0 -reporting-period 1000ms \
-    -limit-rps ${RATE_LIMIT} \
-    -output-file-stats-hdr-response-latency-hist ~/tensorflow_serving_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
-    -model ${MODEL_NAME} -model-version ${TFX_MODEL_VERSION} \
-    -tensorflow-serving-host ${DATABASE_HOST}:${TFX_PORT} \
-    -redis-host ${DATABASE_HOST}:${DATABASE_PORT} 2>&1 | tee ~/tensorflow_serving_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
+for REFERENCE_DATA in "true" "false"; do
+  if [[ "${REFERENCE_DATA}" == "false" ]]; then
+    MODEL_NAME=$MODEL_NAME_NOREFERENCE
+  fi
+  echo "Benchmarking inference performance with reference data set to: ${REFERENCE_DATA} and model name ${MODEL_NAME}"
 
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+  # benchmark inference performance
+  # make sure you're on the root project folder
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
+  cd $GOPATH/src/github.com/RedisAI/aibench
+  cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
+    gunzip |
+    ${EXE_FILE_NAME} \
+      -workers ${NUM_WORKERS} \
+      -burn-in ${QUERIES_BURN_IN} -max-queries ${MAX_QUERIES} \
+      -print-interval 0 -reporting-period 1000ms \
+      -limit-rps ${RATE_LIMIT} \
+      -enable-reference-data ${REFERENCE_DATA} \
+      -output-file-stats-hdr-response-latency-hist ~/tensorflow_serving_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
+      -model ${MODEL_NAME} -model-version ${TFX_MODEL_VERSION} \
+      -tensorflow-serving-host ${DATABASE_HOST}:${TFX_PORT} \
+      -redis-host ${DATABASE_HOST}:${DATABASE_PORT} 2>&1 | tee ~/tensorflow_serving_referencedata_${REFERENCE_DATA}_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
+
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+
+done
