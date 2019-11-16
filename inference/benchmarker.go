@@ -38,6 +38,7 @@ type BenchmarkRunner struct {
 	printResponses                     bool
 	ignoreErrors                       bool
 	debug                              int
+	enableReferenceData                bool
 	fileName                           string
 	seed                               int64
 	reportingPeriod                    time.Duration
@@ -70,6 +71,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
 	flag.BoolVar(&runner.ignoreErrors, "ignore-errors", false, "Whether to ignore the inference errors and continue. By default on error the benchmark stops (default false).")
+	flag.BoolVar(&runner.enableReferenceData, "enable-reference-data", true, "Whether to enable benchmarking inference with a model with reference data or not (default true).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
@@ -103,6 +105,10 @@ func (b *BenchmarkRunner) IgnoreErrors() bool {
 	return b.ignoreErrors
 }
 
+func (b *BenchmarkRunner) UseReferenceData() bool {
+	return b.enableReferenceData
+}
+
 // LoaderCreate is a function that creates a new Loader (called in Run)
 type ProcessorCreate func() Processor
 
@@ -112,7 +118,7 @@ type Processor interface {
 	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) ([]*Stat, error)
+	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*Stat, error)
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
@@ -173,7 +179,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		requestBurst = 1 //int(b.workers)
 	}
 
-	var rateLimiter *rate.Limiter = rate.NewLimiter(requestRate, requestBurst)
+	var rateLimiter = rate.NewLimiter(requestRate, requestBurst)
 
 	var wg sync.WaitGroup
 	for i := 0; i < int(b.workers); i++ {
@@ -210,8 +216,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		_, _ = fmt.Printf("Saving Query Latencies HDR Histogram to %s\n", b.outputFileStatsResponseLatencyHist)
 
 		d1 := []byte(b.sp.StatsMapping[labelAllQueries].stringQueryLatencyFullHistogram())
-		fErr := ioutil.WriteFile(b.outputFileStatsResponseLatencyHist, d1, 0644)
-		if fErr != nil {
+		err = ioutil.WriteFile(b.outputFileStatsResponseLatencyHist, d1, 0644)
+		if err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -240,7 +246,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 	for query := range b.ch {
 		r := rateLimiter.ReserveN(time.Now(), 1)
 		time.Sleep(r.Delay())
-		stats, err := processor.ProcessInferenceQuery(query, false, workerNum)
+		stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceData)
 		if err != nil {
 			if b.IgnoreErrors() {
 				fmt.Printf("Ignoring inference error: %v\n", err)
@@ -257,7 +263,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 		// This guarantees that the warm stat will reflect optimal cache performance.
 		if b.sp.prewarmQueries {
 			// Warm run
-			stats, err = processor.ProcessInferenceQuery(query, true, workerNum)
+			stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceData)
 			if err != nil {
 				if b.IgnoreErrors() {
 					fmt.Printf("Ignoring inference error: %v\n", err)

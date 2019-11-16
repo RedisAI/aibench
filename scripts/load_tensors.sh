@@ -21,17 +21,22 @@ if [ ! -f ${DATA_FILE} ]; then
   exit 1
 fi
 
-# flush the database
-#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} flushall
+if [[ "${SETUP_MODEL}" == "true" ]]; then
 
-# load the correct AI backend
-#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
+  # load the correct AI backend
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
 
-# set the Model
-#cd $GOPATH/src/github.com/RedisAI/aibench
-#redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
-#  TF CPU INPUTS transaction reference \
-#  OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
+  # set the Model
+  cd $GOPATH/src/github.com/RedisAI/aibench
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
+    TF CPU INPUTS transaction reference \
+    OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
+
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
+    TF CPU INPUTS transaction \
+    OUTPUTS out <./tests/models/tensorflow/creditcardfraud_noreference.pb
+
+fi
 
 # load the reference data
 # make sure you're on the root project folder
@@ -39,9 +44,9 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 cat ${DATA_FILE} |
   gunzip |
   ${EXE_FILE_NAME} \
-    -reporting-period 1000ms \
+    -reporting-period=1000ms \
     -set-blob=false -set-tensor=true \
-    -host redis://${DATABASE_HOST}:${DATABASE_PORT} \
-    -workers ${NUM_WORKERS} -pipeline 1000 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
+    -host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
+    -workers=${NUM_WORKERS} -pipeline=${REDIS_PIPELINE_SIZE} 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
 
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats 2>&1 | tee ~/redisai_load_tensors_commandstats_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt

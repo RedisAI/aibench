@@ -90,11 +90,10 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	if err != nil {
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 	}
-	//defer p.grpcClientConn.Close()
 	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -118,45 +117,74 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int) 
 	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
 
 	start := time.Now()
-	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
-	if redisErr != nil {
-		log.Fatalln(redisErr)
-	}
-	request := &tensorflowserving.PredictRequest{
-		ModelSpec: &tensorflowserving.ModelSpec{
-			Name: model,
-			Version: &googleprotobuf.Int64Value{
-				Value: int64(version),
+	var request *tensorflowserving.PredictRequest = nil
+	if (useReferenceData == true) {
+		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+		if redisErr != nil {
+			log.Fatalln(redisErr)
+		}
+		request = &tensorflowserving.PredictRequest{
+			ModelSpec: &tensorflowserving.ModelSpec{
+				Name: model,
+				Version: &googleprotobuf.Int64Value{
+					Value: int64(version),
+				},
 			},
-		},
-		Inputs: map[string]*tfcoreframework.TensorProto{
-			"transaction": {
-				Dtype: tfcoreframework.DataType_DT_FLOAT,
-				TensorShape: &tfcoreframework.TensorShapeProto{
-					Dim: []*tfcoreframework.TensorShapeProto_Dim{
-						{
-							Size: int64(1),
-						},
-						{
-							Size: int64(30),
+			Inputs: map[string]*tfcoreframework.TensorProto{
+				"transaction": {
+					Dtype: tfcoreframework.DataType_DT_FLOAT,
+					TensorShape: &tfcoreframework.TensorShapeProto{
+						Dim: []*tfcoreframework.TensorShapeProto_Dim{
+							{
+								Size: int64(1),
+							},
+							{
+								Size: int64(30),
+							},
 						},
 					},
+					TensorContent: transactionValues,
 				},
-				TensorContent: transactionValues,
-			},
-			"reference": {
-				Dtype: tfcoreframework.DataType_DT_FLOAT,
-				TensorShape: &tfcoreframework.TensorShapeProto{
-					Dim: []*tfcoreframework.TensorShapeProto_Dim{
-						{
-							Size: int64(256),
+				"reference": {
+					Dtype: tfcoreframework.DataType_DT_FLOAT,
+					TensorShape: &tfcoreframework.TensorShapeProto{
+						Dim: []*tfcoreframework.TensorShapeProto_Dim{
+							{
+								Size: int64(256),
+							},
 						},
 					},
+					TensorContent: redisRespReferenceBytes,
 				},
-				TensorContent: redisRespReferenceBytes,
 			},
-		},
+		}
+	} else {
+		request = &tensorflowserving.PredictRequest{
+			ModelSpec: &tensorflowserving.ModelSpec{
+				Name: model,
+				Version: &googleprotobuf.Int64Value{
+					Value: int64(version),
+				},
+			},
+			Inputs: map[string]*tfcoreframework.TensorProto{
+				"transaction": {
+					Dtype: tfcoreframework.DataType_DT_FLOAT,
+					TensorShape: &tfcoreframework.TensorShapeProto{
+						Dim: []*tfcoreframework.TensorShapeProto_Dim{
+							{
+								Size: int64(1),
+							},
+							{
+								Size: int64(30),
+							},
+						},
+					},
+					TensorContent: transactionValues,
+				},
+			},
+		}
 	}
+
 	PredictResponse, err := p.predictionServiceClient.Predict(context.Background(), request)
 	took := time.Since(start).Microseconds()
 	if err != nil {
