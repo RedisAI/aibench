@@ -48,7 +48,7 @@ for REFERENCE_DATA in "true" "false"; do
       -debug=${DEBUG} \
       -enable-reference-data=${REFERENCE_DATA} \
       -host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
-      -output-file-stats-hdr-response-latency-hist=~/redisai_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
+      -output-file-stats-hdr-response-latency-hist=redisai_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
       2>&1 | tee ~/redisai_referencedata_${REFERENCE_DATA}_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
 
