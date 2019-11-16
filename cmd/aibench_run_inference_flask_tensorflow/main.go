@@ -21,25 +21,14 @@ import (
 
 // Program option vars:
 var (
-	redisHost         string
-	restapiHost       string
-	restapiRequestUri string
-	_                 string
-	_                 int
-	strPost           = []byte("POST")
-	//strContentType    = []byte("multipart/mixed")
-
-	strRequestURI = []byte("")
-	strHost       = []byte("")
-	showExplain   bool
-)
-
-// Global vars:
-var (
-	runner *inference.BenchmarkRunner
-)
-
-var (
+	redisHost          string
+	restapiHost        string
+	restapiRequestUri  string
+	strPost            = []byte("POST")
+	strRequestURI      = []byte("")
+	strHost            = []byte("")
+	showExplain        bool
+	runner             *inference.BenchmarkRunner
 	redisClient        *redis.Client
 	restapiReadTimeout time.Duration
 )
@@ -50,7 +39,7 @@ func init() {
 	flag.StringVar(&redisHost, "redis-host", "127.0.0.1:6379", "Redis host address and port")
 	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
 	flag.DurationVar(&restapiReadTimeout, "restapi-read-timeout", 5*time.Second, "REST API timeout")
-	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v1/predict", "REST API request URI")
+	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v2/predict", "REST API request URI")
 	flag.Parse()
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: redisHost,
@@ -60,7 +49,6 @@ func init() {
 func main() {
 	strRequestURI = []byte(restapiRequestUri)
 	strHost = []byte(restapiHost)
-
 	runner.Run(&inference.RedisAIPool, newProcessor)
 }
 
@@ -128,15 +116,17 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	transPart.Write(transactionValues)
 	start := time.Now()
-	redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
-	if redisErr != nil {
-		log.Fatalln("Error on redisClient.Get", redisErr)
+	if useReferenceData {
+		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+		if redisErr != nil {
+			log.Fatalln("Error on redisClient.Get", redisErr)
+		}
+		refPart, err := writer.CreateFormFile("reference", "reference")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		refPart.Write(redisRespReferenceBytes)
 	}
-	refPart, err := writer.CreateFormFile("reference", "reference")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	refPart.Write(redisRespReferenceBytes)
 	writer.Close()
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 	req.SetBody(body.Bytes())
@@ -156,6 +146,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	fasthttp.ReleaseResponse(res)
 	stat := inference.GetStat()
+
 	stat.Init([]byte("DL REST API Query"), took, uint64(0), false, "")
 	return []*inference.Stat{stat}, nil
 }

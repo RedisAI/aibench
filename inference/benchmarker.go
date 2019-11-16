@@ -77,7 +77,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
 	flag.StringVar(&runner.outputFileStatsResponseLatencyHist, "output-file-stats-hdr-response-latency-hist", "stats-response-latency-hist.txt", "File name to output the hdr response latency histogram to")
-	
+
 	return runner
 }
 
@@ -216,8 +216,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		_, _ = fmt.Printf("Saving Query Latencies HDR Histogram to %s\n", b.outputFileStatsResponseLatencyHist)
 
 		d1 := []byte(b.sp.StatsMapping[labelAllQueries].stringQueryLatencyFullHistogram())
-		fErr := ioutil.WriteFile(b.outputFileStatsResponseLatencyHist, d1, 0644)
-		if fErr != nil {
+		err = ioutil.WriteFile(b.outputFileStatsResponseLatencyHist, d1, 0644)
+		if err != nil {
 			log.Fatal(err)
 		}
 	}

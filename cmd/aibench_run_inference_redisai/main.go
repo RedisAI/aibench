@@ -20,11 +20,11 @@ import (
 
 // Global vars:
 var (
-	runner        *inference.BenchmarkRunner
-	cpool         *redis.Pool
-	host          string
-	model         string
-	showExplain   bool
+	runner      *inference.BenchmarkRunner
+	cpool       *redis.Pool
+	host        string
+	model       string
+	showExplain bool
 )
 
 var (
@@ -103,7 +103,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	p.pclient.TensorSet(transactionDataTensorName, redisai.TypeFloat, []int{1, 30}, transactionValues)
 	if useReferenceData == true {
 		p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
-	}else{
+	} else {
 		p.pclient.ModelRun(model, []string{transactionDataTensorName}, []string{classificationTensorName})
 	}
 	p.pclient.TensorGet(classificationTensorName, redisai.TensorContentTypeBlob)

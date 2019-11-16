@@ -4,7 +4,7 @@
 ### Benchmarking inference performance -- RedisAI Benchmark Go program
 
 To measure inference performance in aibench, you first need to load
-the data using the instructions in the overall [Reference data Loading section](https://github.com/filipecosta90/aibench#reference-data-loading). 
+the data using the instructions in the overall [Reference data Loading section](https://github.com/RedisAI/aibench#reference-data-loading). 
 
 Once the data is loaded,
 just use the corresponding `aibench_run_inference_redisai` binary for the DL Solution
@@ -13,14 +13,7 @@ being tested:
 ```bash
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
-cat /tmp/aibench_generate_data-creditcard-fraud.dat.gz \
-        | gunzip \
-        | aibench_run_inference_redisai \
-         -workers 16 \
-         -burn-in 10 -max-queries 100010 \
-         -print-interval 0 -reporting-period 1000s \
-         -model financialNet \
-         -host redis://127.0.0.1:6379 
+./scripts/run_inference_redisai.sh
 ```
 
 #### Sequence diagram - RedisAI Solution
