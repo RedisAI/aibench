@@ -9,6 +9,7 @@ MODEL_NAME_NOREFERENCE=${MODEL_NAME_NOREFERENCE:-"financialNet_NoReference"}
 SETUP_MODEL=${SETUP_MODEL:-"true"}
 REDIS_PIPELINE_SIZE=${REDIS_PIPELINE_SIZE:-100}
 DEBUG=${DEBUG:-0}
+DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat}
 
 # Data folder
 BULK_DATA_DIR=${BULK_DATA_DIR:-"/tmp/bulk_data"}

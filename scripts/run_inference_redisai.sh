@@ -7,7 +7,6 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
 QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
 
 # Rate limit? if greater than 0 rate is limited.
@@ -27,7 +26,7 @@ if [ ! -f ${DATA_FILE} ]; then
   exit 1
 fi
 #"false"
-for REFERENCE_DATA in "true" ; do
+for REFERENCE_DATA in "true"; do
   if [[ "${REFERENCE_DATA}" == "false" ]]; then
     MODEL_NAME=$MODEL_NAME_NOREFERENCE
   fi
@@ -36,8 +35,7 @@ for REFERENCE_DATA in "true" ; do
   # make sure you're on the root project folder
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
   cd $GOPATH/src/github.com/RedisAI/aibench
-  cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
-    gunzip |
+  cat ${DATA_FILE} |
     ${EXE_FILE_NAME} \
       -model=${MODEL_NAME} \
       -model-filename=./tests/models/tensorflow/creditcardfraud.pb \

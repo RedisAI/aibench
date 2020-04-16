@@ -7,8 +7,6 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
@@ -27,10 +25,10 @@ fi
 ##  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
 ##
 ##  # set the Model
-  cd $GOPATH/src/github.com/RedisAI/aibench
-  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
-    TF CPU INPUTS transaction reference \
-    OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
+cd $GOPATH/src/github.com/RedisAI/aibench
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
+  TF CPU INPUTS transaction reference \
+  OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
 ##
 ##  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
 ##    TF CPU INPUTS transaction \
@@ -42,7 +40,6 @@ fi
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
 cat ${DATA_FILE} |
-  gunzip |
   ${EXE_FILE_NAME} \
     -reporting-period=1000ms \
     -set-blob=false -set-tensor=true \

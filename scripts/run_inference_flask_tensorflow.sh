@@ -38,8 +38,7 @@ for REFERENCE_DATA in "false"; do
   # make sure you're on the root project folder
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
   cd $GOPATH/src/github.com/RedisAI/aibench
-  cat ${BULK_DATA_DIR}/aibench_generate_data-creditcard-fraud.dat.gz |
-    gunzip |
+  cat ${DATA_FILE} |
     ${EXE_FILE_NAME} \
       -workers=${NUM_WORKERS} \
       -burn-in=${QUERIES_BURN_IN} -max-queries=${MAX_QUERIES} \
