@@ -108,7 +108,7 @@ func (p *Processor) Close() {
 
 func newProcessor() inference.Processor { return &Processor{} }
 
-func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
+func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.opts = &queryExecutorOptions{
 		showExplain:   showExplain,
 		debug:         runner.DebugLevel() > 0,
@@ -118,16 +118,30 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	p.Metrics = m
 	var err error = nil
 
+
 	hosts:= strings.Split(host, ",")
 	ports:= strings.Split(port, ",")
 
-	p.pclient = make([]*radix.Pool,len(hosts))
-	for idx, h := range hosts  {
-		p.pclient[idx], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", h, ports[idx]), 1, radix.PoolPipelineWindow(0, 0))
+
+	// if we have more hosts than workers lets connect to them all
+	if len(hosts)>totalWorkers{
+		p.pclient = make([]*radix.Pool,len(hosts))
+		for idx, h := range hosts  {
+			p.pclient[idx], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", h, ports[idx]), 1, radix.PoolPipelineWindow(0, 0))
+			if err != nil {
+				log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
+			}
+		}
+
+	}else{
+		pos := (numWorker+1) % len(hosts)
+		p.pclient = make([]*radix.Pool,1)
+		p.pclient[0], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", hosts[pos], ports[pos]), 1, radix.PoolPipelineWindow(0, 0))
 		if err != nil {
 			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
 		}
 	}
+
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {

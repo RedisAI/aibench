@@ -71,7 +71,7 @@ func (p *Processor) Close() {
 
 func newProcessor() inference.Processor { return &Processor{} }
 
-func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
+func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.Wg = wg
 	p.Metrics = m
 	p.opts = &queryExecutorOptions{

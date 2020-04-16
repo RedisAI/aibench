@@ -38,7 +38,6 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 			// request queries limit reached, time to quit
 			break
 		}
-
 		readBytes, err := io.ReadFull(s.r, bytes)
 		if readBytes == 0 {
 			break
