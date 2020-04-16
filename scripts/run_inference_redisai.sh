@@ -26,8 +26,8 @@ if [ ! -f ${DATA_FILE} ]; then
   echo "Cannot find data file ${DATA_FILE}"
   exit 1
 fi
-
-for REFERENCE_DATA in "true" "false"; do
+#"false"
+for REFERENCE_DATA in "true" ; do
   if [[ "${REFERENCE_DATA}" == "false" ]]; then
     MODEL_NAME=$MODEL_NAME_NOREFERENCE
   fi
@@ -40,14 +40,18 @@ for REFERENCE_DATA in "true" "false"; do
     gunzip |
     ${EXE_FILE_NAME} \
       -model=${MODEL_NAME} \
+      -model-filename=./tests/models/tensorflow/creditcardfraud.pb \
       -workers=${NUM_WORKERS} \
       -print-responses=${PRINT_RESPONSES} \
       -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
       -print-interval=0 -reporting-period=1000ms \
       -limit-rps=${RATE_LIMIT} \
       -debug=${DEBUG} \
+      -use-dag=true \
+      -cluster-mode \
       -enable-reference-data=${REFERENCE_DATA} \
-      -host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
+      -host=${DATABASE_HOST} \
+      -port=${DATABASE_PORT} \
       -output-file-stats-hdr-response-latency-hist=redisai_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
       2>&1 | tee ~/redisai_referencedata_${REFERENCE_DATA}_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats

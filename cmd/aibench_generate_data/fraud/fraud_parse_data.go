@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/common"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/serialize"
+	"github.com/mediocregopher/radix"
 	"io"
 	"log"
 	"os"
@@ -89,7 +90,10 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 			}
 			buf := make([]byte, 8)
 			binary.LittleEndian.PutUint64(buf, transactionCount)
-			transactions = append(transactions, serialize.Transaction{Id: buf, TransactionValues: qbytes, ReferenceValues: refBytes})
+			crc := make([]byte, 2)
+			binary.LittleEndian.PutUint16(crc, radix.CRC16(buf) )
+
+			transactions = append(transactions, serialize.Transaction{Id: buf, TransactionValues: qbytes, ReferenceValues: refBytes, Slot: crc})
 			if debug > 0 {
 				if transactionCount%1000 == 0 {
 					fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(transactionCount)))
