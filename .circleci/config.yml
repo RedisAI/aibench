@@ -8,10 +8,13 @@ commands:
         default: abc
     steps:
       - checkout
+      - restore_cache:
+          key: v1-{{ arch }}-redis-cli
+
       - run:
           name: Install dependencies
           command: |
-            # get redis
+            # get redis-cli
             cd /tmp
             wget http://download.redis.io/releases/redis-5.0.8.tar.gz
             tar xvzf redis-5.0.8.tar.gz
@@ -19,15 +22,24 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
+
+      - save_cache:
+          key: v1-{{ arch }}-redis-cli
+          paths:
+            - /usr/local/bin/redis-cli
+
       - run:
           name: Install Aibench execs, and load tensors
           command: |
-            # build binaries
             cd /go/src/github.com/RedisAI/aibench
             go get -t -d ./...
             go test ./...
             ./scripts/build_binaries.sh
-            # generate data
+
+      - run:
+          name: Generate sample data and load tensors
+          command: |
+            cd /go/src/github.com/RedisAI/aibench
             ./scripts/generate_data.sh
             ./scripts/load_tensors.sh
 
