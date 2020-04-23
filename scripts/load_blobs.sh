@@ -7,8 +7,6 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
@@ -23,7 +21,6 @@ fi
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
 cat ${DATA_FILE} |
-  gunzip |
   ${EXE_FILE_NAME} \
     -reporting-period 1000ms \
     -set-blob=true \

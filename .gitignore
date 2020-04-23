@@ -11,6 +11,14 @@ cmd/aibench_run_inference_flask_tensorflow/aibench_run_inference_flask_tensorflo
 data/creditcard.csv
 .keras/
 
+# torchserve #
+*.mar
+*/logs/*
+*/logs
+tests/models/torch/logs/*
+
+
+
 # Idea / others #
 #################
 

@@ -2,9 +2,12 @@
 
 # model_handler.py
 
+# https://pytorch.org/serve/custom_service.html
+# https://pytorch.org/serve/logging.html
+# https://pytorch.org/serve/server.html
 
 # torch-model-archiver --model-name financialNetTorch --version 1 --serialized-file torchFraudNetWithRef.pt --handler handler_financialNet.py
-# torchserve --start --model-store . --models my_tc=financialNetTorch.mar
+# orchserve --start --model-store . --models financial=financialNetTorch.mar --ts-config config.properties --log-config log4j.properties
 """
 ModelHandler defines a base model handler.
 """
@@ -43,6 +46,7 @@ class ModelHandler(object):
         return None
 
     def inference(self, model_input):
+        response = {'outputs': []}
         """
         Internal inference methods
         :param model_input: transformed model input data
@@ -50,7 +54,8 @@ class ModelHandler(object):
         """
         # Do some inference call to engine here and return output
         # TODO do the real inference
-        return [0.90,0.1]
+        response['outputs']=[0.90,0.1]
+        return response
 
     def postprocess(self, inference_output):
         # Take output from network and post-process to desired format
