@@ -7,10 +7,9 @@ commands:
         type: string
         default: abc
     steps:
-      - checkout
-      - restore_cache:
-          key: v1-{{ arch }}-redis-cli
-
+#      - checkout
+#      - restore_cache:
+#          key: v1-{{ arch }}-redis-cli
       - run:
           name: Install dependencies
           command: |
@@ -22,11 +21,11 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
-
-      - save_cache:
-          key: v1-{{ arch }}-redis-cli
-          paths:
-            - /usr/local/bin/redis-cli
+#
+#      - save_cache:
+#          key: v1-{{ arch }}-redis-cli
+#          paths:
+#            - /usr/local/bin/redis-cli
 
       - run:
           name: Install Aibench execs
