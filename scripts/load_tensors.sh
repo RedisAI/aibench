@@ -18,21 +18,18 @@ if [ ! -f ${DATA_FILE} ]; then
   echo "Cannot find data file ${DATA_FILE}"
   exit 1
 fi
-#
+
 #if [[ "${SETUP_MODEL}" == "true" ]]; then
 #
-#  # load the correct AI backend
-##  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
-##
 ##  # set the Model
 cd $GOPATH/src/github.com/RedisAI/aibench
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
   TF CPU INPUTS transaction reference \
   OUTPUTS output <./tests/models/tensorflow/creditcardfraud.pb
-##
-##  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
-##    TF CPU INPUTS transaction \
-##    OUTPUTS out <./tests/models/tensorflow/creditcardfraud_noreference.pb
+
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
+  TF CPU INPUTS transaction \
+  OUTPUTS out <./tests/models/tensorflow/creditcardfraud_noreference.pb
 #
 #fi
 
