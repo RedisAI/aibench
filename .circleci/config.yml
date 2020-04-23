@@ -5,6 +5,7 @@ commands:
     parameters:
       platform:
         type: string
+        default: abc
     steps:
       - run:
           name: Install dependencies
