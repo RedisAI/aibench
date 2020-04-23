@@ -8,41 +8,77 @@ import (
 	"fmt"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
-	"github.com/RedisAI/redisai-go/redisai"
-	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
+	"github.com/mediocregopher/radix"
 	"log"
+	"math/rand"
+	"strings"
+	"time"
+
 	//ignoring until we get the correct model
 	//"log"
 	"sync"
-	"time"
 )
 
 // Global vars:
 var (
-	runner      *inference.BenchmarkRunner
-	cpool       *redis.Pool
-	host        string
-	model       string
-	showExplain bool
+	runner *inference.BenchmarkRunner
+	host                    string
+	port                    string
+	model                   string
+	modelFilename           string
+	useDag                  bool
+	showExplain             bool
+	clusterMode             bool
+	PoolPipelineConcurrency int
+	PoolPipelineWindow      time.Duration
 )
 
 var (
 	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
 )
 
+func getClusterNodesFromArgs(nodes []radix.ClusterNode, port string, host string, nodesAddresses []string) ([]radix.ClusterNode, []string) {
+	nodes = []radix.ClusterNode{}
+	ports := strings.Split(port, ",")
+	for idx, nhost := range strings.Split(host, ",") {
+		node := radix.ClusterNode{
+			Addr:            fmt.Sprintf("%s:%s", nhost, ports[idx]),
+			ID:              "",
+			Slots:           nil,
+			SecondaryOfAddr: "",
+			SecondaryOfID:   "",
+		}
+		nodes = append(nodes, node)
+		nodesAddresses = append(nodesAddresses, node.Addr)
+	}
+	return nodes, nodesAddresses
+}
+
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&host, "host", "redis://localhost:6379", "Redis host address and port")
+	flag.StringVar(&host, "host", "localhost", "Redis host address, if more than one is passed will round robin requests")
+	flag.StringVar(&port, "port", "6379", "Redis host port, if more than one is passed will round robin requests")
 	flag.StringVar(&model, "model", "", "model name")
-	flag.Parse()
+	flag.StringVar(&modelFilename, "model-filename", "", "modelFilename")
+	flag.BoolVar(&useDag, "use-dag", false, "use DAGRUN")
+	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
+	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
+	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
 
-	cpool = &redis.Pool{
-		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
-	}
+	// If limit is zero then no limit will be used and pipelines will only be limited
+	// by the specified time window.
+
+	//	PoolPipelineConcurrency(size)
+	//	PoolPipelineWindow(150 * time.Microsecond, 0)
+	flag.Parse()
+	//
+	//cpool = &redis.Pool{
+	//	MaxIdle:     3,
+	//	IdleTimeout: 240 * time.Second,
+	//	Dial:        func() (redis.Conn, error) { return redis.DialURL(fmt.Sprintf("%s:%d",host,port)) },
+	//}
 }
 
 func main() {
@@ -59,18 +95,20 @@ type Processor struct {
 	opts    *queryExecutorOptions
 	Metrics chan uint64
 	Wg      *sync.WaitGroup
-	pclient *redisai.Client
+	pclient []*radix.Pool
 }
 
 func (p *Processor) Close() {
 	if p.pclient != nil {
-		p.pclient.Close()
+		for _, client := range p.pclient {
+			client.Close()
+		}
 	}
 }
 
 func newProcessor() inference.Processor { return &Processor{} }
 
-func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
+func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
 	p.opts = &queryExecutorOptions{
 		showExplain:   showExplain,
 		debug:         runner.DebugLevel() > 0,
@@ -78,12 +116,32 @@ func (p *Processor) Init(numWorker int, wg *sync.WaitGroup, m chan uint64, rs ch
 	}
 	p.Wg = wg
 	p.Metrics = m
-	p.pclient = redisai.Connect(host, cpool)
-	var autoFlushSize uint32 = 2
-	if runner.UseReferenceData() {
-		autoFlushSize++
+	var err error = nil
+
+
+	hosts:= strings.Split(host, ",")
+	ports:= strings.Split(port, ",")
+
+
+	// if we have more hosts than workers lets connect to them all
+	if len(hosts)>totalWorkers{
+		p.pclient = make([]*radix.Pool,len(hosts))
+		for idx, h := range hosts  {
+			p.pclient[idx], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", h, ports[idx]), 1, radix.PoolPipelineWindow(0, 0))
+			if err != nil {
+				log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
+			}
+		}
+
+	}else{
+		pos := (numWorker+1) % len(hosts)
+		p.pclient = make([]*radix.Pool,1)
+		p.pclient[0], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", hosts[pos], ports[pos]), 1, radix.PoolPipelineWindow(0, 0))
+		if err != nil {
+			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
+		}
 	}
-	p.pclient.Pipeline(autoFlushSize)
+
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
@@ -98,50 +156,21 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	classificationTensorName := "classificationTensor:{" + idS + "}"
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
-
+	args := []string{"LOAD", "1", referenceDataTensorName, "|>",
+		"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
+		"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, referenceDataTensorName, "OUTPUTS", classificationTensorName, "|>",
+		"AI.TENSORGET", classificationTensorName, "BLOB",
+	}
+	pos := rand.Int31n(int32(len(p.pclient)))
 	start := time.Now()
-	p.pclient.TensorSet(transactionDataTensorName, redisai.TypeFloat, []int{1, 30}, transactionValues)
-	if useReferenceData == true {
-		p.pclient.ModelRun(model, []string{transactionDataTensorName, referenceDataTensorName}, []string{classificationTensorName})
-	} else {
-		p.pclient.ModelRun(model, []string{transactionDataTensorName}, []string{classificationTensorName})
-	}
-	p.pclient.TensorGet(classificationTensorName, redisai.TensorContentTypeBlob)
-	err := p.pclient.Flush()
-	if err != nil {
-		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
-		if runner.IgnoreErrors() {
-			fmt.Println(extendedError)
-		} else {
-			log.Fatal(extendedError)
-		}
-	}
-	p.pclient.Receive()
-	p.pclient.Receive()
-	resp, err := p.pclient.Receive()
-	data, err := redisai.ProcessTensorReplyMeta(resp, err)
-	PredictResponse, err := redisai.ProcessTensorReplyBlob(data, err)
-	took := time.Since(start).Microseconds()
-	if err != nil {
-		extendedError := fmt.Errorf("ProcessTensorReplyBlob() failed:%v\n", err)
-		if runner.IgnoreErrors() {
-			fmt.Println(extendedError)
-		} else {
-			log.Fatal(extendedError)
-		}
-	}
-	if p.opts.printResponse {
+		err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
 		if err != nil {
-			extendedError := fmt.Errorf("Response parsing failed:%v\n", err)
-			if runner.IgnoreErrors() {
-				fmt.Println(extendedError)
-			} else {
-				log.Fatal(extendedError)
-			}
+			extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
+			log.Fatal(extendedError)
 		}
-		fmt.Println("RESPONSE: ", PredictResponse[2])
-	}
-	// VALUES
+
+	took := time.Since(start).Microseconds()
+
 	stat := inference.GetStat()
 	stat.Init([]byte(inferenceType), took, uint64(0), false, "")
 

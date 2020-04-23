@@ -11,7 +11,7 @@ import (
 // Internally, Transaction uses byte slices instead of strings to try to minimize
 // overhead.
 type Transaction struct {
-	Id, TransactionValues, ReferenceValues []byte
+	Id, TransactionValues, ReferenceValues, Slot []byte
 }
 
 // NewTransaction returns a new empty Transaction
@@ -20,6 +20,8 @@ func NewTransaction() *Transaction {
 		Id:                make([]byte, 8),
 		TransactionValues: make([]byte, 120),
 		ReferenceValues:   make([]byte, 1024),
+		Slot: make([]byte, 2),
+
 	}
 }
 
@@ -28,6 +30,7 @@ func (p *Transaction) Reset() {
 	p.Id = p.Id[:0]
 	p.TransactionValues = p.TransactionValues[:0]
 	p.ReferenceValues = p.ReferenceValues[:0]
+	p.Slot = p.Slot[:0]
 }
 
 // TransactionSerializer serializes a Transaction for writing
