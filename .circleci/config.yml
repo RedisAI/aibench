@@ -28,20 +28,20 @@ jobs:
       - image: circleci/golang:1.13
       - image: redisai/redisai:0.9.0
 
-      working_directory: /go/src/github.com/RedisAI/aibench
-      steps:
-          - ci_steps:
-            platform: debian
+    working_directory: /go/src/github.com/RedisAI/aibench
+    steps:
+        - ci_steps:
+          platform: debian
 
   build-edge: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
       - image: redisai/redisai:edge
 
-      working_directory: /go/src/github.com/RedisAI/aibench
-      steps:
-          - ci_steps:
-            platform: debian
+    working_directory: /go/src/github.com/RedisAI/aibench
+    steps:
+        - ci_steps:
+          platform: debian
 
 workflows:
   version: 2
