@@ -12,8 +12,7 @@ jobs:
     steps:
       - checkout
       - run: go get -t -d ./...
-      - run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic
-      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
+      - run: go test ./...
 
   build-v090: # test with redisai:0.9.0
     docker:
