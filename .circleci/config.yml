@@ -31,7 +31,7 @@ commands:
           name: Install Aibench execs
           command: |
             cd /go/src/github.com/RedisAI/aibench
-            make
+            make all
 
       - run:
           name: Generate sample data and load tensors
