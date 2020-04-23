@@ -29,18 +29,15 @@ commands:
             - /usr/local/bin/redis-cli
 
       - run:
-          name: Install Aibench execs, and load tensors
+          name: Install Aibench execs
           command: |
-            cd /go/src/github.com/RedisAI/aibench
-            go get -t -d ./...
-            go test ./...
-            ./scripts/build_binaries.sh
+            make
 
       - run:
           name: Generate sample data and load tensors
           command: |
             cd /go/src/github.com/RedisAI/aibench
-            ./scripts/generate_data.sh
+            make data
             ./scripts/load_tensors.sh
 
 
