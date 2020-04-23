@@ -11,8 +11,13 @@
 """
 ModelHandler defines a base model handler.
 """
+import io
 import logging
+import numpy as np
+import os
+import torch
 
+logger = logging.getLogger(__name__)
 
 class ModelHandler(object):
     """
@@ -22,7 +27,9 @@ class ModelHandler(object):
     def __init__(self):
         self.error = None
         self._context = None
+        self.model=None
         self._batch_size = 0
+        self.device = None
         self.initialized = False
 
     def initialize(self, context):
@@ -32,7 +39,14 @@ class ModelHandler(object):
         :return:
         """
         self._context = context
-        self._batch_size = context.system_properties["batch_size"]
+        properties = context.system_properties
+        self._batch_size = properties["batch_size"]
+        self.device = torch.device("cuda:" + str(properties.get("gpu_id")) if torch.cuda.is_available() else "cpu")
+        model_dir = properties.get("model_dir")
+#         Read model serialize/pt file
+        model_pt_path = os.path.join(model_dir, "torchFraudNetWithRef.pt")
+        self.model = model = torch.jit.load(model_pt_path)
+
         self.initialized = True
 
     def preprocess(self, batch):
@@ -43,18 +57,29 @@ class ModelHandler(object):
         """
         # Take the input data and pre-process it make it inference ready
         assert self._batch_size == len(batch), "Invalid input batch size: {}".format(len(batch))
-        return None
+        return batch
 
     def inference(self, model_input):
-        response = {'outputs': []}
+        response = {'outputs': None }
         """
         Internal inference methods
         :param model_input: transformed model input data
         :return: list of inference output in NDArray
         """
+#         trans_tensor = model_input['transaction'].stream.read()
+#         ref_tensor = model_input['reference'].stream.read()
+#         transaction_data = np.frombuffer(trans_tensor, dtype=np.float32).reshape(1, 30)
+#         reference_data = np.frombuffer(ref_tensor, dtype=np.float32)
         # Do some inference call to engine here and return output
-        # TODO do the real inference
-        response['outputs']=[0.90,0.1]
+        # TODO do the real inference from the input
+
+        transaction_data = np.array(np.random.rand(1,30), dtype=np.float32)
+        reference_data = np.array(np.random.rand(1,256), dtype=np.float32)
+        torch_tensor1 = torch.from_numpy(transaction_data)
+        torch_tensor2 = torch.from_numpy(reference_data)
+        with torch.no_grad():
+            out = self.model(torch_tensor1,torch_tensor2).numpy().tolist()
+            response['outputs']=out[0]
         return response
 
     def postprocess(self, inference_output):
