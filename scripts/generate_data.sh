@@ -10,8 +10,6 @@ fi
 INPUT_FILE_NAME=${INPUT_FILE_NAME:-./tests/data/creditcard.csv.gz}
 TMP_FILE_NAME=${TMP_FILE_NAME:-/tmp/creditcard.csv}
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
@@ -23,8 +21,7 @@ ${EXE_FILE_NAME} \
   -input-file ${TMP_FILE_NAME} \
   -use-case="creditcard-fraud" \
   -max-transactions=${NUM_INFERENCES} \
-  -seed=${DATA_SEED} |
-  gzip >${DATA_FILE}
+  -seed=${DATA_SEED} >${DATA_FILE}
 
 # Ensure data file is in place
 if [ ! -f ${DATA_FILE} ]; then
