@@ -24,8 +24,8 @@ commands:
       - run:
           name: Test and install Aibench execs
           command: |
-            make
             make test
+            make
 
       - run:
           name: Generate sample data and load tensors
