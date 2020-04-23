@@ -14,6 +14,7 @@ commands:
             go get -t -d ./...
             go test ./...
             ./scripts/build_binaries.sh
+            ./scripts/generate_data.sh
 
 jobs:
   build-latest: # test with redisai:latest
