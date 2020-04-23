@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"golang.org/x/time/rate"
+	"github.com/bradfitz/iter"
 	"io/ioutil"
 	"log"
 	"math"
@@ -35,6 +36,7 @@ type BenchmarkRunner struct {
 	memProfile                         string
 	cpuProfile                         string
 	workers                            uint
+	repetitions                            uint
 	printResponses                     bool
 	ignoreErrors                       bool
 	debug                              int
@@ -68,6 +70,7 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
 	flag.Uint64Var(&runner.limitrps, "limit-rps", 0, "Limit overall RPS. 0 disables limit.")
 	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
+	flag.UintVar(&runner.repetitions, "repetitions", 10, "Number of repetitions of requests per dataset ( will round robin ).")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
 	flag.BoolVar(&runner.ignoreErrors, "ignore-errors", false, "Whether to ignore the inference errors and continue. By default on error the benchmark stops (default false).")
@@ -115,7 +118,7 @@ type ProcessorCreate func() Processor
 // Loader is an interface that handles the setup of a inference processing worker and executes queries one at a time
 type Processor interface {
 	// Init initializes at global state for the Loader, possibly based on its worker number / ID
-	Init(workerNum int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
+	Init(workerNum int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
 	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*Stat, error)
@@ -241,43 +244,44 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 	responseSizesChan := make(chan uint64, buflen)
 	pwg.Add(1)
 
-	processor.Init(workerNum, pwg, metricsChan, responseSizesChan)
+	processor.Init(workerNum, int(b.workers), pwg, metricsChan, responseSizesChan)
 
-	for query := range b.ch {
-		r := rateLimiter.ReserveN(time.Now(), 1)
-		time.Sleep(r.Delay())
-		stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceData)
-		if err != nil {
-			if b.IgnoreErrors() {
-				fmt.Printf("Ignoring inference error: %v\n", err)
-			} else {
-				panic(err)
-			}
-		} else {
-			atomic.AddUint64(&b.inferenceCount, 1)
-			b.sp.sendStats(stats)
-		}
-
-		// If PrewarmQueries is set, we run the inference as 'cold' first (see above),
-		// then we immediately run it a second time and report that as the 'warm' stat.
-		// This guarantees that the warm stat will reflect optimal cache performance.
-		if b.sp.prewarmQueries {
-			// Warm run
-			stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceData)
+	for i := range iter.N(int(b.repetitions)) {
+		for query := range b.ch {
+			r := rateLimiter.ReserveN(time.Now(), 1)
+			time.Sleep(r.Delay())
+			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceData)
 			if err != nil {
 				if b.IgnoreErrors() {
-					fmt.Printf("Ignoring inference error: %v\n", err)
+					fmt.Printf("On iteration %d Ignoring inference error: %v\n", i, err)
 				} else {
 					panic(err)
 				}
 			} else {
-				b.sp.sendStats(stats)
 				atomic.AddUint64(&b.inferenceCount, 1)
+				b.sp.sendStats(stats)
 			}
-		}
-		queryPool.Put(query)
-	}
 
+			// If PrewarmQueries is set, we run the inference as 'cold' first (see above),
+			// then we immediately run it a second time and report that as the 'warm' stat.
+			// This guarantees that the warm stat will reflect optimal cache performance.
+			if b.sp.prewarmQueries {
+				// Warm run
+				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceData)
+				if err != nil {
+					if b.IgnoreErrors() {
+						fmt.Printf("Ignoring inference error: %v\n", err)
+					} else {
+						panic(err)
+					}
+				} else {
+					b.sp.sendStats(stats)
+					atomic.AddUint64(&b.inferenceCount, 1)
+				}
+			}
+			queryPool.Put(query)
+		}
+	}
 	processor.Close()
 
 	//pwg.Wait()

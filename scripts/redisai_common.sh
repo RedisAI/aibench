@@ -9,6 +9,7 @@ MODEL_NAME_NOREFERENCE=${MODEL_NAME_NOREFERENCE:-"financialNet_NoReference"}
 SETUP_MODEL=${SETUP_MODEL:-"true"}
 REDIS_PIPELINE_SIZE=${REDIS_PIPELINE_SIZE:-100}
 DEBUG=${DEBUG:-0}
+DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat}
 
 # Data folder
 BULK_DATA_DIR=${BULK_DATA_DIR:-"/tmp/bulk_data"}
@@ -20,9 +21,9 @@ mkdir -p ${BULK_DATA_DIR}
 DATA_FILE=${DATA_FILE:-${BULK_DATA_DIR}/${DATA_FILE_NAME}}
 
 # How many concurrent workers - match num of cores, or default to 8
-NUM_WORKERS=${NUM_WORKERS:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 8)}
+NUM_WORKERS=${NUM_WORKERS:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 16)}
 
 # How many INFERENCES to Generate/Run
-NUM_INFERENCES=${NUM_INFERENCES:-100000}
+NUM_INFERENCES=${NUM_INFERENCES:-1000000}
 
 set -x
