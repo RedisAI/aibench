@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
@@ -13,7 +14,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/valyala/fasthttp"
 	"log"
-	"mime/multipart"
 	"net"
 	"sync"
 	"time"
@@ -101,35 +101,35 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	idUint64 := fraud.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
+	transactionValuesFloats := fraud.ConvertStringToFloatSlice(transactionValues)
 	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
+	var redisRespReference []byte
+	redisRespReferenceFloats := make([]float32, 256)
+	var redisErr error = nil
 
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
+	req.Header.SetContentType("application/json")
 	res := fasthttp.AcquireResponse()
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-	transPart, err := writer.CreateFormFile("transaction", "transaction")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	transPart.Write(transactionValues)
 	start := time.Now()
 	if useReferenceData {
-		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+		redisRespReference, redisErr = redisClient.Get(referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln("Error on redisClient.Get", redisErr)
 		}
-		refPart, err := writer.CreateFormFile("reference", "reference")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		refPart.Write(redisRespReferenceBytes)
+		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
 	}
-	writer.Close()
-	req.Header.Add("Content-Type", writer.FormDataContentType())
-	req.SetBody(body.Bytes())
+	body := map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
+	bodyJSON, err := json.Marshal(body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	//jsonValue, _ := json.Marshal(body)
+
+	req.SetBody(bytes.NewBuffer(bodyJSON).Bytes())
 	err = p.httpclient.DoTimeout(req, res, torchserveReadTimeout)
 	if err != nil {
 		fasthttp.ReleaseResponse(res)

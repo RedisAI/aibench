@@ -19,7 +19,7 @@ if [ ! -f ${DATA_FILE} ]; then
   exit 1
 fi
 
-for REFERENCE_DATA in "false"; do
+for REFERENCE_DATA in "true"; do
   if [[ "${REFERENCE_DATA}" == "false" ]]; then
     MODEL_NAME=$MODEL_NAME_NOREFERENCE
   fi
