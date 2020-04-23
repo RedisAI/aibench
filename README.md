@@ -31,20 +31,12 @@ The creditcard-fraud dataset from [Kaggle](https://www.kaggle.com/mlg-ulb/credit
 
 aibench is a collection of Go programs (with some auxiliary bash and Python
 scripts). The easiest way to get and install the Go programs is to use
-`go get` and then `go install`:
+`go get` and then `go install`, simplified in a make call:
 ```bash
 # Fetch aibench and its dependencies
-cd $GOPATH/src/github.com/RedisAI/aibench/cmd
-go get ./...
-
-# Install desired binaries. At a minimum this includes aibench_load_data, and one aibench_run_inference_*
-# binary:
-cd $GOPATH/src/github.com/RedisAI/aibench/cmd
-cd aibench_generate_data && go install
-cd ../aibench_load_data && go install
-cd ../aibench_run_inference_redisai && go install
-cd ../aibench_run_inference_tensorflow_serving && go install
-cd ../aibench_run_inference_flask_tensorflow && go install
+go get github.com/RedisAI/aibench
+cd $GOPATH/src/github.com/RedisAI/aibench
+make
 ```
 
 ## How to use aibench
@@ -56,12 +48,6 @@ This step is specific for each DL solution being tested ( see Current DL solutio
 
 As an example we will use RedisAI. In that manner, for setting up the model Redis using RedisAI use:
 ```bash
-# flush the database
-redis-cli flushall 
-
-# load the correct AI backend
-redis-cli AI.CONFIG LOADBACKEND TF redisai_tensorflow.so
-
 # set the Model
 cd $GOPATH/src/github.com/RedisAI/aibench
 redis-cli -x AI.MODELSET financialNet \
@@ -77,13 +63,7 @@ So that benchmarking results are not affected by generating data on-the-fly, wit
 ```bash
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
-cat ./tests/data/creditcard.csv.gz \
-          | gunzip > /tmp/creditcard.csv
-aibench_generate_data \
-          -input-file /tmp/creditcard.csv \
-          -use-case="creditcard-fraud" \
-          -seed=12345 \
-          | gzip > /tmp/aibench_generate_data-creditcard-fraud.dat.gz
+make data
 ```
 
 ### 3. Reference Data Loading
