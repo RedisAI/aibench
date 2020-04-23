@@ -8,20 +8,23 @@ commands:
     parameters:
       platform:
         type: string
-    working_directory: /go/src/github.com/RedisAI/aibench
+
     steps:
       - checkout
       - run:
+          working_directory: /go/src/github.com/RedisAI/aibench
           name: fetch dependencies
           command: |
             go get -t -d ./...
 
       - run:
+          working_directory: /go/src/github.com/RedisAI/aibench
           name: Test
           command: |
             go test ./...
 
       - run:
+          working_directory: /go/src/github.com/RedisAI/aibench
           name: Build Bins and Generate Data
           command: |
             ./scripts/build_binaries.sh
