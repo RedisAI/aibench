@@ -9,7 +9,7 @@ commands:
     steps:
       - checkout
       - run:
-          name: Install dependencies,Aibench execs, and load tensors
+          name: Install dependencies
           command: |
             # get redis
             cd /tmp
@@ -19,6 +19,9 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
+      - run:
+          name: Install Aibench execs, and load tensors
+          command: |
             # build binaries
             cd /go/src/github.com/RedisAI/aibench
             go get -t -d ./...
@@ -27,6 +30,7 @@ commands:
             # generate data
             ./scripts/generate_data.sh
             ./scripts/load_tensors.sh
+
 
 jobs:
   build-latest: # test with redisai:latest
