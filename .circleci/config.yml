@@ -1,18 +1,51 @@
 # Golang CircleCI 2.0 configuration file
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2.1
+
+commands:
+  ci_steps:
+    parameters:
+      platform:
+        type: string
+    working_directory: /go/src/github.com/RedisAI/aibench
+    steps:
+      - checkout
+      - run:
+          name: fetch dependencies
+          command: |
+            go get -t -d ./...
+
+      - run:
+          name: Test
+          command: |
+            go test ./...
+
+      - run:
+          name: Build Bins and Generate Data
+          command: |
+            ./scripts/build_binaries.sh
+
+
+  deploy:
+    parameters:
+      from:
+        type: string
+    steps:
+      - run:
+          name: Deploy to S3
+          command: |
+            aws s3 cp <<parameters.from>>/ s3://redismodules/$PACKAGE_NAME/ --acl public-read --recursive --exclude "*" --include "*.zip" --include "*.tgz"
+
+
 jobs:
   build-latest: # test with redisai:latest
     docker:
       - image: circleci/golang:1.13
       - image: redisai/redisai:latest
-
-    working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-      - checkout
-      - run: go get -t -d ./...
-      - run: go test ./...
+      - ci_steps:
+          platform: debian
 
   build-v090: # test with redisai:0.9.0
     docker:
