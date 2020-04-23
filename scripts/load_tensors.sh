@@ -1,4 +1,6 @@
 #!/bin/bash
+#Exit immediately if a command exits with a non-zero status.
+set -e
 
 # Ensure generator is available
 EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_load_data)}
