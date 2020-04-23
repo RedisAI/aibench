@@ -1,15 +1,10 @@
 version: 2.1
 
 commands:
-  ci_steps:
+  redis_steps:
     parameters:
-      platform:
-        type: string
-        default: abc
     steps:
-#      - checkout
-#      - restore_cache:
-#          key: v1-{{ arch }}-redis-cli
+      - checkout
       - run:
           name: Install dependencies
           command: |
@@ -21,22 +16,16 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
-#
-#      - save_cache:
-#          key: v1-{{ arch }}-redis-cli
-#          paths:
-#            - /usr/local/bin/redis-cli
 
+  redisai_steps:
+    parameters:
+    steps:
+      - checkout
       - run:
-          name: Test Aibench execs
-          command: |
-            go get -t -d ./...
-            go test ./...
-
-      - run:
-          name: Install Aibench execs
+          name: Test and install Aibench execs
           command: |
             make
+            make test
 
       - run:
           name: Generate sample data and load tensors
@@ -53,8 +42,9 @@ jobs:
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-      - ci_steps:
-          platform: debian
+      - checkout
+      - redis_steps
+      - redisai_steps
 
   build-v090: # test with redisai:0.9.0
     docker:
@@ -63,8 +53,9 @@ jobs:
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-      - ci_steps:
-        platform: debian
+      - checkout
+      - redis_steps
+      - redisai_steps
 
   build-edge: # test with redisai:edge
     docker:
@@ -73,8 +64,22 @@ jobs:
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-      - ci_steps:
-        platform: debian
+      - checkout
+      - redis_steps
+      - redisai_steps
+
+  build-multiarch-docker:
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - run: |
+          echo "$DOCKER_REDISBENCH_PWD" | base64 --decode | docker login --username $DOCKER_REDISBENCH_USER --password-stdin
+      - run:
+          name: Build
+          command: |
+            make docker-release
+          no_output_timeout: 20m
 
 workflows:
   version: 2
