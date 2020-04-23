@@ -21,7 +21,7 @@ jobs:
       - image: redisai/redisai:latest
 
     working_directory: /go/src/github.com/RedisAI/aibench
-      steps:github.c
+    steps:
       - ci_steps:
           platform: debian
 
@@ -32,8 +32,8 @@ jobs:
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-        - ci_steps:
-          platform: debian
+      - ci_steps:
+        platform: debian
 
   build-edge: # test with redisai:edge
     docker:
@@ -42,8 +42,8 @@ jobs:
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
-        - ci_steps:
-          platform: debian
+      - ci_steps:
+        platform: debian
 
 workflows:
   version: 2
