@@ -24,6 +24,7 @@ loaders: aibench_load_data
 runners: aibench_run_inference_redisai aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
 test:
+	$(GOGET) ./...
 	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 data: generators
