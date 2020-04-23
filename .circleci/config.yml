@@ -30,6 +30,7 @@ commands:
       - run:
           name: Install Aibench execs
           command: |
+            cd /go/src/github.com/RedisAI/aibench
             make
 
       - run:
