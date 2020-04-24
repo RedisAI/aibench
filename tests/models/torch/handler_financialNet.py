@@ -45,10 +45,9 @@ class ModelHandler(object):
         self._batch_size = properties["batch_size"]
         self.device = torch.device("cuda:" + str(properties.get("gpu_id")) if torch.cuda.is_available() else "cpu")
         model_dir = properties.get("model_dir")
-#         Read model serialize/pt file
+        # Read model serialize/pt file
         model_pt_path = os.path.join(model_dir, "torchFraudNetWithRef.pt")
         self.model = model = torch.jit.load(model_pt_path)
-
         self.initialized = True
 
     def preprocess(self, batch):
@@ -64,9 +63,9 @@ class ModelHandler(object):
     def inference(self, model_input):
         response = {'outputs': None }
         """
-        Internal inference methods
+        Internal inference methods, checks if the input data has the correct format
         :param model_input: transformed model input data
-        :return: list of inference output in NDArray
+        :return: list of inference output
         """
         if 'body' in model_input[0]:
             body = model_input[0]['body']

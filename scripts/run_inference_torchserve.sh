@@ -23,7 +23,9 @@ for REFERENCE_DATA in "true"; do
   if [[ "${REFERENCE_DATA}" == "false" ]]; then
     MODEL_NAME=$MODEL_NAME_NOREFERENCE
   fi
+  FILENAME_SUFFIX=torchserve_ref_${REFERENCE_DATA}_${OUTPUT_NAME_SUFIX}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
   echo "Benchmarking inference performance with reference data set to: ${REFERENCE_DATA} and model name ${MODEL_NAME}"
+  echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"
 
   # benchmark inference performance
   # make sure you're on the root project folder
@@ -38,9 +40,10 @@ for REFERENCE_DATA in "true"; do
       -limit-rps=${RATE_LIMIT} \
       -debug=${DEBUG} \
       -enable-reference-data=${REFERENCE_DATA} \
-      -output-file-stats-hdr-response-latency-hist=rest_tensorflow_referencedata_${REFERENCE_DATA}_hdr_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt \
       -torchserve-host=${DATABASE_HOST}:${TORCHSERVE_PORT} \
-      -redis-host=${DATABASE_HOST}:${DATABASE_PORT} 2>&1 | tee ~/rest_tensorflow_referencedata_${REFERENCE_DATA}_results_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers_${RATE_LIMIT}.txt
+      -redis-host=${DATABASE_HOST}:${DATABASE_PORT} \
+      -output-file-stats-hdr-response-latency-hist=~/HIST_${FILENAME_SUFFIX} \
+      2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
 
