@@ -137,8 +137,8 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	took := time.Since(start).Microseconds()
 	fasthttp.ReleaseRequest(req)
-	if res.StatusCode() != 200 {
-		log.Fatalln(fmt.Sprintf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode()))
+	if res.StatusCode() != 200  {
+		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode())
 	}
 	if p.opts.printResponse {
 		body := res.Body()
