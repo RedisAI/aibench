@@ -37,8 +37,9 @@ for REFERENCE_DATA in "true"; do
       cd $GOPATH/src/github.com/RedisAI/aibench
 
       cat ${DATA_FILE} |
-        -workers=${NUM_WORKERS} \
-          -burn-in=${QUERIES_BURN_IN} -max-queries=${MAX_QUERIES} \
+        ${EXE_FILE_NAME} \
+          -workers=${NUM_WORKERS} \
+          -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
           -print-interval=0 -reporting-period=1000ms \
           -limit-rps=${RATE_LIMIT} \
           -enable-reference-data=${REFERENCE_DATA} \
