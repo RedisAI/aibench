@@ -7,8 +7,9 @@ at https://github.com/timescale/tsbs.
 Current DL solutions supported:
 
 + RedisAI [(supplemental docs)](docs/redisai.md)
-+ TFServing + Redis [(supplemental docs)](docs/tfserving_and_redis.md)
-+ Rest API + Redis [(supplemental docs)](docs/restapi_and_redis.md)
++ TFServing \[with/without Redis\] [(supplemental docs)](docs/tfserving_and_redis.md)
++ Rest API \[with/without Redis\] [(supplemental docs)](docs/restapi_and_redis.md)
++ TorchServe \[with/without Redis\] [(supplemental docs)](docs/torchserve_and_redis.md)
 
 ## Current use cases
 
