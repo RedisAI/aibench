@@ -21,7 +21,7 @@ generators: aibench_generate_data
 
 loaders: aibench_load_data
 
-runners: aibench_run_inference_redisai aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
+runners: aibench_run_inference_redisai aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
 test:
 	$(GOGET) ./...
