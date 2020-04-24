@@ -12,6 +12,7 @@ DEBUG=${DEBUG:-0}
 DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat}
 PRINT_RESPONSES=${PRINT_RESPONSES:-false}
 QUERIES_BURN_IN=${QUERIES_BURN_IN:-10000}
+SLEEP_BETWEEN_RUNS=${SLEEP_BETWEEN_RUNS:-30}
 
 # Rate limit? if greater than 0 rate is limited.
 RATE_LIMIT=${RATE_LIMIT:-0}
