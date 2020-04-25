@@ -48,6 +48,7 @@ python3 server.py
 cd $GOPATH/src/github.com/RedisAI/aibench/tests/servers/flask
 
 # Install requirements
+apt install gunicorn -y
 pip install -r requirements.txt
 
 export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud.pb

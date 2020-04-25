@@ -7,16 +7,7 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-MAX_QUERIES=${MAX_QUERIES:-0}
 RESTAPI_PORT=${RESTAPI_PORT:-8000}
-QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
-
-# Rate limit? if greater than 0 rate is limited.
-RATE_LIMIT=${RATE_LIMIT:-0}
-
-# output name
-OUTPUT_NAME_SUFIX=${OUTPUT_NAME_SUFIX:-""}
 
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
