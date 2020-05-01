@@ -137,14 +137,14 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		log.Fatalln("Error on httpclient.DoTimeout", err)
 	}
 	took := time.Since(start).Microseconds()
-	fasthttp.ReleaseRequest(req)
 	if res.StatusCode() != 200 {
-		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode())
+		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d. REQUEST: %v RESPONSE %v", 200, res.StatusCode(), body, body)
 	}
 	if p.opts.printResponse {
 		body := res.Body()
 		fmt.Println("RESPONSE: ", string(body))
 	}
+	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(res)
 	stat := inference.GetStat()
 
