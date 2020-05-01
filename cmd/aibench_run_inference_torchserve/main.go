@@ -137,13 +137,11 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		log.Fatalln("Error on httpclient.DoTimeout", err)
 	}
 	took := time.Since(start).Microseconds()
-	var response interface{}
-	json.Unmarshal(res.Body(),response)
-	if res.StatusCode() != 200 {
-		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d. REQUEST BODY: %v RESPONSE %v", 200, res.StatusCode(), body, response)
-	}
 	if p.opts.printResponse {
-		fmt.Println("RESPONSE: ", response)
+		fmt.Println(fmt.Sprintf("REQUEST BODY: %v RESPONSE %v", body, res.String()))
+	}
+	if res.StatusCode() != 200 {
+		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode())
 	}
 	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(res)
