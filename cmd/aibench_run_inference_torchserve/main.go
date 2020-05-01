@@ -108,6 +108,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	var redisRespReference []byte
 	redisRespReferenceFloats := make([]float32, 256)
 	var redisErr error = nil
+	var body map[string][]float32
 
 	req.SetRequestURIBytes(strRequestURI)
 	req.SetHostBytes(strHost)
@@ -120,14 +121,14 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 			log.Fatalln("Error on redisClient.Get", redisErr)
 		}
 		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
+		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
+	} else {
+		body = map[string][]float32{"transaction": transactionValuesFloats}
 	}
-	body := map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
 	bodyJSON, err := json.Marshal(body)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	//jsonValue, _ := json.Marshal(body)
 
 	req.SetBody(bytes.NewBuffer(bodyJSON).Bytes())
 	err = p.httpclient.DoTimeout(req, res, torchserveReadTimeout)
