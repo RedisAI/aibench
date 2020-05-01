@@ -20,8 +20,7 @@ func NewTransaction() *Transaction {
 		Id:                make([]byte, 8),
 		TransactionValues: make([]byte, 120),
 		ReferenceValues:   make([]byte, 1024),
-		Slot: make([]byte, 2),
-
+		Slot:              make([]byte, 2),
 	}
 }
 

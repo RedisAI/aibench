@@ -46,30 +46,6 @@ commands:
 
 
 jobs:
-  build-latest: # test with redisai:latest
-    docker:
-      - image: circleci/golang:1.13
-      - image: redisai/redisai:latest
-
-    working_directory: /go/src/github.com/RedisAI/aibench
-    steps:
-      - checkout
-      - redis_steps
-      - common_steps
-      - redisai_steps
-
-  build-v090: # test with redisai:0.9.0
-    docker:
-      - image: circleci/golang:1.13
-      - image: redisai/redisai:0.9.0
-
-    working_directory: /go/src/github.com/RedisAI/aibench
-    steps:
-      - checkout
-      - redis_steps
-      - common_steps
-      - redisai_steps
-
   build-edge: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
@@ -100,8 +76,6 @@ workflows:
   commit:
     jobs:
       - build-edge
-      - build-latest
-      - build-v090
   nightly:
     triggers:
       - schedule:
@@ -112,5 +86,3 @@ workflows:
                 - master
     jobs:
       - build-edge
-      - build-latest
-      - build-v090
