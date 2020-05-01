@@ -42,7 +42,7 @@ commands:
       - run:
           name: Run inference
           command: |
-            ./scripts/run_inference_redisai.sh
+            ./scripts/run_inference_redisai_ci.sh
 
 
 jobs:
