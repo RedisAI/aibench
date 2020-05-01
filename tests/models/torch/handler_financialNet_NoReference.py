@@ -46,7 +46,7 @@ class ModelHandler(object):
         self.device = torch.device("cuda:" + str(properties.get("gpu_id")) if torch.cuda.is_available() else "cpu")
         model_dir = properties.get("model_dir")
         # Read model serialize/pt file
-        model_pt_path = os.path.join(model_dir, "torchFraudNetWithRef.pt")
+        model_pt_path = os.path.join(model_dir, "torchFraudNetNoRef.pt")
         self.model = model = torch.jit.load(model_pt_path)
         self.initialized = True
 
