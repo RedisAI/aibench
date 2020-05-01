@@ -48,8 +48,9 @@ python3 server.py
 cd $GOPATH/src/github.com/RedisAI/aibench/tests/servers/flask
 
 # Install requirements
+apt install gunicorn -y
 pip install -r requirements.txt
 
 export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud.pb
-gunicorn --workers=8 --threads 8 -b 0.0.0.0:8000  --log-level error --daemon server:app
+gunicorn --workers=48 --threads 48 -b 0.0.0.0:8000  --log-level error --daemon server:app
 ```

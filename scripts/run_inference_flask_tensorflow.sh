@@ -7,16 +7,7 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat.gz}
-MAX_QUERIES=${MAX_QUERIES:-0}
 RESTAPI_PORT=${RESTAPI_PORT:-8000}
-QUERIES_BURN_IN=${QUERIES_BURN_IN:-10}
-
-# Rate limit? if greater than 0 rate is limited.
-RATE_LIMIT=${RATE_LIMIT:-0}
-
-# output name
-OUTPUT_NAME_SUFIX=${OUTPUT_NAME_SUFIX:-""}
 
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
@@ -35,7 +26,7 @@ for REFERENCE_DATA in "true"; do
   # we overload the NUM_WORKERS here for the official benchmark
   for NUM_WORKERS in 16 32 48 64 80 96 112 128 144 160; do
     for RUN in 1 2 3; do
-      FILENAME_SUFFIX=redisai_ref_${REFERENCE_DATA}_${OUTPUT_NAME_SUFIX}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
+      FILENAME_SUFFIX=flask_tensorflow_ref_${REFERENCE_DATA}_${OUTPUT_NAME_SUFIX}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
       echo "Benchmarking inference performance with reference data set to: ${REFERENCE_DATA} and model name ${MODEL_NAME}"
       echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"
 
@@ -46,7 +37,7 @@ for REFERENCE_DATA in "true"; do
       cat ${DATA_FILE} |
         ${EXE_FILE_NAME} \
           -workers=${NUM_WORKERS} \
-          -burn-in=${QUERIES_BURN_IN} -max-queries=${MAX_QUERIES} \
+          -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
           -print-interval=0 -reporting-period=1000ms \
           -limit-rps=${RATE_LIMIT} \
           -debug=${DEBUG} \

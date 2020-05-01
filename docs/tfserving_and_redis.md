@@ -102,5 +102,5 @@ curl --data @$TESTDATA/tensorflow_serving_inference_payload.json -X POST http://
 ### Production Installation -- Install TensorFlow Serving on production VM
 
 ```bash
-tensorflow_model_server --inter_op_parallelism_threads=4 --model_name=financialNet --model_base_path=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow
+tensorflow_model_server --model_name=financialNet --model_base_path=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow
 ```
