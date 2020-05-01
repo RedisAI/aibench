@@ -91,7 +91,7 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 			buf := make([]byte, 8)
 			binary.LittleEndian.PutUint64(buf, transactionCount)
 			crc := make([]byte, 2)
-			binary.LittleEndian.PutUint16(crc, radix.CRC16(buf) )
+			binary.LittleEndian.PutUint16(crc, radix.CRC16(buf))
 
 			transactions = append(transactions, serialize.Transaction{Id: buf, TransactionValues: qbytes, ReferenceValues: refBytes, Slot: crc})
 			if debug > 0 {

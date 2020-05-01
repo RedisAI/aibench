@@ -22,7 +22,7 @@ import (
 
 // Global vars:
 var (
-	runner *inference.BenchmarkRunner
+	runner                  *inference.BenchmarkRunner
 	host                    string
 	port                    string
 	model                   string
@@ -66,19 +66,7 @@ func init() {
 	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
 	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
-
-	// If limit is zero then no limit will be used and pipelines will only be limited
-	// by the specified time window.
-
-	//	PoolPipelineConcurrency(size)
-	//	PoolPipelineWindow(150 * time.Microsecond, 0)
 	flag.Parse()
-	//
-	//cpool = &redis.Pool{
-	//	MaxIdle:     3,
-	//	IdleTimeout: 240 * time.Second,
-	//	Dial:        func() (redis.Conn, error) { return redis.DialURL(fmt.Sprintf("%s:%d",host,port)) },
-	//}
 }
 
 func main() {
@@ -118,24 +106,22 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	p.Metrics = m
 	var err error = nil
 
-
-	hosts:= strings.Split(host, ",")
-	ports:= strings.Split(port, ",")
-
+	hosts := strings.Split(host, ",")
+	ports := strings.Split(port, ",")
 
 	// if we have more hosts than workers lets connect to them all
-	if len(hosts)>totalWorkers{
-		p.pclient = make([]*radix.Pool,len(hosts))
-		for idx, h := range hosts  {
+	if len(hosts) > totalWorkers {
+		p.pclient = make([]*radix.Pool, len(hosts))
+		for idx, h := range hosts {
 			p.pclient[idx], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", h, ports[idx]), 1, radix.PoolPipelineWindow(0, 0))
 			if err != nil {
 				log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
 			}
 		}
 
-	}else{
-		pos := (numWorker+1) % len(hosts)
-		p.pclient = make([]*radix.Pool,1)
+	} else {
+		pos := (numWorker + 1) % len(hosts)
+		p.pclient = make([]*radix.Pool, 1)
 		p.pclient[0], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", hosts[pos], ports[pos]), 1, radix.PoolPipelineWindow(0, 0))
 		if err != nil {
 			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
@@ -156,18 +142,27 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	classificationTensorName := "classificationTensor:{" + idS + "}"
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
-	args := []string{"LOAD", "1", referenceDataTensorName, "|>",
-		"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
-		"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, referenceDataTensorName, "OUTPUTS", classificationTensorName, "|>",
-		"AI.TENSORGET", classificationTensorName, "BLOB",
+	var args []string
+	if useReferenceData == true {
+		args = []string{"LOAD", "1", referenceDataTensorName, "|>",
+			"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
+			"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, referenceDataTensorName, "OUTPUTS", classificationTensorName, "|>",
+			"AI.TENSORGET", classificationTensorName, "BLOB",
+		}
+	} else {
+		args = []string{"|>",
+			"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
+			"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, "OUTPUTS", classificationTensorName, "|>",
+			"AI.TENSORGET", classificationTensorName, "BLOB",
+		}
 	}
 	pos := rand.Int31n(int32(len(p.pclient)))
 	start := time.Now()
-		err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
-		if err != nil {
-			extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
-			log.Fatal(extendedError)
-		}
+	err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
+	if err != nil {
+		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
+		log.Fatal(extendedError)
+	}
 
 	took := time.Since(start).Microseconds()
 

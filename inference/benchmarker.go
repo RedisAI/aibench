@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"golang.org/x/time/rate"
 	"github.com/bradfitz/iter"
+	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
 	"math"
@@ -36,7 +36,7 @@ type BenchmarkRunner struct {
 	memProfile                         string
 	cpuProfile                         string
 	workers                            uint
-	repetitions                            uint
+	repetitions                        uint
 	printResponses                     bool
 	ignoreErrors                       bool
 	debug                              int
