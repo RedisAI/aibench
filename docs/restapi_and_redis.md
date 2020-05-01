@@ -50,7 +50,16 @@ cd $GOPATH/src/github.com/RedisAI/aibench/tests/servers/flask
 # Install requirements
 apt install gunicorn -y
 pip install -r requirements.txt
+```
 
+#### Test with reference data
+```
 export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud.pb
 gunicorn --workers=48 --threads 48 -b 0.0.0.0:8000  --log-level error --daemon server:app
+```
+
+#### Test without reference data
+```
+export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud_noreference.pb
+gunicorn --workers=48 --threads 48 -b 0.0.0.0:8000  --log-level error --daemon server_noreference:app
 ```

@@ -34,13 +34,26 @@ python3 -m  pip install torchserve torch-model-archiver
 # make sure you're on the torchserve folder
 cd $GOPATH/src/github.com/RedisAI/aibench/tests/models/torch
 torch-model-archiver --model-name financialNetTorch --version 1 --serialized-file torchFraudNetWithRef.pt --handler handler_financialNet.py
+torch-model-archiver --model-name financialNet_NoReferenceTorch --version 1 --serialized-file torchFraudNetNoRef.pt --handler handler_financialNet_NoReference.py
 ```
 
 #### Start TorchServe to serve the model
+
+#### Test with reference data
+
 ```bash
 # make sure you're on the torchserve folder
 cd $GOPATH/src/github.com/RedisAI/aibench/tests/models/torch
 torchserve --start --model-store . --models financial=financialNetTorch.mar --ts-config config.properties --log-config log4j.properties
+```
+
+#### Test without reference data
+
+
+```bash
+# make sure you're on the torchserve folder
+cd $GOPATH/src/github.com/RedisAI/aibench/tests/models/torch
+torchserve --start --model-store . --models financial=financialNet_NoReferenceTorch.mar --ts-config config.properties --log-config log4j.properties
 ```
 
 #### config.properties file

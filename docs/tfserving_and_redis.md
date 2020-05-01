@@ -100,7 +100,12 @@ curl --data @$TESTDATA/tensorflow_serving_inference_payload.json -X POST http://
 ```
 
 ### Production Installation -- Install TensorFlow Serving on production VM
-
+#### Test with reference data
 ```bash
-tensorflow_model_server --model_name=financialNet --model_base_path=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow
+tensorflow_model_server --model_name=financialNet --model_base_path=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/reference
+```
+
+#### Test without reference data
+```bash
+tensorflow_model_server --model_name=financialNet_NoReference --model_base_path=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/noreference
 ```
