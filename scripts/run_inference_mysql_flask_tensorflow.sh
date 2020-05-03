@@ -26,6 +26,10 @@ for REFERENCE_DATA in "true"; do
   # we overload the NUM_WORKERS here for the official benchmark
   for NUM_WORKERS in 1 16 32 48 64 80 96 112 128 144 160; do
     for RUN in 1 2 3; do
+      NUM_INFERENCES_IN=$NUM_INFERENCES
+      if [[ "${NUM_WORKERS}" == "false" ]]; then
+        NUM_INFERENCES_IN=$( (${NUM_INFERENCES} / 10 ) )
+      fi
       FILENAME_SUFFIX=flask_tensorflow_ref_mysql_${REFERENCE_DATA}_${OUTPUT_NAME_SUFIX}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
       echo "Benchmarking inference performance with reference data set to: ${REFERENCE_DATA} and model name ${MODEL_NAME}"
       echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"
@@ -36,7 +40,7 @@ for REFERENCE_DATA in "true"; do
       cat ${DATA_FILE} |
         ${EXE_FILE_NAME} \
           -workers=${NUM_WORKERS} \
-          -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
+          -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES_IN} \
           -print-interval=0 -reporting-period=1000ms \
           -limit-rps=${RATE_LIMIT} \
           -debug=${DEBUG} \
