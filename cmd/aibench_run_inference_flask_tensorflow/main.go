@@ -34,7 +34,10 @@ var (
 	runner             *inference.BenchmarkRunner
 	redisClient        *redis.Client
 	mysqlClient        *sql.DB
+	mysqlMaxIdle        int
+	mysqlMaxOpen        int
 	restapiReadTimeout time.Duration
+	mysqlConnMaxLifetime time.Duration
 )
 
 // Parse args:
@@ -45,6 +48,10 @@ func init() {
 	flag.DurationVar(&restapiReadTimeout, "restapi-read-timeout", 5*time.Second, "REST API timeout")
 	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v2/predict", "REST API request URI")
 	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
+	flag.IntVar(&mysqlMaxIdle, "mysql-max-idle", 256, "MySql max idle")
+	flag.IntVar(&mysqlMaxOpen, "mysql-max-open", 512, "MySql max open")
+	flag.DurationVar(&mysqlConnMaxLifetime, "mysql-conn-max-lifetime", time.Minute*10, "MySql ConnMaxLifetime")
+
 	flag.Parse()
 	if runner.UseReferenceDataRedis() {
 		redisClient = redis.NewClient(&redis.Options{
@@ -57,6 +64,9 @@ func init() {
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
 		}
+		mysqlClient.SetMaxIdleConns(mysqlMaxIdle)
+		mysqlClient.SetMaxOpenConns(mysqlMaxOpen)
+		mysqlClient.SetConnMaxLifetime(mysqlConnMaxLifetime)
 	}
 
 }
@@ -78,7 +88,6 @@ type Processor struct {
 	Metrics    chan uint64
 	Wg         *sync.WaitGroup
 	httpclient *fasthttp.HostClient
-	sqldb      *sql.DB
 }
 
 func (p *Processor) Close() {
