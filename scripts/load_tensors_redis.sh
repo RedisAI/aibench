@@ -42,6 +42,8 @@ cat ${DATA_FILE} |
   ${EXE_FILE_NAME} \
     -reporting-period=1000ms \
     -set-blob=false -set-tensor=true \
+    -max-inserts=${NUM_INFERENCES} \
+    -use-redis=true \
     -host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
     -workers=${NUM_WORKERS} -pipeline=${REDIS_PIPELINE_SIZE} 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
 

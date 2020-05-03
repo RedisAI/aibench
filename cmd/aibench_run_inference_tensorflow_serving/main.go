@@ -93,7 +93,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -118,7 +118,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
-	if useReferenceData == true {
+	if useReferenceDataRedis == true {
 		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln(redisErr)
