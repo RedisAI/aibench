@@ -42,6 +42,7 @@ for REFERENCE_DATA in "true"; do
           -print-interval=0 -reporting-period=1000ms \
           -limit-rps=${RATE_LIMIT} \
           -debug=${DEBUG} \
+          -ignore-errors=true \
           -enable-reference-data-redis=${REFERENCE_DATA} \
           -torchserve-host=${MODELSERVER_HOST}:${TORCHSERVE_PORT} \
           -redis-host=${DATABASE_HOST}:${DATABASE_PORT} \

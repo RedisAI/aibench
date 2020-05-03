@@ -47,6 +47,7 @@ for REFERENCE_DATA in "true"; do
           -debug=${DEBUG} \
           -enable-reference-data-mysql=${REFERENCE_DATA} \
           -mysql-host="${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(${MYSQL_HOST}:${MYSQL_PORT})/" \
+          -ignore-errors=true \
           -torchserve-host=${MODELSERVER_HOST}:${TORCHSERVE_PORT} \
           -redis-host=${DATABASE_HOST}:${DATABASE_PORT} \
           -output-file-stats-hdr-response-latency-hist=~/HIST_${FILENAME_SUFFIX} \
