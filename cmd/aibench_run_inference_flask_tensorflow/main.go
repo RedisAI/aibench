@@ -33,6 +33,7 @@ var (
 	showExplain        bool
 	runner             *inference.BenchmarkRunner
 	redisClient        *redis.Client
+	mysqlClient        *sql.DB
 	restapiReadTimeout time.Duration
 )
 
@@ -43,12 +44,19 @@ func init() {
 	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
 	flag.DurationVar(&restapiReadTimeout, "restapi-read-timeout", 5*time.Second, "REST API timeout")
 	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v2/predict", "REST API request URI")
-	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)", "MySql host address and port")
+	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
 	flag.Parse()
 	if runner.UseReferenceDataRedis() {
 		redisClient = redis.NewClient(&redis.Options{
 			Addr: redisHost,
 		})
+	}
+	if runner.UseReferenceDataMysql() {
+		var err error = nil
+		mysqlClient, err = sql.Open("mysql", mysqlHost)
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
+		}
 	}
 
 }
@@ -97,13 +105,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 			return fasthttp.DialTimeout(addr, restapiReadTimeout)
 		},
 	}
-	if runner.UseReferenceDataMysql() {
-		var err error = nil
-		p.sqldb, err = sql.Open("mysql", mysqlHost)
-		if err != nil {
-			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
-		}
-	}
+
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
@@ -142,7 +144,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		refPart.Write(redisRespReferenceBytes)
 	}
 	if useReferenceDataMysql {
-		statement := p.sqldb.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
+		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
 		var mysqlResult []byte
 		err := statement.Scan(&mysqlResult)
 		if err != nil {

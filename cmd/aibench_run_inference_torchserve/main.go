@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 var (
 	redisHost             string
 	torchserveHost        string
+	mysqlHost             string
 	torchserveRequestUri  string
 	strPost               = []byte("POST")
 	strRequestURI         = []byte("")
@@ -40,10 +42,13 @@ func init() {
 	flag.StringVar(&torchserveHost, "torchserve-host", "127.0.0.1:8080", "REST API host address and port")
 	flag.DurationVar(&torchserveReadTimeout, "torchserve-read-timeout", 5*time.Second, "REST API timeout")
 	flag.StringVar(&torchserveRequestUri, "torchserve-request-uri", "/predictions/financial", "torchserve REST API request URI")
+	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
 	flag.Parse()
-	redisClient = redis.NewClient(&redis.Options{
-		Addr: redisHost,
-	})
+	if runner.UseReferenceDataRedis() {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: redisHost,
+		})
+	}
 }
 
 func main() {
@@ -63,6 +68,7 @@ type Processor struct {
 	Metrics    chan uint64
 	Wg         *sync.WaitGroup
 	httpclient *fasthttp.HostClient
+	sqldb      *sql.DB
 }
 
 func (p *Processor) Close() {
@@ -88,6 +94,14 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 		Dial: func(addr string) (net.Conn, error) {
 			return fasthttp.DialTimeout(addr, torchserveReadTimeout)
 		},
+	}
+
+	if runner.UseReferenceDataMysql() {
+		var err error = nil
+		p.sqldb, err = sql.Open("mysql", mysqlHost)
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
+		}
 	}
 
 }
@@ -122,7 +136,9 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		}
 		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
 		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
-	} else {
+	}
+
+	if useReferenceDataRedis == false && useReferenceDataMysql == false {
 		body = map[string][]float32{"transaction": transactionValuesFloats}
 	}
 	bodyJSON, err := json.Marshal(body)

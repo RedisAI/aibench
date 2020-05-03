@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -24,7 +25,9 @@ import (
 
 // Program option vars:
 var (
-	redisHost             string
+	redisHost string
+	mysqlHost string
+
 	tensorflowServingHost string
 	model                 string
 	version               int
@@ -48,10 +51,13 @@ func init() {
 	flag.StringVar(&tensorflowServingHost, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
 	flag.IntVar(&version, "model-version", 1, "Model version")
+	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
 	flag.Parse()
-	redisClient = redis.NewClient(&redis.Options{
-		Addr: redisHost,
-	})
+	if runner.UseReferenceDataRedis() {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: redisHost,
+		})
+	}
 }
 
 func main() {
@@ -70,6 +76,7 @@ type Processor struct {
 	Wg                      *sync.WaitGroup
 	predictionServiceClient tensorflowserving.PredictionServiceClient
 	grpcClientConn          *grpc.ClientConn
+	sqldb                   *sql.DB
 }
 
 func (p *Processor) Close() {
@@ -92,6 +99,15 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 	}
 	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
+
+	if runner.UseReferenceDataMysql() {
+		var err error = nil
+		p.sqldb, err = sql.Open("mysql", mysqlHost)
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
+		}
+	}
+
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
