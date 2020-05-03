@@ -27,7 +27,7 @@ for REFERENCE_DATA in "true"; do
   for NUM_WORKERS in 1 16 32 48 64 80 96 112 128 144 160; do
     for RUN in 1 2 3; do
       NUM_INFERENCES_IN=$NUM_INFERENCES
-      if [[ "${NUM_WORKERS}" == "false" ]]; then
+      if [[ "${NUM_WORKERS}" == "1" ]]; then
         NUM_INFERENCES_IN=$( (${NUM_INFERENCES} / 10 ) )
       fi
       FILENAME_SUFFIX=flask_tensorflow_ref_mysql_${REFERENCE_DATA}_${OUTPUT_NAME_SUFIX}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
