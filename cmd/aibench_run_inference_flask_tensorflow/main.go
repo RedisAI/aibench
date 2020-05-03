@@ -146,6 +146,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	if useReferenceDataMysql {
 		statement, err := mysqlClient.Query("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
 		var mysqlResult []byte
+		statement.Next()
 		err = statement.Scan(&mysqlResult)
 		if err != nil {
 			log.Fatalln("Error on MySqlClient", err)
