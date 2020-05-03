@@ -17,6 +17,7 @@ import (
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
 	googleprotobuf "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
