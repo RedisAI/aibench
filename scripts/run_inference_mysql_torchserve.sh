@@ -36,7 +36,6 @@ for REFERENCE_DATA in "true"; do
 
       # benchmark inference performance
       # make sure you're on the root project folder
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
       cd $GOPATH/src/github.com/RedisAI/aibench
       cat ${DATA_FILE} |
         ${EXE_FILE_NAME} \
@@ -53,7 +52,6 @@ for REFERENCE_DATA in "true"; do
           -output-file-stats-hdr-response-latency-hist=~/HIST_${FILENAME_SUFFIX} \
           2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
       echo "Sleeping: $SLEEP_BETWEEN_RUNS"
       sleep ${SLEEP_BETWEEN_RUNS}
     done
