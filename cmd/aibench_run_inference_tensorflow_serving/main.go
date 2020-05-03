@@ -7,6 +7,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
+	"sync"
+	tfcoreframework "tensorflow/core/framework"
+	tensorflowserving "tensorflow_serving/apis"
+	"time"
+
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
@@ -14,11 +20,6 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
-	"log"
-	"sync"
-	tfcoreframework "tensorflow/core/framework"
-	tensorflowserving "tensorflow_serving/apis"
-	"time"
 )
 
 // Program option vars:

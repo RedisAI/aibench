@@ -11,9 +11,9 @@ import (
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/valyala/fasthttp"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"mime/multipart"
 	"net"
@@ -24,7 +24,7 @@ import (
 // Program option vars:
 var (
 	redisHost          string
-	mysqlHost string
+	mysqlHost          string
 	restapiHost        string
 	restapiRequestUri  string
 	strPost            = []byte("POST")
@@ -51,7 +51,6 @@ func init() {
 		})
 	}
 
-
 }
 
 func main() {
@@ -71,7 +70,7 @@ type Processor struct {
 	Metrics    chan uint64
 	Wg         *sync.WaitGroup
 	httpclient *fasthttp.HostClient
-	sqldb  *sql.DB
+	sqldb      *sql.DB
 }
 
 func (p *Processor) Close() {
@@ -98,7 +97,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 			return fasthttp.DialTimeout(addr, restapiReadTimeout)
 		},
 	}
-	if runner.UseReferenceDataMysql(){
+	if runner.UseReferenceDataMysql() {
 		var err error = nil
 		p.sqldb, err = sql.Open("mysql", mysqlHost)
 		if err != nil {
@@ -142,7 +141,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		}
 		refPart.Write(redisRespReferenceBytes)
 	}
-	if useReferenceDataMysql{
+	if useReferenceDataMysql {
 		statement := p.sqldb.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
 		var mysqlResult []byte
 		err := statement.Scan(&mysqlResult)
@@ -158,7 +157,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 			log.Fatalln(err)
 		}
 		if len != 1024 {
-			log.Fatalf("expected reference data to have 1024 bytes. has %d", len )
+			log.Fatalf("expected reference data to have 1024 bytes. has %d", len)
 		}
 	}
 	writer.Close()

@@ -6,14 +6,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/RedisAI/aibench/inference"
-	_ "github.com/lib/pq"
-	"github.com/mediocregopher/radix"
 	"log"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/inference"
+	_ "github.com/lib/pq"
+	"github.com/mediocregopher/radix"
 
 	//ignoring until we get the correct model
 	//"log"
