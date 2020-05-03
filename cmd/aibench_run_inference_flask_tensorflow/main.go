@@ -23,20 +23,20 @@ import (
 
 // Program option vars:
 var (
-	redisHost          string
-	mysqlHost          string
-	restapiHost        string
-	restapiRequestUri  string
-	strPost            = []byte("POST")
-	strRequestURI      = []byte("")
-	strHost            = []byte("")
-	showExplain        bool
-	runner             *inference.BenchmarkRunner
-	redisClient        *redis.Client
-	mysqlClient        *sql.DB
-	mysqlMaxIdle        int
-	mysqlMaxOpen        int
-	restapiReadTimeout time.Duration
+	redisHost            string
+	mysqlHost            string
+	restapiHost          string
+	restapiRequestUri    string
+	strPost              = []byte("POST")
+	strRequestURI        = []byte("")
+	strHost              = []byte("")
+	showExplain          bool
+	runner               *inference.BenchmarkRunner
+	redisClient          *redis.Client
+	mysqlClient          *sql.DB
+	mysqlMaxIdle         int
+	mysqlMaxOpen         int
+	restapiReadTimeout   time.Duration
 	mysqlConnMaxLifetime time.Duration
 )
 
@@ -51,7 +51,6 @@ func init() {
 	flag.IntVar(&mysqlMaxIdle, "mysql-max-idle", 256, "MySql max idle")
 	flag.IntVar(&mysqlMaxOpen, "mysql-max-open", 512, "MySql max open")
 	flag.DurationVar(&mysqlConnMaxLifetime, "mysql-conn-max-lifetime", time.Minute*10, "MySql ConnMaxLifetime")
-
 	flag.Parse()
 	if runner.UseReferenceDataRedis() {
 		redisClient = redis.NewClient(&redis.Options{
@@ -68,7 +67,6 @@ func init() {
 		mysqlClient.SetMaxOpenConns(mysqlMaxOpen)
 		mysqlClient.SetConnMaxLifetime(mysqlConnMaxLifetime)
 	}
-
 }
 
 func main() {

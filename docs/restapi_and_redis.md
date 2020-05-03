@@ -61,5 +61,5 @@ gunicorn --workers=48 --threads 48 -b 0.0.0.0:8000  --log-level error --daemon s
 #### Test without reference data
 ```
 export TF_MODEL_PATH=$GOPATH/src/github.com/RedisAI/aibench/tests/models/tensorflow/creditcardfraud_noreference.pb
-gunicorn --workers=48 --threads 48 -b 0.0.0.0:8000  --log-level error --daemon server_noreference:app
+gunicorn --workers=48 --threads 2 -b 0.0.0.0:8000  --log-level error --daemon server_noreference:app
 ```
