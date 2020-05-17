@@ -5,11 +5,13 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"flag"
 	"fmt"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -21,16 +23,21 @@ import (
 
 // Program option vars:
 var (
-	redisHost          string
-	restapiHost        string
-	restapiRequestUri  string
-	strPost            = []byte("POST")
-	strRequestURI      = []byte("")
-	strHost            = []byte("")
-	showExplain        bool
-	runner             *inference.BenchmarkRunner
-	redisClient        *redis.Client
-	restapiReadTimeout time.Duration
+	redisHost            string
+	mysqlHost            string
+	restapiHost          string
+	restapiRequestUri    string
+	strPost              = []byte("POST")
+	strRequestURI        = []byte("")
+	strHost              = []byte("")
+	showExplain          bool
+	runner               *inference.BenchmarkRunner
+	redisClient          *redis.Client
+	mysqlClient          *sql.DB
+	mysqlMaxIdle         int
+	mysqlMaxOpen         int
+	restapiReadTimeout   time.Duration
+	mysqlConnMaxLifetime time.Duration
 )
 
 // Parse args:
@@ -40,10 +47,26 @@ func init() {
 	flag.StringVar(&restapiHost, "restapi-host", "127.0.0.1:8000", "REST API host address and port")
 	flag.DurationVar(&restapiReadTimeout, "restapi-read-timeout", 5*time.Second, "REST API timeout")
 	flag.StringVar(&restapiRequestUri, "restapi-request-uri", "/v2/predict", "REST API request URI")
+	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
+	flag.IntVar(&mysqlMaxIdle, "mysql-max-idle", 256, "MySql max idle")
+	flag.IntVar(&mysqlMaxOpen, "mysql-max-open", 512, "MySql max open")
+	flag.DurationVar(&mysqlConnMaxLifetime, "mysql-conn-max-lifetime", time.Minute*10, "MySql ConnMaxLifetime")
 	flag.Parse()
-	redisClient = redis.NewClient(&redis.Options{
-		Addr: redisHost,
-	})
+	if runner.UseReferenceDataRedis() {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: redisHost,
+		})
+	}
+	if runner.UseReferenceDataMysql() {
+		var err error = nil
+		mysqlClient, err = sql.Open("mysql", mysqlHost)
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
+		}
+		mysqlClient.SetMaxIdleConns(mysqlMaxIdle)
+		mysqlClient.SetMaxOpenConns(mysqlMaxOpen)
+		mysqlClient.SetConnMaxLifetime(mysqlConnMaxLifetime)
+	}
 }
 
 func main() {
@@ -92,7 +115,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -116,7 +139,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	transPart.Write(transactionValues)
 	start := time.Now()
-	if useReferenceData {
+	if useReferenceDataRedis {
 		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln("Error on redisClient.Get", redisErr)
@@ -126,6 +149,25 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 			log.Fatalln(err)
 		}
 		refPart.Write(redisRespReferenceBytes)
+	}
+	if useReferenceDataMysql {
+		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
+		var mysqlResult []byte
+		err := statement.Scan(&mysqlResult)
+		if err != nil {
+			log.Fatalln("Error on MySqlClient", err)
+		}
+		refPart, err := writer.CreateFormFile("reference", "reference")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		len, err := refPart.Write(mysqlResult)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if len != 1024 {
+			log.Fatalf("expected reference data to have 1024 bytes. has %d", len)
+		}
 	}
 	writer.Close()
 	req.Header.Add("Content-Type", writer.FormDataContentType())

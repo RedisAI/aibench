@@ -5,25 +5,30 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/RedisAI/aibench/inference"
-	"github.com/go-redis/redis"
-	googleprotobuf "github.com/golang/protobuf/ptypes/wrappers"
-	_ "github.com/lib/pq"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 	"log"
 	"sync"
 	tfcoreframework "tensorflow/core/framework"
 	tensorflowserving "tensorflow_serving/apis"
 	"time"
+
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/inference"
+	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
+	googleprotobuf "github.com/golang/protobuf/ptypes/wrappers"
+	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 )
 
 // Program option vars:
 var (
-	redisHost             string
+	redisHost string
+	mysqlHost string
+
 	tensorflowServingHost string
 	model                 string
 	version               int
@@ -37,7 +42,12 @@ var (
 )
 
 var (
-	redisClient *redis.Client
+	redisClient          *redis.Client
+	mysqlClient          *sql.DB
+	mysqlMaxIdle         int
+	mysqlMaxOpen         int
+	restapiReadTimeout   time.Duration
+	mysqlConnMaxLifetime time.Duration
 )
 
 // Parse args:
@@ -47,10 +57,26 @@ func init() {
 	flag.StringVar(&tensorflowServingHost, "tensorflow-serving-host", "127.0.0.1:8500", "TensorFlow serving host address and port")
 	flag.StringVar(&model, "model", "", "Model name")
 	flag.IntVar(&version, "model-version", 1, "Model version")
+	flag.StringVar(&mysqlHost, "mysql-host", "perf:perf@tcp(127.0.0.1:3306)/", "MySql host address and port")
+	flag.IntVar(&mysqlMaxIdle, "mysql-max-idle", 256, "MySql max idle")
+	flag.IntVar(&mysqlMaxOpen, "mysql-max-open", 512, "MySql max open")
+	flag.DurationVar(&mysqlConnMaxLifetime, "mysql-conn-max-lifetime", time.Minute*10, "MySql ConnMaxLifetime")
 	flag.Parse()
-	redisClient = redis.NewClient(&redis.Options{
-		Addr: redisHost,
-	})
+	if runner.UseReferenceDataRedis() {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: redisHost,
+		})
+	}
+	if runner.UseReferenceDataMysql() {
+		var err error = nil
+		mysqlClient, err = sql.Open("mysql", mysqlHost)
+		if err != nil {
+			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
+		}
+		mysqlClient.SetMaxIdleConns(mysqlMaxIdle)
+		mysqlClient.SetMaxOpenConns(mysqlMaxOpen)
+		mysqlClient.SetConnMaxLifetime(mysqlConnMaxLifetime)
+	}
 }
 
 func main() {
@@ -91,9 +117,10 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
 	}
 	p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
+
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -118,7 +145,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
-	if useReferenceData == true {
+	if useReferenceDataRedis == true {
 		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln(redisErr)
@@ -158,7 +185,51 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 				},
 			},
 		}
-	} else {
+	}
+	if useReferenceDataMysql {
+		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
+		var mysqlResult []byte
+		err := statement.Scan(&mysqlResult)
+		if err != nil {
+			log.Fatalln("Error on MySqlClient", err)
+		}
+		request = &tensorflowserving.PredictRequest{
+			ModelSpec: &tensorflowserving.ModelSpec{
+				Name: model,
+				Version: &googleprotobuf.Int64Value{
+					Value: int64(version),
+				},
+			},
+			Inputs: map[string]*tfcoreframework.TensorProto{
+				"transaction": {
+					Dtype: tfcoreframework.DataType_DT_FLOAT,
+					TensorShape: &tfcoreframework.TensorShapeProto{
+						Dim: []*tfcoreframework.TensorShapeProto_Dim{
+							{
+								Size: int64(1),
+							},
+							{
+								Size: int64(30),
+							},
+						},
+					},
+					TensorContent: transactionValues,
+				},
+				"reference": {
+					Dtype: tfcoreframework.DataType_DT_FLOAT,
+					TensorShape: &tfcoreframework.TensorShapeProto{
+						Dim: []*tfcoreframework.TensorShapeProto_Dim{
+							{
+								Size: int64(256),
+							},
+						},
+					},
+					TensorContent: mysqlResult,
+				},
+			},
+		}
+	}
+	if useReferenceDataRedis == false && useReferenceDataMysql == false {
 		request = &tensorflowserving.PredictRequest{
 			ModelSpec: &tensorflowserving.ModelSpec{
 				Name: model,

@@ -50,7 +50,7 @@ for REFERENCE_DATA in "true" "false"; do
           -debug=${DEBUG} \
           -use-dag=true \
           -cluster-mode \
-          -enable-reference-data=${REFERENCE_DATA} \
+          -enable-reference-data-redis=${REFERENCE_DATA} \
           -host=${DATABASE_HOST} \
           -port=${DATABASE_PORT} \
           -output-file-stats-hdr-response-latency-hist=~/HIST_${FILENAME_SUFFIX} \

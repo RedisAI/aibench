@@ -36,11 +36,11 @@ commands:
     steps:
       - checkout
       - run:
-          name: Load tensors
+          name: Load tensors into Redis
           command: |
-            ./scripts/load_tensors.sh
+            ./scripts/load_tensors_redis.sh
       - run:
-          name: Run inference
+          name: Run inference RedisAI
           command: |
             ./scripts/run_inference_redisai_ci.sh
 

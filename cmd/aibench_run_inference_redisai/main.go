@@ -6,14 +6,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
-	"github.com/RedisAI/aibench/inference"
-	_ "github.com/lib/pq"
-	"github.com/mediocregopher/radix"
 	"log"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
+	"github.com/RedisAI/aibench/inference"
+	_ "github.com/lib/pq"
+	"github.com/mediocregopher/radix"
 
 	//ignoring until we get the correct model
 	//"log"
@@ -130,7 +131,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceData bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -143,7 +144,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
 	var args []string
-	if useReferenceData == true {
+	if useReferenceDataRedis == true {
 		args = []string{"LOAD", "1", referenceDataTensorName, "|>",
 			"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
 			"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, referenceDataTensorName, "OUTPUTS", classificationTensorName, "|>",
@@ -158,6 +159,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	pos := rand.Int31n(int32(len(p.pclient)))
 	start := time.Now()
+
 	err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)

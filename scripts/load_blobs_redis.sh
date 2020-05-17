@@ -24,7 +24,11 @@ cat ${DATA_FILE} |
   ${EXE_FILE_NAME} \
     -reporting-period 1000ms \
     -set-blob=true \
-    -host redis://${DATABASE_HOST}:${DATABASE_PORT} \
-    -workers ${NUM_WORKERS} -pipeline 1000 #-max-inserts 10000
+    -use-redis=false \
+    -use-mysql=true \
+    -max-inserts=${NUM_INFERENCES} \
+    -mysql-host="perf:perf@tcp(${MYSQL_HOST}:${MYSQL_PORT})/test" \
+    -redis-host="redis://${DATABASE_HOST}:${DATABASE_PORT}" \
+    -workers=${NUM_WORKERS} -pipeline=1000
 
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats
