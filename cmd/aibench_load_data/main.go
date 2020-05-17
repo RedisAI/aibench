@@ -140,7 +140,7 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 			issuedCommands++
 		}
 		if setTensor {
-			err := p.pclient.TensorSet(id, redisai.TypeFloat, []int{1, 256}, referenceValues)
+			err := p.pclient.TensorSet(id, redisai.TypeFloat, []int64{1, 256}, referenceValues)
 			if err != nil {
 				log.Fatal(err)
 			}

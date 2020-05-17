@@ -159,6 +159,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	pos := rand.Int31n(int32(len(p.pclient)))
 	start := time.Now()
+
 	err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
