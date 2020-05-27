@@ -22,7 +22,6 @@ import (
 var (
 	host         string
 	mysqlHost    string
-	sqlCreate    string
 	pipelineSize uint
 	setBlob      bool
 	setTensor    bool
@@ -48,15 +47,15 @@ func init() {
 	flag.BoolVar(&useRedis, "use-redis", false, "Use Redis as the reference data holder")
 	flag.BoolVar(&useMysql, "use-mysql", false, "Use MySql as the reference data holder")
 	flag.Parse()
-	if useRedis == true {
+	if useRedis {
 		cpool = &redis.Pool{
 			MaxIdle:     3,
 			IdleTimeout: 240 * time.Second,
 			Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
 		}
 	}
-	if useMysql == true {
-		var err error = nil
+	if useMysql {
+		var err error
 		sqldb, err = sql.Open("mysql", mysqlHost)
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
@@ -98,7 +97,7 @@ func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 		p.pclient.Pipeline(uint32(pipelineSize))
 	}
 	if useMysql {
-		var err error = nil
+		var err error
 		psqldb, err := sql.Open("mysql", mysqlHost)
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))

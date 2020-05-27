@@ -39,23 +39,6 @@ var (
 	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
 )
 
-func getClusterNodesFromArgs(nodes []radix.ClusterNode, port string, host string, nodesAddresses []string) ([]radix.ClusterNode, []string) {
-	nodes = []radix.ClusterNode{}
-	ports := strings.Split(port, ",")
-	for idx, nhost := range strings.Split(host, ",") {
-		node := radix.ClusterNode{
-			Addr:            fmt.Sprintf("%s:%s", nhost, ports[idx]),
-			ID:              "",
-			Slots:           nil,
-			SecondaryOfAddr: "",
-			SecondaryOfID:   "",
-		}
-		nodes = append(nodes, node)
-		nodesAddresses = append(nodesAddresses, node.Addr)
-	}
-	return nodes, nodesAddresses
-}
-
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
@@ -105,7 +88,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	}
 	p.Wg = wg
 	p.Metrics = m
-	var err error = nil
+	var err error
 
 	hosts := strings.Split(host, ",")
 	ports := strings.Split(port, ",")
@@ -144,7 +127,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	transactionDataTensorName := "transactionTensor:{" + idS + "}"
 	transactionValues := q[8:128]
 	var args []string
-	if useReferenceDataRedis == true {
+	if useReferenceDataRedis {
 		args = []string{"LOAD", "1", referenceDataTensorName, "|>",
 			"AI.TENSORSET", transactionDataTensorName, "FLOAT", "1", "30", "BLOB", string(transactionValues), "|>",
 			"AI.MODELRUN", model, "INPUTS", transactionDataTensorName, referenceDataTensorName, "OUTPUTS", classificationTensorName, "|>",

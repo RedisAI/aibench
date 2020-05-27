@@ -6,6 +6,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
+GOFMT=$(GOCMD) fmt
 
 # DOCKER
 DOCKER_APP_NAME=aibench
@@ -23,8 +24,22 @@ loaders: aibench_load_data
 
 runners: aibench_run_inference_redisai aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
-test:
-	$(GOGET) ./...
+checkfmt:
+	@echo 'Checking gofmt';\
+ 	bash -c "diff -u <(echo -n) <(gofmt -d .)";\
+	EXIT_CODE=$$?;\
+	if [ "$$EXIT_CODE"  -ne 0 ]; then \
+		echo '$@: Go files must be formatted with gofmt'; \
+	fi && \
+	exit $$EXIT_CODE
+
+get:
+	GO111MODULE=on $(GOGET) github.com/golangci/golangci-lint/cmd/golangci-lint
+	$(GOGET) -t -v ./...
+
+test: get
+	$(GOFMT) ./...
+	golangci-lint run
 	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 data: generators
