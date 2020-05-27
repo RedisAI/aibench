@@ -46,7 +46,6 @@ var (
 	mysqlClient          *sql.DB
 	mysqlMaxIdle         int
 	mysqlMaxOpen         int
-	restapiReadTimeout   time.Duration
 	mysqlConnMaxLifetime time.Duration
 )
 
@@ -68,7 +67,7 @@ func init() {
 		})
 	}
 	if runner.UseReferenceDataMysql() {
-		var err error = nil
+		var err error
 		mysqlClient, err = sql.Open("mysql", mysqlHost)
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
@@ -111,7 +110,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 		debug:         runner.DebugLevel() > 0,
 		printResponse: runner.DoPrintResponses(),
 	}
-	var err error = nil
+	var err error
 	p.grpcClientConn, err = grpc.Dial(tensorflowServingHost, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Cannot connect to the grpc server: %v\n", err)
@@ -128,7 +127,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	// reconnect if the connection was shutdown
 	if p.grpcClientConn.GetState() == connectivity.Shutdown {
-		var err error = nil
+		var err error
 		p.grpcClientConn, err = grpc.Dial(tensorflowServingHost, grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("Cannot connect to the grpc server: %v\n", err)
@@ -145,8 +144,8 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
-	if useReferenceDataRedis == true {
-		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+	if useReferenceDataRedis {
+		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln(redisErr)
 		}
@@ -229,7 +228,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 			},
 		}
 	}
-	if useReferenceDataRedis == false && useReferenceDataMysql == false {
+	if !useReferenceDataRedis && !useReferenceDataMysql {
 		request = &tensorflowserving.PredictRequest{
 			ModelSpec: &tensorflowserving.ModelSpec{
 				Name: model,

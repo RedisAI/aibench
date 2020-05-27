@@ -37,7 +37,6 @@ var (
 	mysqlClient           *sql.DB
 	mysqlMaxIdle          int
 	mysqlMaxOpen          int
-	restapiReadTimeout    time.Duration
 	mysqlConnMaxLifetime  time.Duration
 )
 
@@ -59,7 +58,7 @@ func init() {
 		})
 	}
 	if runner.UseReferenceDataMysql() {
-		var err error = nil
+		var err error
 		mysqlClient, err = sql.Open("mysql", mysqlHost)
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
@@ -129,8 +128,8 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
 	var redisRespReference []byte
-	redisRespReferenceFloats := make([]float32, 256)
-	var redisErr error = nil
+	var redisRespReferenceFloats []float32
+	var redisErr error
 	var body map[string][]float32
 
 	req.SetRequestURIBytes(strRequestURI)
@@ -139,7 +138,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	res := fasthttp.AcquireResponse()
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReference, redisErr = redisClient.Get(referenceDataKeyName).Bytes()
+		redisRespReference, redisErr = redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln("Error on redisClient.Get", redisErr)
 		}
@@ -158,7 +157,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
 	}
 
-	if useReferenceDataRedis == false && useReferenceDataMysql == false {
+	if !useReferenceDataRedis && !useReferenceDataMysql {
 		body = map[string][]float32{"transaction": transactionValuesFloats}
 	}
 	bodyJSON, err := json.Marshal(body)
@@ -174,7 +173,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	took := time.Since(start).Microseconds()
 	if p.opts.printResponse {
-		fmt.Println(fmt.Sprintf("REQUEST BODY: %v RESPONSE %v", body, res.String()))
+		fmt.Printf("REQUEST BODY: %v RESPONSE %v", body, res.String())
 	}
 	if res.StatusCode() != 200 {
 		return nil, fmt.Errorf("Wrong status inference response code. expected %v, got %d", 200, res.StatusCode())

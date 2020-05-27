@@ -58,7 +58,7 @@ func init() {
 		})
 	}
 	if runner.UseReferenceDataMysql() {
-		var err error = nil
+		var err error
 		mysqlClient, err = sql.Open("mysql", mysqlHost)
 		if err != nil {
 			log.Fatalf(fmt.Sprintf("Error connection to MySql %v", err))
@@ -137,10 +137,13 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	transPart.Write(transactionValues)
+	_, err = transPart.Write(transactionValues)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln("Error on redisClient.Get", redisErr)
 		}
@@ -148,7 +151,10 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		if err != nil {
 			log.Fatalln(err)
 		}
-		refPart.Write(redisRespReferenceBytes)
+		_, err = refPart.Write(redisRespReferenceBytes)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 	if useReferenceDataMysql {
 		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)

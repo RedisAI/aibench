@@ -18,7 +18,6 @@ type statProcessor struct {
 	printInterval  uint64     // printInterval is how often print intermediate stats (number of queries)
 	wg             sync.WaitGroup
 	StatsMapping   map[string]*statGroup
-	latencyFile    string
 	opsCount       uint64
 }
 
@@ -30,17 +29,6 @@ func (sp *statProcessor) sendStats(stats []*Stat) {
 	for _, s := range stats {
 		sp.c <- s
 	}
-}
-
-func (sp *statProcessor) sendStatsWarm(stats []*Stat) {
-	if stats == nil {
-		return
-	}
-
-	for _, s := range stats {
-		s.isWarm = true
-	}
-	sp.sendStats(stats)
 }
 
 // process collects latency results, aggregating them into summary
@@ -115,6 +103,9 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 				intervalQueryRate,
 				overallQueryRate,
 			)
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = writeStatGroupMap(os.Stderr, sp.StatsMapping)
 			if err != nil {
 				log.Fatal(err)
@@ -128,8 +119,8 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 		}
 	}
 
-	if printStats == true {
-		sinceStart := time.Now().Sub(start)
+	if printStats {
+		sinceStart := time.Since(start)
 		overallQueryRate := float64(sp.opsCount) / float64(sinceStart.Seconds())
 		// the final stats output goes to stdout:
 		_, err := fmt.Printf("Run complete after %d inferences with %d workers (Overall inference rate %0.2f inferences/sec):\n",

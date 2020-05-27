@@ -7,14 +7,6 @@ import (
 	"strconv"
 )
 
-func randomByteStringSliceChoice(s [][]byte) []byte {
-	return s[rand.Intn(len(s))]
-}
-
-func randomInt64SliceChoice(s []int64) int64 {
-	return s[rand.Intn(len(s))]
-}
-
 func ConvertSliceStringToFloat(transactionDataString []string) []float32 {
 	res := make([]float32, len(transactionDataString))
 	for i := range transactionDataString {

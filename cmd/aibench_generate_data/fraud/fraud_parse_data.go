@@ -50,8 +50,6 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 
 	file, err := os.Open(inputFilename)
 	var transactions []serialize.Transaction
-	maxPoints := limit
-
 	if err != nil {
 		panic(fmt.Sprintf("cannot open file for read %s: %v", inputFilename, err))
 	}
@@ -64,16 +62,19 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 	// if the transaction count is lower than the limit or if there is no limit and we havent read the file one
 	for transactionCount < limit || (limit == 0 && seekCount < 1) {
 
-		file.Seek(0, io.SeekStart)
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			log.Fatal(err)
+		}
 		br := bufio.NewReader(file)
 		reader := csv.NewReader(br)
 
 		//skip first line
-		line, err := reader.Read()
+		_, err = reader.Read()
 		if err != nil {
 			log.Fatal(err)
 		}
-		line, err = reader.Read()
+		line, err := reader.Read()
 
 		for err != io.EOF && (transactionCount < limit || (limit == 0 && seekCount < 1)) {
 			qfloat := ConvertSliceStringToFloat(line)
@@ -106,7 +107,7 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 
 	}
 
-	maxPoints = uint64(len(transactions))
+	var maxPoints = uint64(len(transactions))
 	if limit > 0 && limit < uint64(len(transactions)) {
 		// Set specified points number limit
 		maxPoints = limit
@@ -118,7 +119,7 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 	}}
 
 	if debug > 0 {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("finished reading %s, max transactions %d", inputFilename, maxPoints))
+		fmt.Fprintf(os.Stderr, "finished reading %s, max transactions %d\n", inputFilename, maxPoints)
 	}
 
 	return sim

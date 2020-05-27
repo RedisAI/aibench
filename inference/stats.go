@@ -62,7 +62,6 @@ func (s *Stat) reset() *Stat {
 // statGroup collects simple streaming statistics.
 type statGroup struct {
 	sumTotalResults                  uint64
-	queryDocCountValues              []string
 	count                            int64
 	timedOutCount                    int64
 	totalResultsStatisticalHistogram *gohistogram.NumericHistogram
@@ -94,7 +93,7 @@ func (s *statGroup) push(latency_us int64, totalResults uint64, timedOut bool, q
 	_ = s.latencyHDRHistogram.RecordValue(latency_us)
 	s.totalResultsStatisticalHistogram.Add(float64(totalResults))
 	s.sumTotalResults += totalResults
-	if timedOut == true {
+	if timedOut {
 		s.timedOutCount++
 	}
 
@@ -114,11 +113,6 @@ func (s *statGroup) stringQueryLatencyStatistical() string {
 		float64(s.latencyHDRHistogram.Max())/10e2,
 		s.latencyHDRHistogram.StdDev()/10e2,
 		s.count, s.timedOutCount)
-}
-
-// stringQueryResponseSizeFullHistogram returns a string histogram of Query Response Size (#docs)
-func (s *statGroup) stringQueryResponseSizeFullHistogram() string {
-	return fmt.Sprintf("%s\n", s.totalResultsStatisticalHistogram.String())
 }
 
 // stringQueryResponseSizeFullHistogram returns a string histogram of Query Response Size (#docs)

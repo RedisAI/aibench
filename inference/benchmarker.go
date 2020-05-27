@@ -53,7 +53,6 @@ type BenchmarkRunner struct {
 	scanner        *producer
 	ch             chan []byte
 	inferenceCount uint64
-	opsCount       uint64
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -157,12 +156,15 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate) {
 
 	if b.cpuProfile != "" {
-		fmt.Println(fmt.Sprintf("starting cpu profile. Saving into :%s", b.cpuProfile))
+		fmt.Printf("starting cpu profile. Saving into :%s", b.cpuProfile)
 		f, err := os.Create(b.cpuProfile)
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			log.Fatal(err)
+		}
 		defer pprof.StopCPUProfile()
 	}
 
@@ -285,7 +287,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 					atomic.AddUint64(&b.inferenceCount, 1)
 				}
 			}
-			queryPool.Put(query)
+			queryPool.Put(&query)
 		}
 	}
 	processor.Close()
