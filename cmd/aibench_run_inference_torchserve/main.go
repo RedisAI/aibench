@@ -138,7 +138,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	res := fasthttp.AcquireResponse()
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReference, redisErr = redisClient.Get(referenceDataKeyName).Bytes()
+		redisRespReference, redisErr = redisClient.Get(redisClient.Context(),referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln("Error on redisClient.Get", redisErr)
 		}

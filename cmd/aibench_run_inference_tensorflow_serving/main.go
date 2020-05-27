@@ -145,7 +145,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(referenceDataKeyName).Bytes()
+		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(),referenceDataKeyName).Bytes()
 		if redisErr != nil {
 			log.Fatalln(redisErr)
 		}
