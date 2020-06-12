@@ -1,3 +1,4 @@
+import csv
 
 import redisai as rai
 from skimage import io
@@ -9,6 +10,7 @@ from os.path import isfile, join
 import tqdm
 import argparse
 from pathlib import Path
+from redisai.command_builder import Builder
 
 """
  script to pre process the specified input images. For each image:
@@ -59,19 +61,33 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("Reading cropped scaled images to {}".format(args.input_val_dir))
     con = rai.Client(host=args.host, port=args.port)
-
+    builder = Builder()
     filenames = [f for f in listdir(args.input_val_dir) if isfile(
         join(args.input_val_dir, f))]
     filenames.sort()
+    with open("test.csv","w") as csvfile:
+        csvwriter = csv.writer(csvfile)
+    # spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+    # spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
 
-    for filename in tqdm.tqdm(filenames):
-        img_path = '{}/{}'.format(args.input_val_dir, filename)
-        image = io.imread(img_path)
-        con.tensorset(filename, image)
+        for filename in tqdm.tqdm(filenames):
+            img_path = '{}/{}'.format(args.input_val_dir, filename)
+            image = io.imread(img_path)
+            tensorset_args = builder.tensorset(filename, image )
+            final_args = ['WRITE','W1']
+            tensorset_args.pop()
+            tensorset_args.pop()
+            final_args.extend(tensorset_args)
+            csvwriter.writerow(final_args)
+            # tensorset_args = [str(x) for x in tensorset_args ]
+            #
+            #
+            #
+            # # dag_args = ["AI.DAGRUN"]
+            # csvfile.writelines(( "WRITE,TENSORSET," + ",".join(tensorset_args)+"\n"))
+        # con.tensorset(filename, image)
 
 
 
-image = io.imread(img_path)
-con.tensorset('image', image)
-final = con.tensorget('out')
+
 

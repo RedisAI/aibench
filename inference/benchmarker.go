@@ -21,7 +21,8 @@ const (
 	labelAllQueries    = "All queries"
 	labelColdQueries   = "Cold queries"
 	labelWarmQueries   = "Warm queries"
-	rowBenchmarkNBytes = 8 + 120 + 1024
+	//rowBenchmarkNBytes = 8 + 120 + 1024
+	rowBenchmarkNBytes = 224*224*4
 	defaultReadSize    = 4 << 20 // 4 MB
 	Inf                = rate.Limit(math.MaxFloat64)
 )
@@ -65,11 +66,11 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	}
 	flag.Uint64Var(&runner.sp.burnIn, "burn-in", 0, "Number of queries to ignore before collecting statistics.")
 	flag.Uint64Var(&runner.limit, "max-queries", 0, "Limit the number of queries to send, 0 = no limit")
-	flag.Uint64Var(&runner.sp.printInterval, "print-interval", 100, "Print timing stats to stderr after this many queries (0 to disable)")
+	flag.Uint64Var(&runner.sp.printInterval, "print-interval", 1000, "Print timing stats to stderr after this many queries (0 to disable)")
 	flag.StringVar(&runner.memProfile, "memprofile", "", "Write a memory profile to this file.")
 	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
 	flag.Uint64Var(&runner.limitrps, "limit-rps", 0, "Limit overall RPS. 0 disables limit.")
-	flag.UintVar(&runner.workers, "workers", 1, "Number of concurrent requests to make.")
+	flag.UintVar(&runner.workers, "workers", 8, "Number of concurrent requests to make.")
 	flag.UintVar(&runner.repetitions, "repetitions", 10, "Number of repetitions of requests per dataset ( will round robin ).")
 	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")

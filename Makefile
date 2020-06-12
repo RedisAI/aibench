@@ -18,11 +18,11 @@ DOCKER_LATEST:="${DOCKER_REPO}:latest"
 .PHONY: all generators loaders runners
 all: generators loaders runners
 
-generators: aibench_generate_data
+generators: aibench_generate_data aibench_generate_data_vision
 
 loaders: aibench_load_data
 
-runners: aibench_run_inference_redisai aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
+runners: aibench_run_inference_redisai aibench_run_inference_redisai_vision aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
 checkfmt:
 	@echo 'Checking gofmt';\
@@ -34,12 +34,10 @@ checkfmt:
 	exit $$EXIT_CODE
 
 get:
-	GO111MODULE=on $(GOGET) github.com/golangci/golangci-lint/cmd/golangci-lint
 	$(GOGET) -t -v ./...
 
 test: get
 	$(GOFMT) ./...
-	golangci-lint run
 	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 data: generators

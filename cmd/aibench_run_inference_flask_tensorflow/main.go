@@ -143,18 +143,18 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
-		if redisErr != nil {
-			log.Fatalln("Error on redisClient.Get", redisErr)
-		}
-		refPart, err := writer.CreateFormFile("reference", "reference")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		_, err = refPart.Write(redisRespReferenceBytes)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		//redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
+		//if redisErr != nil {
+		//	log.Fatalln("Error on redisClient.Get", redisErr)
+		//}
+		//refPart, err := writer.CreateFormFile("reference", "reference")
+		//if err != nil {
+		//	log.Fatalln(err)
+		//}
+		//_, err = refPart.Write(redisRespReferenceBytes)
+		//if err != nil {
+		//	log.Fatalln(err)
+		//}
 	}
 	if useReferenceDataMysql {
 		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)

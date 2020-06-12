@@ -129,7 +129,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	req.Header.SetMethodBytes(strPost)
 	var redisRespReference []byte
 	var redisRespReferenceFloats []float32
-	var redisErr error
+	//var redisErr error
 	var body map[string][]float32
 
 	req.SetRequestURIBytes(strRequestURI)
@@ -138,10 +138,10 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	res := fasthttp.AcquireResponse()
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReference, redisErr = redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
-		if redisErr != nil {
-			log.Fatalln("Error on redisClient.Get", redisErr)
-		}
+		//redisRespReference, redisErr = redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
+		//if redisErr != nil {
+		//	log.Fatalln("Error on redisClient.Get", redisErr)
+		//}
 		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
 		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
 	}

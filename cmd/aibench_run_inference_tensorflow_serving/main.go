@@ -145,45 +145,45 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
-		if redisErr != nil {
-			log.Fatalln(redisErr)
-		}
-		request = &tensorflowserving.PredictRequest{
-			ModelSpec: &tensorflowserving.ModelSpec{
-				Name: model,
-				Version: &googleprotobuf.Int64Value{
-					Value: int64(version),
-				},
-			},
-			Inputs: map[string]*tfcoreframework.TensorProto{
-				"transaction": {
-					Dtype: tfcoreframework.DataType_DT_FLOAT,
-					TensorShape: &tfcoreframework.TensorShapeProto{
-						Dim: []*tfcoreframework.TensorShapeProto_Dim{
-							{
-								Size: int64(1),
-							},
-							{
-								Size: int64(30),
-							},
-						},
-					},
-					TensorContent: transactionValues,
-				},
-				"reference": {
-					Dtype: tfcoreframework.DataType_DT_FLOAT,
-					TensorShape: &tfcoreframework.TensorShapeProto{
-						Dim: []*tfcoreframework.TensorShapeProto_Dim{
-							{
-								Size: int64(256),
-							},
-						},
-					},
-					TensorContent: redisRespReferenceBytes,
-				},
-			},
-		}
+		//redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
+		//if redisErr != nil {
+		//	log.Fatalln(redisErr)
+		//}
+		//request = &tensorflowserving.PredictRequest{
+		//	ModelSpec: &tensorflowserving.ModelSpec{
+		//		Name: model,
+		//		Version: &googleprotobuf.Int64Value{
+		//			Value: int64(version),
+		//		},
+		//	},
+		//	Inputs: map[string]*tfcoreframework.TensorProto{
+		//		"transaction": {
+		//			Dtype: tfcoreframework.DataType_DT_FLOAT,
+		//			TensorShape: &tfcoreframework.TensorShapeProto{
+		//				Dim: []*tfcoreframework.TensorShapeProto_Dim{
+		//					{
+		//						Size: int64(1),
+		//					},
+		//					{
+		//						Size: int64(30),
+		//					},
+		//				},
+		//			},
+		//			TensorContent: transactionValues,
+		//		},
+		//		"reference": {
+		//			Dtype: tfcoreframework.DataType_DT_FLOAT,
+		//			TensorShape: &tfcoreframework.TensorShapeProto{
+		//				Dim: []*tfcoreframework.TensorShapeProto_Dim{
+		//					{
+		//						Size: int64(256),
+		//					},
+		//				},
+		//			},
+		//			TensorContent: redisRespReferenceBytes,
+		//		},
+		//	},
+		//}
 	}
 	if useReferenceDataMysql {
 		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)
