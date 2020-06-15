@@ -38,6 +38,7 @@ var (
 	mysqlMaxOpen         int
 	restapiReadTimeout   time.Duration
 	mysqlConnMaxLifetime time.Duration
+	rowBenchmarkNBytes   = 8 + 120 + 1024
 )
 
 // Parse args:
@@ -72,7 +73,7 @@ func init() {
 func main() {
 	strRequestURI = []byte(restapiRequestUri)
 	strHost = []byte(restapiHost)
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type queryExecutorOptions struct {
@@ -115,7 +116,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {

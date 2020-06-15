@@ -18,13 +18,13 @@ import (
 )
 
 const (
-	labelAllQueries    = "All queries"
-	labelColdQueries   = "Cold queries"
-	labelWarmQueries   = "Warm queries"
+	labelAllQueries  = "All queries"
+	labelColdQueries = "Cold queries"
+	labelWarmQueries = "Warm queries"
 	//rowBenchmarkNBytes = 8 + 120 + 1024
-	rowBenchmarkNBytes = 224*224*4
-	defaultReadSize    = 4 << 20 // 4 MB
-	Inf                = rate.Limit(math.MaxFloat64)
+
+	defaultReadSize = 4 << 20 // 4 MB
+	Inf             = rate.Limit(math.MaxFloat64)
 )
 
 // LoadRunner contains the common components for running a inference benchmarking
@@ -127,7 +127,7 @@ type Processor interface {
 	Init(workerNum int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
 
 	// ProcessInferenceQuery handles a given inference and reports its stats
-	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*Stat, error)
+	ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*Stat, error)
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
@@ -154,7 +154,7 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 // Run does the bulk of the benchmark execution.
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
-func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate) {
+func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate, rowSizeBytes int) {
 
 	if b.cpuProfile != "" {
 		fmt.Printf("starting cpu profile. Saving into :%s", b.cpuProfile)
@@ -209,7 +209,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
+	_ = br.produce(queryPool, b.ch, rowSizeBytes, b.debug)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -252,6 +252,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 	pwg := &sync.WaitGroup{}
 	responseSizesChan := make(chan uint64, buflen)
 	pwg.Add(1)
+	var workerInferences int64 = 0
 
 	processor.Init(workerNum, int(b.workers), pwg, metricsChan, responseSizesChan)
 
@@ -259,7 +260,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 		for query := range b.ch {
 			r := rateLimiter.ReserveN(time.Now(), 1)
 			time.Sleep(r.Delay())
-			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql)
+			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql, workerInferences)
 			if err != nil {
 				if b.IgnoreErrors() {
 					fmt.Printf("On iteration %d Ignoring inference error: %v\n", i, err)
@@ -267,6 +268,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 					panic(err)
 				}
 			} else {
+				workerInferences++
 				atomic.AddUint64(&b.inferenceCount, 1)
 				b.sp.sendStats(stats)
 			}
@@ -276,7 +278,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 			// This guarantees that the warm stat will reflect optimal cache performance.
 			if b.sp.prewarmQueries {
 				// Warm run
-				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql)
+				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql, workerInferences)
 				if err != nil {
 					if b.IgnoreErrors() {
 						fmt.Printf("Ignoring inference error: %v\n", err)
@@ -284,8 +286,9 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 						panic(err)
 					}
 				} else {
-					b.sp.sendStats(stats)
+					workerInferences++
 					atomic.AddUint64(&b.inferenceCount, 1)
+					b.sp.sendStats(stats)
 				}
 			}
 			queryPool.Put(&query)

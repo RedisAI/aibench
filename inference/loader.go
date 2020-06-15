@@ -86,7 +86,7 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 // Run does the bulk of the benchmark execution.
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
-func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate) {
+func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate, rowBenchmarkNBytes int) {
 
 	if b.workers == 0 {
 		panic("must have at least one worker")

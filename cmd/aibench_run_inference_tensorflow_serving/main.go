@@ -26,27 +26,19 @@ import (
 
 // Program option vars:
 var (
-	redisHost string
-	mysqlHost string
-
+	redisHost             string
+	mysqlHost             string
 	tensorflowServingHost string
 	model                 string
 	version               int
-
-	showExplain bool
-)
-
-// Global vars:
-var (
-	runner *inference.BenchmarkRunner
-)
-
-var (
-	redisClient          *redis.Client
-	mysqlClient          *sql.DB
-	mysqlMaxIdle         int
-	mysqlMaxOpen         int
-	mysqlConnMaxLifetime time.Duration
+	showExplain           bool
+	runner                *inference.BenchmarkRunner
+	rowBenchmarkNBytes    = 8 + 120 + 1024
+	redisClient           *redis.Client
+	mysqlClient           *sql.DB
+	mysqlMaxIdle          int
+	mysqlMaxOpen          int
+	mysqlConnMaxLifetime  time.Duration
 )
 
 // Parse args:
@@ -79,7 +71,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type queryExecutorOptions struct {
@@ -119,7 +111,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {

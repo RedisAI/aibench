@@ -1,7 +1,6 @@
 #!/bin/bash
 #Exit immediately if a command exits with a non-zero status.
 set -e
-set -x
 
 # Ensure generator is available
 EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_run_inference_redisai)}
@@ -53,7 +52,6 @@ for REFERENCE_DATA in "true" "false"; do
           -enable-reference-data-redis=${REFERENCE_DATA} \
           -host=${DATABASE_HOST} \
           -port=${DATABASE_PORT} \
-          -output-file-stats-hdr-response-latency-hist=~/HIST_${FILENAME_SUFFIX} \
           2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 
       redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats

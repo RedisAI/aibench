@@ -20,20 +20,17 @@ import (
 
 // Program option vars:
 var (
-	host         string
-	mysqlHost    string
-	pipelineSize uint
-	setBlob      bool
-	setTensor    bool
-	useRedis     bool
-	useMysql     bool
-)
-
-// Global vars:
-var (
-	runner *inference.LoadRunner
-	cpool  *redis.Pool
-	sqldb  *sql.DB
+	host               string
+	mysqlHost          string
+	pipelineSize       uint
+	setBlob            bool
+	setTensor          bool
+	useRedis           bool
+	useMysql           bool
+	runner             *inference.LoadRunner
+	cpool              *redis.Pool
+	sqldb              *sql.DB
+	rowBenchmarkNBytes = 8 + 120 + 1024
 )
 
 // Parse args:
@@ -70,7 +67,7 @@ func init() {
 }
 
 func main() {
-	runner.RunLoad(&inference.RedisAIPool, newProcessor)
+	runner.RunLoad(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type Loader struct {

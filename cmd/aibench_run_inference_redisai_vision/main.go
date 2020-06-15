@@ -32,10 +32,8 @@ var (
 	clusterMode             bool
 	PoolPipelineConcurrency int
 	PoolPipelineWindow      time.Duration
-)
-
-var (
-	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
+	inferenceType           = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
+	rowBenchmarkNBytes      = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
 )
 
 // Parse args:
@@ -53,7 +51,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes)
 }
 
 type queryExecutorOptions struct {
@@ -113,20 +111,18 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	idS := "1"
-	tensorName := "imageTensor:{" + idS + "}"
+	tensorName := fmt.Sprintf("imageTensor:{w%d-i%d}", workerNum, queryNumber)
 	tensorValues := q
 	var args []string
-	//"AI.TENSORSET" "000000019042.jpg" "UINT8" "224" "224" "4" "BLOB"
-	//"BLOB", string(tensorValues),
-		args = []string{ tensorName, "UINT8", "224", "224", "4", "BLOB", string(tensorValues),
-	}
+	//                                           N x H  x W  x C
+	//"AI.TENSORSET" "000000019042.jpg" "UINT8" "1" "224" "224" "3" "BLOB" ...
+	args = []string{tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues)}
 	pos := rand.Int31n(int32(len(p.pclient)))
 	start := time.Now()
 
