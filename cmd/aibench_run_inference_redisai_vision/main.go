@@ -26,7 +26,6 @@ var (
 	host                    string
 	port                    string
 	model                   string
-	modelFilename           string
 	persistOutputs          bool
 	showExplain             bool
 	clusterMode             bool
@@ -42,7 +41,6 @@ func init() {
 	flag.StringVar(&host, "host", "localhost", "Redis host address, if more than one is passed will round robin requests")
 	flag.StringVar(&port, "port", "6379", "Redis host port, if more than one is passed will round robin requests")
 	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu_NxHxWxC", "model name")
-	flag.StringVar(&modelFilename, "model-filename", "", "modelFilename")
 	flag.BoolVar(&persistOutputs, "persist-results", false, "persist the classification tensors")
 	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")

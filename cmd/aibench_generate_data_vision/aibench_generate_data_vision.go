@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"github.com/cheggaaa/pb/v3"
 	"math"
 
 	//"github.com/RedisAI/redisai-go/redisai"
@@ -190,7 +191,6 @@ func SerializeTensorDataFloat32(pixels []float32, w io.Writer) (err error) {
 	for _, value := range pixels {
 		buf = append(buf, Float32bytes(value)...)
 	}
-	fmt.Println(len(buf))
 	_, err = w.Write(buf)
 	return err
 }
@@ -210,6 +210,7 @@ func main() {
 	}()
 
 	items, _ := ioutil.ReadDir(inputDir)
+	bar := pb.StartNew(len(items))
 	for _, item := range items {
 		if !item.IsDir() {
 
@@ -220,18 +221,10 @@ func main() {
 			}
 			img, err := jpeg.Decode(imageFile)
 			pixels, _ := JPEGImageTo_HxWxC_float32_AiTensor(img, false, 1.0/255.0)
-			fmt.Println(item.Name(), "  ", len(pixels))
 			SerializeTensorDataFloat32(pixels, out)
-			//
-			//fmt.Println(len(pixels))
-			//
-			//// Create a simple client.
-			//client := redisai.Connect("redis://localhost:6379", nil)
-			//
-			//// Set a tensor
-			//// AI.TENSORSET foo UINT8 224 224 4 BLOB ....
-			//err = client.TensorSetFromTensor(item.Name(), tensor)
+			bar.Increment()
 
 		}
 	}
+	bar.Finish()
 }

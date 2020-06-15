@@ -43,6 +43,9 @@ test: get
 data: generators
 	./scripts/generate_data.sh
 
+data-vision: generators
+	./scripts/generate_data_vision.sh
+
 aibench_%: $(wildcard ./cmd/$@/*.go)
 	$(GOGET) ./cmd/$@
 	$(GOBUILD) -o bin/$@ ./cmd/$@

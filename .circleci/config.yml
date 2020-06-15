@@ -38,6 +38,10 @@ commands:
     steps:
       - checkout
       - run:
+          name: Load mobilenet model
+          command: |
+            ./scripts/load_models_mobilenet_redisai.sh
+      - run:
           name: Load tensors into Redis
           command: |
             ./scripts/load_tensors_redis.sh
