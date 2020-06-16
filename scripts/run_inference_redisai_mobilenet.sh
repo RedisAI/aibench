@@ -25,7 +25,7 @@ set -x
 # we overload the NUM_WORKERS here for the official benchmark
 for NUM_WORKERS in 1 16 32 48 64 80 96 112 128 144 160; do
   for RUN in 1 2 3; do
-    FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
+    FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
     echo "Benchmarking inference performance with ${NUM_WORKERS} workers. Model name ${VISION_MODEL_NAME}"
     echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"
     # benchmark inference performance
