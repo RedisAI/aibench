@@ -38,6 +38,7 @@ for NUM_WORKERS in 1 16 32 48 64 80 96 112 128 144 160; do
         -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
         -print-interval=0 -reporting-period=1000ms \
         -host=${DATABASE_HOST} \
+        --cluster-mode \
         -port=${DATABASE_PORT} \
         2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 
