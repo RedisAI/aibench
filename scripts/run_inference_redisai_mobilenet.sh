@@ -14,8 +14,8 @@ EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
 
 # Ensure data file is in place
-if [ ! -f ${DATA_FILE} ]; then
-  echo "Cannot find data file ${DATA_FILE}"
+if [ ! -f ${OUTPUT_VISION_FILE_NAME} ]; then
+  echo "Cannot find data file ${OUTPUT_VISION_FILE_NAME}"
   exit 1
 fi
 
