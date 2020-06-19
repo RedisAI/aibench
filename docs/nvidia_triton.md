@@ -1,11 +1,19 @@
 # aibench Supplemental Guide: Nvidia Triton Inference Server
 
+As stated on [the official documentation](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/run.html): 
+> For best performance the Triton Inference Server should be run on a system that contains **Docker, nvidia-docker, CUDA** and one or more supported GPUs, as explained in Running The Inference Server. 
 
 ## Model Repository
-More info at https://github.com/NVIDIA/triton-inference-server/blob/master/docs/model_repository.rst
+
+Before running the Triton Inference Server, you must first set up a model repository containing the models that the server will make available for inferencing.
+We will specifically target TensorFlow models, but you check the full documentation [here](https://github.com/NVIDIA/triton-inference-server/blob/master/docs/model_repository.rst).
+
 ### TensorFlow Models
 
-TensorFlow saves trained models in one of two ways: GraphDef or SavedModel. Triton supports both formats. Once you have a trained model in TensorFlow, you can save it as a GraphDef directly or convert it to a GraphDef by using a script like freeze_graph.py, or save it as a SavedModel using a SavedModelBuilder or tf.saved_model.simple_save. If you use the Estimator API you can also use Estimator.export_savedmodel.
+
+TensorFlow saves trained models in one of two ways: GraphDef or SavedModel. 
+
+Once you have a trained model in TensorFlow, you can save it as a GraphDef directly or convert it to a GraphDef by using a script like [freeze_graph.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/freeze_graph.py) or a python package like [ml2rt](https://github.com/hhsecond/ml2rt). **We will focus on the TensorFlow GraphDef option.**
 
 A TensorFlow GraphDef is a single file that by default must be named model.graphdef. A minimal model repository for a single TensorFlow GraphDef model would look like:
 ```
