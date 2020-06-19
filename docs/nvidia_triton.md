@@ -57,14 +57,6 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
 ```
 
-#### GPU capable Prebuilt Docker Container 
-
-```
-# make sure you're on the root project folder
-cd $GOPATH/src/github.com/RedisAI/aibench
-nvidia-docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-trt-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
-```
-
 #### Check the model is ready
 
 Command
@@ -128,7 +120,80 @@ model_status {
   }
 }
 ready_state: SERVER_READY
+```
 
+#### GPU capable Prebuilt Docker Container 
+
+```
+# make sure you're on the root project folder
+cd $GOPATH/src/github.com/RedisAI/aibench
+nvidia-docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-trt-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
+```
+#### Check the TF-TRT model is ready
+
+Command
+```
+curl localhost:8000/api/status/mobilenet_v1_100_224_NxHxWxC_fp16_trt
+```
+
+Expected reply
+```
+# curl localhost:8000/api/status/mobilenet_v1_100_224_NxHxWxC_fp16_trt
+id: "inference:0"
+version: "1.12.0"
+uptime_ns: 16237089374
+model_status {
+  key: "mobilenet_v1_100_224_NxHxWxC_fp16_trt"
+  value {
+    config {
+      name: "mobilenet_v1_100_224_NxHxWxC_fp16_trt"
+      platform: "tensorflow_graphdef"
+      version_policy {
+        latest {
+          num_versions: 1
+        }
+      }
+      max_batch_size: 1
+      input {
+        name: "input"
+        data_type: TYPE_FP32
+        format: FORMAT_NHWC
+        dims: 224
+        dims: 224
+        dims: 3
+      }
+      output {
+        name: "MobilenetV1/Predictions/Reshape_1"
+        data_type: TYPE_FP32
+        dims: 1001
+      }
+      instance_group {
+        name: "mobilenet_v1_100_224_NxHxWxC_fp16_trt"
+        count: 1
+        gpus: 0
+        kind: KIND_GPU
+      }
+      default_model_filename: "model.graphdef"
+      optimization {
+        input_pinned_memory {
+          enable: true
+        }
+        output_pinned_memory {
+          enable: true
+        }
+      }
+    }
+    version_status {
+      key: 1
+      value {
+        ready_state: MODEL_READY
+        ready_state_reason {
+        }
+      }
+    }
+  }
+}
+ready_state: SERVER_READY
 ```
 
 ### Production Installation 
