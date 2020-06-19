@@ -47,9 +47,9 @@ output [
 ]
 ```
 
-## Installation 
+## Running the Inference Server 
 
-### Using A Prebuilt Docker Container 
+For best performance the Triton Inference Server should be run on a system that contains **Docker, nvidia-docker, CUDA** and one or more supported GPUs, as explained in Running The Inference Server. 
 
 Use docker pull to get the Triton Inference Server container from NGC:
 For a detailed info see [Nvidia framework support matrix](https://docs.nvidia.com/deeplearning/frameworks/support-matrix/index.html)
@@ -58,11 +58,19 @@ For a detailed info see [Nvidia framework support matrix](https://docs.nvidia.co
 docker pull nvcr.io/nvidia/tritonserver:20.03-py3
 ```
 
+### Improve the server’s performance
+
+The `--shm-size` and `--ulimit` flags are recommended to improve the server’s performance. 
+The `--shm-size` allocation limit is set to the default of 64MB.  This may be insufficient for TensorFlow.  NVIDIA recommends ([1](https://docs.nvidia.com/deeplearning/frameworks/tensorflow-user-guide/index.html) ,[2](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/run.html#running-the-inference-server) ) the use of the following flags:
+> For --shm-size the minimum recommended size is 1g but smaller or larger sizes may be used depending on the number and size of models being served.
+
+
+
 #### CPU only Prebuilt Docker Container 
 ```
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
-docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
+docker run --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
 ```
 
 #### Check the model is ready
@@ -135,7 +143,7 @@ ready_state: SERVER_READY
 ```
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
-nvidia-docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-trt-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
+nvidia-docker run --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-trt-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
 ```
 #### Check the TF-TRT model is ready
 
@@ -203,7 +211,3 @@ model_status {
 }
 ready_state: SERVER_READY
 ```
-
-### Production Installation 
-
-TBD
