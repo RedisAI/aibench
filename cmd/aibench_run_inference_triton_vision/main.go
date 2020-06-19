@@ -25,6 +25,7 @@ var (
 	runner                  *inference.BenchmarkRunner
 	host                    string
 	model                   string
+	version					int
 	showExplain             bool
 	inferenceType           = "NVIDIA Triton Query - mobilenet_v1_100_224 "
 	rowBenchmarkNBytes      = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
@@ -36,8 +37,9 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&host, "host", "localhost", "Redis host address, if more than one is passed will round robin requests")
-	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu_NxHxWxC", "model name")
+	flag.StringVar(&host, "host", "127.0.0.1:8500", "NVidia Triton host address and port")
+	flag.StringVar(&model, "model", "mobilenet_v1_100_224_NxHxWxC", "model name")
+	flag.IntVar(&version, "model-version", 1, "Model version")
 	flag.Parse()
 }
 
