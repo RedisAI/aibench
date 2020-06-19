@@ -22,9 +22,6 @@ func ConvertStringToFloatSlice(transactionDataString []byte) []float32 {
 	for i := 0; i < total_floats; i++ {
 		bits := binary.LittleEndian.Uint32(transactionDataString[i*4 : (i+1)*4])
 		res[i] = math.Float32frombits(bits)
-
-		//value, _ := strconv.ParseFloat(, 64)
-		//float32(value)
 	}
 	return res
 }
