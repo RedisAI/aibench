@@ -50,14 +50,14 @@ For a detailed info see [Nvidia framework support matrix](https://docs.nvidia.co
 docker pull nvcr.io/nvidia/tritonserver:20.03-py3
 ```
 
-CPU only 
+#### CPU only Prebuilt Docker Container 
 ```
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
 docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v$(pwd)/tests/models/triton-tensorflow-model-repository:/models nvcr.io/nvidia/tritonserver:20.03-py3 trtserver --model-store=/models --api-version=2
 ```
 
-GPU capable
+#### GPU capable Prebuilt Docker Container 
 
 ```
 # make sure you're on the root project folder
