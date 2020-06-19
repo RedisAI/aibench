@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
@@ -121,10 +120,10 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idUint64 := inference.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
-	transactionValuesFloats := fraud.ConvertStringToFloatSlice(transactionValues)
+	transactionValuesFloats := inference.ConvertByteSliceToFloatSlice(transactionValues)
 	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethodBytes(strPost)
@@ -143,7 +142,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		//if redisErr != nil {
 		//	log.Fatalln("Error on redisClient.Get", redisErr)
 		//}
-		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
+		redisRespReferenceFloats = inference.ConvertByteSliceToFloatSlice(redisRespReference)
 		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
 	}
 
@@ -154,7 +153,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		if err != nil {
 			log.Fatalln("Error on MySqlClient", err)
 		}
-		redisRespReferenceFloats = fraud.ConvertStringToFloatSlice(redisRespReference)
+		redisRespReferenceFloats = inference.ConvertByteSliceToFloatSlice(redisRespReference)
 		body = map[string][]float32{"transaction": transactionValuesFloats, "reference": redisRespReferenceFloats}
 	}
 

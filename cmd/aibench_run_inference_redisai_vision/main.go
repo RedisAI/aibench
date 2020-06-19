@@ -131,7 +131,6 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		args = []string{"|>"}
 	}
 	args = append(args, //                                           N x H  x W  x C
-		//"AI.TENSORSET" "000000019042.jpg" "UINT8" "1" "224" "224" "3" "BLOB" ...
 		"AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues), "|>",
 		"AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName, "|>",
 		"AI.TENSORGET", outputTensorName, "BLOB")

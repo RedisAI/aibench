@@ -2,7 +2,6 @@ package inference
 
 import (
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"io"
 	"os"
 	"strconv"
@@ -45,7 +44,7 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 		if err != nil {
 			panic(fmt.Sprintf("expected to read %d bytes but got %d on row %d", nbytes, readBytes, n))
 		}
-		row := fraud.Uint64frombytes(bytes[0:8])
+		row := Uint64frombytes(bytes[0:8])
 
 		if debug > 0 {
 			if n%1000 == 0 {

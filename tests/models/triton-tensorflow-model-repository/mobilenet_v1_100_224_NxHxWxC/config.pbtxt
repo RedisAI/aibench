@@ -3,10 +3,10 @@ platform: "tensorflow_graphdef"
 max_batch_size: 1
 input [
    {
-      name: "inputs"
+      name: "input"
       data_type: TYPE_FP32
       format: FORMAT_NHWC
-      dims: [ 3, 224, 224 ]
+      dims: [ 224, 224, 3 ]
    }
 ]
 output [

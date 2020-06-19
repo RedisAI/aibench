@@ -1,4 +1,4 @@
-package fraud
+package inference
 
 import (
 	"bytes"

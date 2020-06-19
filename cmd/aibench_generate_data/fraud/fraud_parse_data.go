@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/common"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/serialize"
+	"github.com/RedisAI/aibench/inference"
 	"github.com/mediocregopher/radix"
 	"io"
 	"log"
@@ -77,17 +78,17 @@ func (c *AibenchSimulatorConfig) NewSimulator(limit uint64, inputFilename string
 		line, err := reader.Read()
 
 		for err != io.EOF && (transactionCount < limit || (limit == 0 && seekCount < 1)) {
-			qfloat := ConvertSliceStringToFloat(line)
-			qbytes := Float32bytes(qfloat[0])
+			qfloat := inference.ConvertSliceStringToFloat(line)
+			qbytes := inference.Float32bytes(qfloat[0])
 			for _, value := range qfloat[1:30] {
-				qbytes = append(qbytes, Float32bytes(value)...)
+				qbytes = append(qbytes, inference.Float32bytes(value)...)
 			}
 
-			refFloats := randReferenceData(256)
-			refBytes := Float32bytes(refFloats[0])
+			refFloats := inference.RandReferenceData(256)
+			refBytes := inference.Float32bytes(refFloats[0])
 
 			for _, value := range refFloats[1:256] {
-				refBytes = append(refBytes, Float32bytes(value)...)
+				refBytes = append(refBytes, inference.Float32bytes(value)...)
 			}
 			buf := make([]byte, 8)
 			binary.LittleEndian.PutUint64(buf, transactionCount)

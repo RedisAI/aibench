@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/RedisAI/redisai-go/redisai"
 	_ "github.com/go-sql-driver/mysql"
@@ -122,7 +121,7 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	copy(tmp, q[0:8])
 	copy(referenceValues, q[128:1152])
 
-	idF := fraud.Uint64frombytes(tmp)
+	idF := inference.Uint64frombytes(tmp)
 	id := "referenceTensor:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	idBlob := "referenceBLOB:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	issuedCommands := 0

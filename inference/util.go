@@ -1,4 +1,4 @@
-package fraud
+package inference
 
 import (
 	"encoding/binary"
@@ -16,7 +16,7 @@ func ConvertSliceStringToFloat(transactionDataString []string) []float32 {
 	return res
 }
 
-func ConvertStringToFloatSlice(transactionDataString []byte) []float32 {
+func ConvertByteSliceToFloatSlice(transactionDataString []byte) []float32 {
 	total_floats := len(transactionDataString) / 4
 	res := make([]float32, total_floats)
 	for i := 0; i < total_floats; i++ {
@@ -26,7 +26,7 @@ func ConvertStringToFloatSlice(transactionDataString []byte) []float32 {
 	return res
 }
 
-func randReferenceData(n int) []float32 {
+func RandReferenceData(n int) []float32 {
 	res := make([]float32, n)
 	for i := range res {
 		res[i] = rand.Float32()
