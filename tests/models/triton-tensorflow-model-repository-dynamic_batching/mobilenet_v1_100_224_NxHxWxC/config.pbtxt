@@ -1,7 +1,6 @@
 name: "mobilenet_v1_100_224_NxHxWxC"
 platform: "tensorflow_graphdef"
 max_batch_size: 16
-preserve_ordering: true
 input [
    {
       name: "input"
