@@ -7,7 +7,7 @@ optimization {
         gpu_execution_accelerator : [
             { name : "tensorrt"
                 parameters { key: "precision_mode" value: "FP16" }
-                parameters { key: "max_workspace_size_bytes" value: 8589934592 }
+                parameters { key: "max_workspace_size_bytes" value: "8589934592" }
             }
         ]
     }
