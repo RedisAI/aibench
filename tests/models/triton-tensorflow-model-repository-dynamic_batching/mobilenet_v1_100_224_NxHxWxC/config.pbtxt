@@ -1,6 +1,6 @@
 name: "mobilenet_v1_100_224_NxHxWxC"
 platform: "tensorflow_graphdef"
-max_batch_size: 16
+max_batch_size: 32
 input [
    {
       name: "input"
@@ -17,5 +17,5 @@ output [
    }
 ]
 dynamic_batching {
-  preferred_batch_size: [ 16 ]
+  preferred_batch_size: [ 32 ]
 }
