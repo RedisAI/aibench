@@ -3,8 +3,6 @@ platform: "tensorflow_graphdef"
 max_batch_size: 1
 optimization {
     graph { level: 1 }
-}
-optimization {
     execution_accelerators {
         gpu_execution_accelerator : [
             { name : "tensorrt"
