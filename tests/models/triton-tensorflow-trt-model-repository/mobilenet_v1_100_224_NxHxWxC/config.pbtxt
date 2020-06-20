@@ -3,8 +3,15 @@ platform: "tensorflow_graphdef"
 max_batch_size: 1
 optimization {
     graph { level: 1 }
+}
+optimization {
     execution_accelerators {
-        gpu_execution_accelerator : ["tensorrt"]
+        gpu_execution_accelerator : [
+            { name : "tensorrt"
+                parameters { key: "precision_mode" value: "FP16" }
+                parameters { key: "max_workspace_size_bytes" value: 8589934592 }
+            }
+        ]
     }
 }
 input [
