@@ -1,6 +1,13 @@
 name: "mobilenet_v1_100_224_NxHxWxC"
 platform: "tensorflow_graphdef"
 max_batch_size: 1
+optimization {
+    graph { level: 1 }
+    execution_accelerators {
+        gpu_execution_accelerator : ["tensorrt"]
+        max_workspace_size_bytes: 8589934592
+    }
+}
 input [
    {
       name: "input"
