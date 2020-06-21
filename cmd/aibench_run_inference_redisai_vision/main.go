@@ -14,9 +14,6 @@ import (
 	"github.com/RedisAI/aibench/inference"
 	_ "github.com/lib/pq"
 	"github.com/mediocregopher/radix"
-
-	//ignoring until we get the correct model
-	//"log"
 	"sync"
 )
 
@@ -29,9 +26,10 @@ var (
 	persistOutputs          bool
 	showExplain             bool
 	clusterMode             bool
+	useDag                  bool
 	PoolPipelineConcurrency int
 	PoolPipelineWindow      time.Duration
-	inferenceType           = "RedisAI Query - with AI.DAGRUN with mobilenet_v1_100_224, persistency "
+	inferenceType           = "RedisAI Query - mobilenet_v1_100_224 :"
 	rowBenchmarkNBytes      = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
 )
 
@@ -42,15 +40,21 @@ func init() {
 	flag.StringVar(&port, "port", "6379", "Redis host port, if more than one is passed will round robin requests")
 	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu_NxHxWxC", "model name")
 	flag.BoolVar(&persistOutputs, "persist-results", false, "persist the classification tensors")
+	flag.BoolVar(&useDag, "use-dag", false, "use DAGRUN")
 	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
 	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
 	flag.Parse()
-	if persistOutputs {
-		inferenceType += "ON"
+	if useDag {
+		if persistOutputs {
+			inferenceType += "AI.DAGRUN with persistency ON"
+		} else {
+			inferenceType += "AI.DAGRUN with persistency OFF"
+		}
 	} else {
-		inferenceType += "OFF"
+		inferenceType += "AI.MODELRUN"
 	}
+
 }
 
 func main() {
@@ -123,28 +127,35 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	tensorName := fmt.Sprintf("imageTensor:{w%d-i%d}", workerNum, queryNumber)
 	outputTensorName := fmt.Sprintf("classificationTensor:{w%d-i%d}", workerNum, queryNumber)
 	tensorValues := q
-	var args []string
-	if persistOutputs {
-		args = []string{"PERSIST", "1", outputTensorName, "|>"}
-
-	} else {
-		args = []string{"|>"}
-	}
-	args = append(args, //                                           N x H  x W  x C
-		"AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues), "|>",
-		"AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName, "|>",
-		"AI.TENSORGET", outputTensorName, "BLOB")
-
 	pos := rand.Int31n(int32(len(p.pclient)))
+	var err error
 	start := time.Now()
+	if useDag {
+		var args []string
+		if persistOutputs {
+			args = []string{"PERSIST", "1", outputTensorName, "|>"}
 
-	err := p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
+		} else {
+			args = []string{"|>"}
+		}
+		args = append(args,
+			"AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues), "|>",
+			"AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName, "|>",
+			"AI.TENSORGET", outputTensorName, "BLOB")
+		err = p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
+	} else {
+		pipeCmds := radix.Pipeline(
+			radix.FlatCmd(nil, "AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues)),
+			radix.FlatCmd(nil, "AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName),
+			radix.FlatCmd(nil, "AI.TENSORGET", outputTensorName, "BLOB"),
+		)
+		err = p.pclient[pos].Do(pipeCmds)
+	}
+	took := time.Since(start).Microseconds()
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
 		log.Fatal(extendedError)
 	}
-
-	took := time.Since(start).Microseconds()
 
 	stat := inference.GetStat()
 	stat.Init([]byte(inferenceType), took, uint64(0), false, "")
