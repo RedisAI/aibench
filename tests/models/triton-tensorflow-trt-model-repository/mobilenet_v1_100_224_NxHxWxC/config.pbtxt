@@ -1,0 +1,29 @@
+name: "mobilenet_v1_100_224_NxHxWxC"
+platform: "tensorflow_graphdef"
+max_batch_size: 1
+optimization {
+    graph { level: 1 }
+    execution_accelerators {
+        gpu_execution_accelerator : [
+            { name : "tensorrt"
+                parameters { key: "precision_mode" value: "FP16" }
+                parameters { key: "max_workspace_size_bytes" value: "8589934592" }
+            }
+        ]
+    }
+}
+input [
+   {
+      name: "input"
+      data_type: TYPE_FP32
+      format: FORMAT_NHWC
+      dims: [ 224, 224, 3 ]
+   }
+]
+output [
+   {
+      name: "MobilenetV1/Predictions/Reshape_1"
+      data_type: TYPE_FP32
+      dims: [ 1001 ]
+   }
+]

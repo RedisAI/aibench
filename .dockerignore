@@ -11,6 +11,8 @@ LICENSE
 NOTICE
 README.md
 
+*.png
+*.jpg
 *.out
 *.log
 .DS_Store

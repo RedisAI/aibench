@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/RedisAI/redisai-go/redisai"
 	_ "github.com/go-sql-driver/mysql"
@@ -20,20 +19,17 @@ import (
 
 // Program option vars:
 var (
-	host         string
-	mysqlHost    string
-	pipelineSize uint
-	setBlob      bool
-	setTensor    bool
-	useRedis     bool
-	useMysql     bool
-)
-
-// Global vars:
-var (
-	runner *inference.LoadRunner
-	cpool  *redis.Pool
-	sqldb  *sql.DB
+	host               string
+	mysqlHost          string
+	pipelineSize       uint
+	setBlob            bool
+	setTensor          bool
+	useRedis           bool
+	useMysql           bool
+	runner             *inference.LoadRunner
+	cpool              *redis.Pool
+	sqldb              *sql.DB
+	rowBenchmarkNBytes = 8 + 120 + 1024
 )
 
 // Parse args:
@@ -70,7 +66,7 @@ func init() {
 }
 
 func main() {
-	runner.RunLoad(&inference.RedisAIPool, newProcessor)
+	runner.RunLoad(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type Loader struct {
@@ -125,7 +121,7 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*inference.Stat, uint6
 	copy(tmp, q[0:8])
 	copy(referenceValues, q[128:1152])
 
-	idF := fraud.Uint64frombytes(tmp)
+	idF := inference.Uint64frombytes(tmp)
 	id := "referenceTensor:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	idBlob := "referenceBLOB:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	issuedCommands := 0

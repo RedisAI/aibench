@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
@@ -38,6 +37,7 @@ var (
 	mysqlMaxOpen         int
 	restapiReadTimeout   time.Duration
 	mysqlConnMaxLifetime time.Duration
+	rowBenchmarkNBytes   = 8 + 120 + 1024
 )
 
 // Parse args:
@@ -72,7 +72,7 @@ func init() {
 func main() {
 	strRequestURI = []byte(restapiRequestUri)
 	strHost = []byte(restapiHost)
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type queryExecutorOptions struct {
@@ -115,13 +115,13 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idUint64 := inference.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
 	referenceDataKeyName := "referenceBLOB:{" + idS + "}"
@@ -143,18 +143,18 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 	start := time.Now()
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
-		if redisErr != nil {
-			log.Fatalln("Error on redisClient.Get", redisErr)
-		}
-		refPart, err := writer.CreateFormFile("reference", "reference")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		_, err = refPart.Write(redisRespReferenceBytes)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		//redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
+		//if redisErr != nil {
+		//	log.Fatalln("Error on redisClient.Get", redisErr)
+		//}
+		//refPart, err := writer.CreateFormFile("reference", "reference")
+		//if err != nil {
+		//	log.Fatalln(err)
+		//}
+		//_, err = refPart.Write(redisRespReferenceBytes)
+		//if err != nil {
+		//	log.Fatalln(err)
+		//}
 	}
 	if useReferenceDataMysql {
 		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)

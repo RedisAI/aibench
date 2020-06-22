@@ -14,7 +14,6 @@ import (
 	tensorflowserving "tensorflow_serving/apis"
 	"time"
 
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
@@ -26,27 +25,19 @@ import (
 
 // Program option vars:
 var (
-	redisHost string
-	mysqlHost string
-
+	redisHost             string
+	mysqlHost             string
 	tensorflowServingHost string
 	model                 string
 	version               int
-
-	showExplain bool
-)
-
-// Global vars:
-var (
-	runner *inference.BenchmarkRunner
-)
-
-var (
-	redisClient          *redis.Client
-	mysqlClient          *sql.DB
-	mysqlMaxIdle         int
-	mysqlMaxOpen         int
-	mysqlConnMaxLifetime time.Duration
+	showExplain           bool
+	runner                *inference.BenchmarkRunner
+	rowBenchmarkNBytes    = 8 + 120 + 1024
+	redisClient           *redis.Client
+	mysqlClient           *sql.DB
+	mysqlMaxIdle          int
+	mysqlMaxOpen          int
+	mysqlConnMaxLifetime  time.Duration
 )
 
 // Parse args:
@@ -79,7 +70,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type queryExecutorOptions struct {
@@ -119,7 +110,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
@@ -136,7 +127,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 		p.predictionServiceClient = tensorflowserving.NewPredictionServiceClient(p.grpcClientConn)
 	}
 
-	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idUint64 := inference.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	transactionValues := q[8:128]
 
@@ -145,45 +136,45 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	start := time.Now()
 	var request *tensorflowserving.PredictRequest = nil
 	if useReferenceDataRedis {
-		redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
-		if redisErr != nil {
-			log.Fatalln(redisErr)
-		}
-		request = &tensorflowserving.PredictRequest{
-			ModelSpec: &tensorflowserving.ModelSpec{
-				Name: model,
-				Version: &googleprotobuf.Int64Value{
-					Value: int64(version),
-				},
-			},
-			Inputs: map[string]*tfcoreframework.TensorProto{
-				"transaction": {
-					Dtype: tfcoreframework.DataType_DT_FLOAT,
-					TensorShape: &tfcoreframework.TensorShapeProto{
-						Dim: []*tfcoreframework.TensorShapeProto_Dim{
-							{
-								Size: int64(1),
-							},
-							{
-								Size: int64(30),
-							},
-						},
-					},
-					TensorContent: transactionValues,
-				},
-				"reference": {
-					Dtype: tfcoreframework.DataType_DT_FLOAT,
-					TensorShape: &tfcoreframework.TensorShapeProto{
-						Dim: []*tfcoreframework.TensorShapeProto_Dim{
-							{
-								Size: int64(256),
-							},
-						},
-					},
-					TensorContent: redisRespReferenceBytes,
-				},
-			},
-		}
+		//redisRespReferenceBytes, redisErr := redisClient.Get(redisClient.Context(), referenceDataKeyName).Bytes()
+		//if redisErr != nil {
+		//	log.Fatalln(redisErr)
+		//}
+		//request = &tensorflowserving.PredictRequest{
+		//	ModelSpec: &tensorflowserving.ModelSpec{
+		//		Name: model,
+		//		Version: &googleprotobuf.Int64Value{
+		//			Value: int64(version),
+		//		},
+		//	},
+		//	Inputs: map[string]*tfcoreframework.TensorProto{
+		//		"transaction": {
+		//			Dtype: tfcoreframework.DataType_DT_FLOAT,
+		//			TensorShape: &tfcoreframework.TensorShapeProto{
+		//				Dim: []*tfcoreframework.TensorShapeProto_Dim{
+		//					{
+		//						Size: int64(1),
+		//					},
+		//					{
+		//						Size: int64(30),
+		//					},
+		//				},
+		//			},
+		//			TensorContent: transactionValues,
+		//		},
+		//		"reference": {
+		//			Dtype: tfcoreframework.DataType_DT_FLOAT,
+		//			TensorShape: &tfcoreframework.TensorShapeProto{
+		//				Dim: []*tfcoreframework.TensorShapeProto_Dim{
+		//					{
+		//						Size: int64(256),
+		//					},
+		//				},
+		//			},
+		//			TensorContent: redisRespReferenceBytes,
+		//		},
+		//	},
+		//}
 	}
 	if useReferenceDataMysql {
 		statement := mysqlClient.QueryRow("select blobtensor from test.tbltensorblobs where id=?", referenceDataKeyName)

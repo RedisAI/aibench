@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RedisAI/aibench/cmd/aibench_generate_data/fraud"
 	"github.com/RedisAI/aibench/inference"
 	_ "github.com/lib/pq"
 	"github.com/mediocregopher/radix"
@@ -33,10 +32,8 @@ var (
 	clusterMode             bool
 	PoolPipelineConcurrency int
 	PoolPipelineWindow      time.Duration
-)
-
-var (
-	inferenceType = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
+	rowBenchmarkNBytes      = 8 + 120 + 1024
+	inferenceType           = "RedisAI Query - with AI.TENSORSET transacation datatype BLOB"
 )
 
 // Parse args:
@@ -54,7 +51,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor)
+	runner.Run(&inference.RedisAIPool, newProcessor, 0)
 }
 
 type queryExecutorOptions struct {
@@ -114,13 +111,13 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 }
 
-func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool) ([]*inference.Stat, error) {
+func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {
 
 	// No need to run again for EXPLAIN
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	idUint64 := fraud.Uint64frombytes(q[0:8])
+	idUint64 := inference.Uint64frombytes(q[0:8])
 	idS := fmt.Sprintf("%d", idUint64)
 	referenceDataTensorName := "referenceTensor:{" + idS + "}"
 	classificationTensorName := "classificationTensor:{" + idS + "}"

@@ -1,0 +1,21 @@
+name: "mobilenet_v1_100_224_NxHxWxC"
+platform: "tensorflow_graphdef"
+max_batch_size: 32
+input [
+   {
+      name: "input"
+      data_type: TYPE_FP32
+      format: FORMAT_NHWC
+      dims: [ 224, 224, 3 ]
+   }
+]
+output [
+   {
+      name: "MobilenetV1/Predictions/Reshape_1"
+      data_type: TYPE_FP32
+      dims: [ 1001 ]
+   }
+]
+dynamic_batching {
+  preferred_batch_size: [ 32 ]
+}
