@@ -1,6 +1,7 @@
 [![license](https://img.shields.io/github/license/RedisAI/aibench.svg)](https://github.com/RedisAI/aibench)
 [![Forum](https://img.shields.io/badge/Forum-RedisAI-blue)](https://forum.redislabs.com/c/modules/redisai)
 [![Gitter](https://badges.gitter.im/RedisLabs/RedisAI.svg)](https://gitter.im/RedisLabs/RedisAI?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/RedisTimeSeries/redistimeseries-go)
 
 # aibench
 This repo contains code for benchmarking deep learning solutions,
