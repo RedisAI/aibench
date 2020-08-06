@@ -24,7 +24,7 @@ Currently, aibench supports two use cases:
  - **creditcard-fraud [[details kere](docs/vision-image-classification-benchmark/description.md)]**: from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on anonymized credit card transactions and reference data. 
  
  
- - **vision-image-classification[[details kere](docs/creditcard-fraud-benchmark/description.md)]**: an image-focused use-case that uses one network “backbone”: MobileNet V1, which can be considered as one of the standards by the AI community. To assess inference performance we’re recurring to COCO 2017 validation dataset (a large-scale object detection, segmentation, and captioning dataset).
+ - **vision-image-classification[[details kere](docs/vision-image-classification-benchmark/description.md)]**: an image-focused use-case that uses one network “backbone”: MobileNet V1, which can be considered as one of the standards by the AI community. To assess inference performance we’re recurring to COCO 2017 validation dataset (a large-scale object detection, segmentation, and captioning dataset).
 ### Current DL solutions supported per use case:
 
 | Use case/Inference Server      | model | RedisAI  | TensorFlow Serving | Torch Serve | Nvidia Triton | Rest API |
