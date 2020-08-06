@@ -23,7 +23,7 @@ The following diagram illustrates the sequence of requests made for each inferen
 
 ![Sequence diagram - DL REST API Solution][aibench_client_restapi]
 
-[aibench_client_restapi]: ./aibench_client_restapi.png
+[aibench_client_restapi]: aibench_client_restapi.png
 
 ---
 

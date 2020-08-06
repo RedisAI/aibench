@@ -23,7 +23,7 @@ The following diagram illustrates the sequence of requests made for each inferen
 
 ![Sequence diagram - RedisAI Solution][aibench_client_redisai]
 
-[aibench_client_redisai]: ./aibench_client_redisai.png
+[aibench_client_redisai]: aibench_client_redisai.png
 
 
 

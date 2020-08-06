@@ -21,7 +21,7 @@ The following diagram illustrates the sequence of requests made for each inferen
 
 ![Sequence diagram - Tensorflow Serving and Redis Solution][aibench_client_tfserving]
 
-[aibench_client_tfserving]: ./aibench_client_tfserving.png
+[aibench_client_tfserving]: aibench_client_tfserving.png
 
 ---
 

@@ -21,7 +21,6 @@ fi
 
 cd $GOPATH/src/github.com/RedisAI/aibench
 
-set -x
 # we overload the NUM_WORKERS here for the official benchmark
 for NUM_WORKERS in 1 8 16 24; do
   for RUN in 1 2 3; do
