@@ -60,7 +60,7 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 ## load the CPU model
 $ DEVICE=cpu ./scripts/load_models_mobilenet_redisai.sh
 
-## load the CPU model
+## load the GPU model
 $ DEVICE=gpu ./scripts/load_models_mobilenet_redisai.sh
 ```
 
@@ -68,7 +68,7 @@ $ DEVICE=gpu ./scripts/load_models_mobilenet_redisai.sh
 
 To measure inference performance in aibench, you first need to load
 the data using the previous sections. Once the data is loaded,
-just use the corresponding `aibench_run_inference_` binary for the database
+just use the corresponding `aibench_run_inference_` binary for the model server
 being tested, or use one of the provided scripts to ease the benchmark process.
 
 As an example we will use RedisAI:

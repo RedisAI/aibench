@@ -24,13 +24,12 @@ As stated on
 
 Currently, aibench supports two use cases: 
  - **creditcard-fraud [[details kere](docs/creditcard-fraud-benchmark/description.md)]**: from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on anonymized credit card transactions and reference data. 
-
  
  - **vision-image-classification[[details kere](docs/vision-image-classification-benchmark/description.md)]**: an image-focused use-case that uses one network “backbone”: MobileNet V1, which can be considered as one of the standards by the AI community. To assess inference performance we’re recurring to COCO 2017 validation dataset (a large-scale object detection, segmentation, and captioning dataset).
 ### Current DL solutions supported per use case:
 
 | Use case/Inference Server      | model | RedisAI  | TensorFlow Serving | Torch Serve | Nvidia Triton | Rest API |
 |--------------------------------|----------|----------|--------------------|-------------|---------------|----------|
-| Vision Benchmark (CPU/GPU) ([details](docs/vision-image-classification-benchmark/description.md)) | mobilenet-v1 (224_224 )| :heavy_check_mark: | Not supported          | Not supported    | :heavy_check_mark:     | Not supported |
+| Vision Benchmark (CPU/GPU) ([details](docs/vision-image-classification-benchmark/description.md)) | [mobilenet-v1 (224_224)](https://zenodo.org/record/2269307/files/mobilenet_v1_1.0_224.tgz)| :heavy_check_mark: | Not supported          | Not supported    | :heavy_check_mark:     | Not supported |
 | Fraud Benchmark (CPU) ([details](docs/creditcard-fraud-benchmark/description.md)) |   [Non standard Kaggle Model](https://www.kaggle.com/mlg-ulb/creditcardfraud) with the extension of reference data    | :heavy_check_mark: [docs](docs/creditcard-fraud-benchmark/redisai.md) | :heavy_check_mark: [docs](docs/creditcard-fraud-benchmark/tf_serving_and_redis.md)           | :heavy_check_mark: [docs](docs/creditcard-fraud-benchmark/torchserve_and_redis.md)    | Not supported    | :heavy_check_mark: [docs](docs/creditcard-fraud-benchmark/restapi_and_redis.md) |
 
