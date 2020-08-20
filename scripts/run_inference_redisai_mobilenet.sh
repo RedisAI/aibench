@@ -22,7 +22,7 @@ fi
 cd $GOPATH/src/github.com/RedisAI/aibench
 
 # we overload the NUM_WORKERS here for the official benchmark
-for NUM_WORKERS in 1 8 16 24; do
+for NUM_WORKERS in 1 8 16 24 32 48 64 128; do
   for RUN in 1 2 3; do
     FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
     echo "Benchmarking inference performance with ${NUM_WORKERS} workers. Model name ${VISION_MODEL_NAME}"
@@ -37,7 +37,6 @@ for NUM_WORKERS in 1 8 16 24; do
         -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
         -print-interval=0 -reporting-period=1000ms \
         -host=${DATABASE_HOST} \
-        --cluster-mode \
         -port=${DATABASE_PORT} \
         2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 

@@ -8,6 +8,6 @@ source ${EXE_DIR}/redisai_common.sh
 
 ##  # set the Model
 cd $GOPATH/src/github.com/RedisAI/aibench
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
-  TF ${DEVICE} INPUTS input \
-  OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME}  \
+  TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
+  OUTPUTS MobilenetV1/Predictions/Reshape_1  BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb

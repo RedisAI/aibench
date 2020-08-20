@@ -60,15 +60,33 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 ## load the CPU model
 $ DEVICE=cpu ./scripts/load_models_mobilenet_redisai.sh
 
-## load the CPU model
+## load the GPU model
 $ DEVICE=gpu ./scripts/load_models_mobilenet_redisai.sh
+```
+
+#### 2.1 Auto batching
+By default, the benchmark uses a batch size of 0. You can benchmark RedisAI auto batching capabilities by specifying the `BATCHSIZE=<n>` env variable.
+
+When provided with an n that is greater than 0, the engine will batch incoming requests from multiple clients that use the model with input tensors of the same shape. 
+
+Please denote that single client benchmarks will not benefit from auto-batching. 
+
+In that manner, for setting up the model with auto batching up to 32 tensors from distinct clients, do as follows:
+
+```bash
+cd $GOPATH/src/github.com/RedisAI/aibench
+## load the CPU model and specify auto batching up to 32 incoming tensors from distinct clients
+$ DEVICE=cpu BATCHSIZE=32 ./scripts/load_models_mobilenet_redisai.sh
+
+## load the GPU model and specify auto batching up to 32 incoming tensors from distinct clients
+$ DEVICE=gpu BATCHSIZE=32 ./scripts/load_models_mobilenet_redisai.sh
 ```
 
 ### 3. Benchmarking inference performance
 
 To measure inference performance in aibench, you first need to load
 the data using the previous sections. Once the data is loaded,
-just use the corresponding `aibench_run_inference_` binary for the database
+just use the corresponding `aibench_run_inference_` binary for the model server
 being tested, or use one of the provided scripts to ease the benchmark process.
 
 As an example we will use RedisAI:
