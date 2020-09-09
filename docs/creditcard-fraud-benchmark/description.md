@@ -42,7 +42,7 @@ scripts). The easiest way to get and install the Go programs is to use
 # Fetch aibench and its dependencies
 go get github.com/RedisAI/aibench
 cd $GOPATH/src/github.com/RedisAI/aibench
-git checkout v0.1
+git checkout v0.1.1
 make
 ```
 
