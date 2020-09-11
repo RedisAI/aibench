@@ -7,9 +7,9 @@ We've created a benchmark suite consisting of a fraud-detection use case based o
 We used this benchmark to compare four different AI serving solutions:
 
 - TorchServe: built and maintained by Amazon Web Services (AWS) in collaboration with Facebook, TorchServe is available as part of the PyTorch open-source project.
-- Tensorflow Serving: a high-performance serving system, wrapping TensorFlow and maintained by Google.
+- Tensorflow Serving: a high-performance serving system, wrapping TensorFlow and maintained by Google. The TensorFlow Serving on ARM variation is also documented [here](./tfserving_arm_and_redis.md).
 - Common REST API serving: a common DL production grade setup with Gunicorn (a Python WSGI HTTP server) communicating with Flask through a WSGI protocol, and using TensorFlow as the backend.
--  RedisAI: an AI serving engine for real-time applications built by Redis Labs and Tensorwerk, seamlessly plugged into ​Redis.
+- RedisAI: an AI serving engine for real-time applications built by Redis Labs and Tensorwerk, seamlessly plugged into ​Redis.
 
 We wanted to cover all solutions in an unbiased manner, helping prospective users make an informed decision on the solution that best suits their case, both with and without data locality. 
 
