@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 )
 
-// producer is used to read in TwoWordQueries from a Reader where they are
 // Go-encoded and then distribute them to workers
 type producer struct {
 	r     io.Reader

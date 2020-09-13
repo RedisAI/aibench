@@ -13,10 +13,7 @@ import (
 
 	"github.com/RedisAI/aibench/inference"
 	_ "github.com/lib/pq"
-	"github.com/mediocregopher/radix"
-
-	//ignoring until we get the correct model
-	//"log"
+	"github.com/mediocregopher/radix/v3"
 	"sync"
 )
 

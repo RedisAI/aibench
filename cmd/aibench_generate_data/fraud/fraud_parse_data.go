@@ -8,7 +8,7 @@ import (
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/common"
 	"github.com/RedisAI/aibench/cmd/aibench_generate_data/serialize"
 	"github.com/RedisAI/aibench/inference"
-	"github.com/mediocregopher/radix"
+	"github.com/mediocregopher/radix/v3"
 	"io"
 	"log"
 	"os"
@@ -16,18 +16,12 @@ import (
 	"sync/atomic"
 )
 
-// A FTSSimulator generates data similar to telemetry from Telegraf for only CPU metrics.
-// It fulfills the Simulator interface.
 type FTSSimulator struct {
 	*commonaibenchSimulator
 }
 
 // Next advances a Transaction to the next state in the generator.
 func (d *FTSSimulator) Next(p *serialize.Transaction) bool {
-	//// Switch to the next document
-	//if d.recordIndex >= uint64(len(d.records)) {
-	//	d.recordIndex = 0
-	//}
 	return d.populateTransaction(p)
 }
 

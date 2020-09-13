@@ -16,7 +16,6 @@ TMP_FILE_NAME=${TMP_FILE_NAME:-/tmp/creditcard.csv}
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh
 
-cd $GOPATH/src/github.com/RedisAI/aibench
 cat ${INPUT_FILE_NAME} |
   gunzip >${TMP_FILE_NAME}
 ${EXE_FILE_NAME} \

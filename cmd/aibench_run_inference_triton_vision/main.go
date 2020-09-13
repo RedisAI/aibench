@@ -7,17 +7,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
-	"time"
-
+	triton "github.com/RedisAI/aibench/cmd/aibench_run_inference_triton_vision/nvidia_inferenceserver"
 	"github.com/RedisAI/aibench/inference"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
-	triton "nvidia_inferenceserver"
-
-	//ignoring until we get the correct model
-	//"log"
+	"log"
 	"sync"
+	"time"
 )
 
 // Global vars:
@@ -27,7 +23,7 @@ var (
 	model              string
 	version            string
 	showExplain        bool
-	inferenceType      = "NVIDIA Triton Query - mobilenet_v1_100_224 "
+	inferenceType      = "NVIDIA triton Query - mobilenet_v1_100_224 "
 	rowBenchmarkNBytes = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
 	outputSize         = 1001
 	grpcClientConn     *grpc.ClientConn
@@ -36,7 +32,7 @@ var (
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
-	flag.StringVar(&host, "host", "127.0.0.1:8001", "NVidia Triton host address and port")
+	flag.StringVar(&host, "host", "127.0.0.1:8001", "NVidia triton host address and port")
 	flag.StringVar(&model, "model", "mobilenet_v1_100_224_NxHxWxC", "Name of model being served. (Required)")
 	flag.StringVar(&version, "model-version", "", "Model version. Default: Latest Version.")
 	flag.Parse()
@@ -95,7 +91,7 @@ func ModelInferRequest(client triton.GRPCInferenceServiceClient, rawInput []byte
 
 	// Create request input tensors
 	inferInputs := []*triton.ModelInferRequest_InferInputTensor{
-		&triton.ModelInferRequest_InferInputTensor{
+		{
 			Name:     "input",
 			Datatype: "FP32",
 			Shape:    []int64{1, 224, 224, 3},
@@ -107,7 +103,7 @@ func ModelInferRequest(client triton.GRPCInferenceServiceClient, rawInput []byte
 
 	// Create request input output tensors
 	inferOutputs := []*triton.ModelInferRequest_InferRequestedOutputTensor{
-		&triton.ModelInferRequest_InferRequestedOutputTensor{
+		{
 			Name: "MobilenetV1/Predictions/Reshape_1",
 		},
 	}
@@ -182,10 +178,10 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	p.pclient = triton.NewGRPCInferenceServiceClient(p.grpcClientConn)
 
 	serverLiveResponse := ServerLiveRequest(p.pclient)
-	fmt.Printf("Triton Health - Live: %v\n", serverLiveResponse.Live)
+	fmt.Printf("triton Health - Live: %v\n", serverLiveResponse.Live)
 
 	serverReadyResponse := ServerReadyRequest(p.pclient)
-	fmt.Printf("Triton Health - Ready: %v\n", serverReadyResponse.Ready)
+	fmt.Printf("triton Health - Ready: %v\n", serverReadyResponse.Ready)
 
 	modelMetadataResponse := ModelMetadataRequest(p.pclient, model, "")
 	fmt.Println(modelMetadataResponse)

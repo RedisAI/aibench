@@ -24,8 +24,6 @@ fi
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source $GOPATH/src/github.com/RedisAI/aibench/scripts/redisai_common.sh
 
-cd $GOPATH/src/github.com/RedisAI/aibench
-
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \
   --output-file=${OUTPUT_VISION_FILE_NAME}
