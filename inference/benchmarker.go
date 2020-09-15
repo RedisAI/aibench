@@ -42,7 +42,6 @@ type BenchmarkRunner struct {
 	ignoreErrors                       bool
 	debug                              int
 	enableReferenceDataRedis           bool
-	enableReferenceDataMysql           bool
 	fileName                           string
 	seed                               int64
 	reportingPeriod                    time.Duration
@@ -76,7 +75,6 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
 	flag.BoolVar(&runner.ignoreErrors, "ignore-errors", false, "Whether to ignore the inference errors and continue. By default on error the benchmark stops (default false).")
 	flag.BoolVar(&runner.enableReferenceDataRedis, "enable-reference-data-redis", false, "Whether to enable benchmarking inference with a model with reference data on Redis or not (default false).")
-	flag.BoolVar(&runner.enableReferenceDataMysql, "enable-reference-data-mysql", false, "Whether to enable benchmarking inference with a model with reference data on MySql or not (default false).")
 	flag.IntVar(&runner.debug, "debug", 0, "Whether to print debug messages.")
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
@@ -112,10 +110,6 @@ func (b *BenchmarkRunner) IgnoreErrors() bool {
 
 func (b *BenchmarkRunner) UseReferenceDataRedis() bool {
 	return b.enableReferenceDataRedis
-}
-
-func (b *BenchmarkRunner) UseReferenceDataMysql() bool {
-	return b.enableReferenceDataMysql
 }
 
 // LoaderCreate is a function that creates a new Loader (called in Run)
@@ -190,7 +184,6 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		requestRate = rate.Limit(b.limitrps)
 		requestBurst = 1 //int(b.workers)
 	}
-
 	var rateLimiter = rate.NewLimiter(requestRate, requestBurst)
 
 	var wg sync.WaitGroup
@@ -260,7 +253,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 		for query := range b.ch {
 			r := rateLimiter.ReserveN(time.Now(), 1)
 			time.Sleep(r.Delay())
-			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql, workerInferences)
+			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, false, workerInferences)
 			if err != nil {
 				if b.IgnoreErrors() {
 					fmt.Printf("On iteration %d Ignoring inference error: %v\n", i, err)
@@ -278,7 +271,7 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 			// This guarantees that the warm stat will reflect optimal cache performance.
 			if b.sp.prewarmQueries {
 				// Warm run
-				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceDataRedis, b.enableReferenceDataMysql, workerInferences)
+				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceDataRedis, false, workerInferences)
 				if err != nil {
 					if b.IgnoreErrors() {
 						fmt.Printf("Ignoring inference error: %v\n", err)

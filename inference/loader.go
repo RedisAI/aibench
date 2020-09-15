@@ -70,13 +70,14 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 		if len(b.fileName) > 0 {
 			// Read from specified file
 			file, err := os.Open(b.fileName)
-
+			log.Printf("Reading %s\n", b.fileName)
 			if err != nil {
 				panic(fmt.Sprintf("cannot open file for read %s: %v", b.fileName, err))
 			}
 			b.br = bufio.NewReaderSize(file, defaultReadSize)
 		} else {
 			// Read from STDIN
+			log.Printf("Reading from STDIN\n")
 			b.br = bufio.NewReaderSize(os.Stdin, defaultReadSize)
 		}
 	}
@@ -145,9 +146,6 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	}
 
 	processor.Close()
-
-	//pwg.Wait()
-
 	wg.Done()
 }
 

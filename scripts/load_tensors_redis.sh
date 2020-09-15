@@ -24,7 +24,6 @@ fi
 #if [[ "${SETUP_MODEL}" == "true" ]]; then
 #
 ##  # set the Model
-cd $GOPATH/src/github.com/RedisAI/aibench
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
   TF CPU INPUTS transaction reference \
   OUTPUTS output BLOB <./tests/models/tensorflow/creditcardfraud.pb
@@ -37,14 +36,11 @@ redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NO
 
 # load the reference data
 # make sure you're on the root project folder
-cd $GOPATH/src/github.com/RedisAI/aibench
-cat ${DATA_FILE} |
-  ${EXE_FILE_NAME} \
-    -reporting-period=1000ms \
-    -set-blob=false -set-tensor=true \
-    -max-inserts=${NUM_INFERENCES} \
-    -use-redis=true \
-    -redis-host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
-    -workers=${NUM_WORKERS} -pipeline=${REDIS_PIPELINE_SIZE} 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
+${EXE_FILE_NAME} \
+  --file ${DATA_FILE} \
+  --reporting-period=1000ms \
+  --set-blob=false -set-tensor=true \
+  --redis-host=redis://${DATABASE_HOST}:${DATABASE_PORT} \
+  --workers=${NUM_WORKERS} --pipeline=${REDIS_PIPELINE_SIZE} 2>&1 | tee ~/redisai_load_tensors_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt
 
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats 2>&1 | tee ~/redisai_load_tensors_commandstats_${OUTPUT_NAME_SUFIX}_${NUM_WORKERS}_workers.txt

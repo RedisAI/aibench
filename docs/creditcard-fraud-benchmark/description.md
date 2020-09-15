@@ -231,8 +231,6 @@ Usage of aibench_run_inference_redisai:
         Write a cpu profile to this file.
   -debug int
         Whether to print debug messages.
-  -enable-reference-data-mysql
-        Whether to enable benchmarking inference with a model with reference data on MySql or not (default false).
   -enable-reference-data-redis
         Whether to enable benchmarking inference with a model with reference data on Redis or not (default false).
   -file string

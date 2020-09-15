@@ -31,8 +31,6 @@ for REFERENCE_DATA in "true"; do
       echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"
 
       # benchmark inference performance
-      # make sure you're on the root project folder
-      cd $GOPATH/src/github.com/RedisAI/aibench
       cat ${DATA_FILE} |
         ${EXE_FILE_NAME} \
           -workers=${NUM_WORKERS} \

@@ -13,7 +13,6 @@ func (s *FraudSerializer) Serialize(p *Transaction, w io.Writer) (err error) {
 	buf = append(buf, p.Id...)
 	buf = append(buf, p.TransactionValues...)
 	buf = append(buf, p.ReferenceValues...)
-	//buf = append(buf, p.Slot...)
 	_, err = w.Write(buf)
 	return err
 }

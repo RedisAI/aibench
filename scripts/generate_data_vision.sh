@@ -1,8 +1,10 @@
 #!/bin/bash
 #Exit immediately if a command exits with a non-zero status.
 set -e
+set -e
 
-cd $GOPATH/src/github.com/RedisAI/aibench
+WORKDIR=$PWD
+
 cd datasets/vision/coco-2017-val
 python3 -m pip install -r requirements.txt
 ck version
@@ -11,7 +13,6 @@ ck install package --tags=object-detection,dataset,coco,2017,val,original
 ck locate env --tags=object-detection,dataset,coco,2017,val,original
 python3 preprocess.py --input-val_dir $(ck locate env --tags=object-detection,dataset,coco,2017,val,original)/val2017
 
-
 # Ensure generator is available
 EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_generate_data_vision)}
 if [[ -z "${EXE_FILE_NAME}" ]]; then
@@ -19,12 +20,10 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
-
+cd ${WORKDIR}
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
-source $GOPATH/src/github.com/RedisAI/aibench/scripts/redisai_common.sh
-
-cd $GOPATH/src/github.com/RedisAI/aibench
+source ${EXE_DIR}/redisai_common.sh
 
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \

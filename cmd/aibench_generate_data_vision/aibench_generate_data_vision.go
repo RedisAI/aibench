@@ -8,7 +8,6 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"math"
 
-	//"github.com/RedisAI/redisai-go/redisai"
 	"github.com/RedisAI/redisai-go/redisai/implementations"
 	"image"
 	"image/jpeg"

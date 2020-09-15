@@ -13,7 +13,7 @@ import (
 
 	"github.com/RedisAI/aibench/inference"
 	_ "github.com/lib/pq"
-	"github.com/mediocregopher/radix"
+	"github.com/mediocregopher/radix/v3"
 	"sync"
 )
 

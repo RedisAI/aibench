@@ -22,6 +22,11 @@ commands:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: |
+            sudo apt install python3 python3-pip
+            python3 -m pip install -r ./datasets/vision/coco-2017-val/requirements.txt
+      - run:
           name: Test and install Aibench execs
           command: |
             make checkfmt
@@ -29,26 +34,30 @@ commands:
             make test
             make
       - run:
-          name: Generate sample data
+          name: Generate sample data for Fraud benchmark (CI)
           command: |
-            make data
+            make data-fraud-ci
+      - run:
+          name: Generate sample data for Vision benchmark (CI)
+          command: |
+            make data-vision-ci
 
   redisai_steps:
     parameters:
     steps:
       - checkout
       - run:
-          name: Load mobilenet model
-          command: |
-            ./scripts/load_models_mobilenet_redisai.sh
-      - run:
           name: Load tensors into Redis
           command: |
             ./scripts/load_tensors_redis.sh
       - run:
-          name: Run inference RedisAI
+          name: Run fraud benchmark (CI) for RedisAI
           command: |
-            ./scripts/run_inference_redisai_ci.sh
+            make bench-fraud-ci
+      - run:
+          name: Run vision benchmark (CI) for RedisAI
+          command: |
+            make bench-vision-ci
 
 
 jobs:
@@ -63,19 +72,6 @@ jobs:
       - common_steps
       - redis_steps
       - redisai_steps
-
-  build-multiarch-docker:
-    machine:
-      enabled: true
-    steps:
-      - checkout
-      - run: |
-          echo "$DOCKER_REDISBENCH_PWD" | base64 --decode | docker login --username $DOCKER_REDISBENCH_USER --password-stdin
-      - run:
-          name: Build
-          command: |
-            make docker-release
-          no_output_timeout: 20m
 
 workflows:
   version: 2
