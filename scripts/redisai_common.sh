@@ -19,7 +19,6 @@ REDIS_PIPELINE_SIZE=${REDIS_PIPELINE_SIZE:-100}
 DEBUG=${DEBUG:-0}
 DATA_FILE_NAME=${DATA_FILE_NAME:-aibench_generate_data-creditcard-fraud.dat}
 PRINT_RESPONSES=${PRINT_RESPONSES:-false}
-QUERIES_BURN_IN=${QUERIES_BURN_IN:-10000}
 SLEEP_BETWEEN_RUNS=${SLEEP_BETWEEN_RUNS:-30}
 
 # Rate limit? if greater than 0 rate is limited.
@@ -37,13 +36,22 @@ mkdir -p ${BULK_DATA_DIR}
 # Full path to data file
 DATA_FILE=${DATA_FILE:-${BULK_DATA_DIR}/${DATA_FILE_NAME}}
 
-# How many concurrent workers - match num of cores, or default to 8
-NUM_WORKERS=${NUM_WORKERS:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 16)}
-
-# How many INFERENCES to Generate/Run
-NUM_INFERENCES=${NUM_INFERENCES:-1000000}
-
 INPUT_VISION_VAL_DIR=${INPUT_VISION_VAL_DIR:-datasets/vision/coco-2017-val/cropped-val2017/.}
 OUTPUT_VISION_FILE_NAME=${OUTPUT_VISION_FILE_NAME:-${BULK_DATA_DIR}/vision_tensors.out}
 NUM_VISION_INFERENCES=${NUM_VISION_INFERENCES:-5000}
 VISION_QUERIES_BURN_IN=${VISION_QUERIES_BURN_IN:-100}
+
+# How many concurrent workers - match num of cores, or default to 8
+NUM_WORKERS=${NUM_WORKERS:-$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 16)}
+# How many INFERENCES to Generate/Run
+NUM_INFERENCES=${NUM_INFERENCES:-1000000}
+# How many inferences to discard data at the beginning ( make the model server hot )
+QUERIES_BURN_IN=${QUERIES_BURN_IN:-10000}
+
+MIN_CLIENTS=${MIN_CLIENTS:-1}
+CLIENTS_STEP=${CLIENTS_STEP:-16}
+MAX_CLIENTS=${MAX_CLIENTS:-160}
+RUNS_PER_VARIATION=${RUNS_PER_VARIATION:-3}
+
+
+

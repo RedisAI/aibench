@@ -146,9 +146,6 @@ func (b *LoadRunner) loadHandler(wg *sync.WaitGroup, queryPool *sync.Pool, proce
 	}
 
 	processor.Close()
-
-	pwg.Wait()
-
 	wg.Done()
 }
 

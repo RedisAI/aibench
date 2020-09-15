@@ -1,6 +1,9 @@
 #!/bin/bash
 #Exit immediately if a command exits with a non-zero status.
 set -e
+set -e
+
+WORKDIR=$PWD
 
 cd datasets/vision/coco-2017-val
 python3 -m pip install -r requirements.txt
@@ -17,6 +20,7 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
   exit 1
 fi
 
+cd ${WORKDIR}
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
 source ${EXE_DIR}/redisai_common.sh

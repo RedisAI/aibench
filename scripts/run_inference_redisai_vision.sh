@@ -20,8 +20,11 @@ if [ ! -f ${OUTPUT_VISION_FILE_NAME} ]; then
 fi
 
 # we overload the NUM_WORKERS here for the official benchmark
-for NUM_WORKERS in 1 8 16 24 32 48 64 128; do
-  for RUN in 1 2 3; do
+for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
+  if [ $NUM_WORKERS == 0 ]; then
+    NUM_WORKERS=1
+  fi
+  for RUN in $(seq 1 ${RUNS_PER_VARIATION}); do
     FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_rate_${RATE_LIMIT}.txt
     echo "Benchmarking inference performance with ${NUM_WORKERS} workers. Model name ${VISION_MODEL_NAME}"
     echo "\t\tSaving files with file suffix: ${FILENAME_SUFFIX}"

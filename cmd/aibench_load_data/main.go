@@ -27,19 +27,19 @@ var (
 func init() {
 	runner = aibench.NewLoadRunner()
 	flag.StringVar(&host, "redis-host", "redis://localhost:6379", "Redis host address and port")
-	flag.UintVar(&pipelineSize, "pipeline", 10, "Redis pipeline size")
+	flag.UintVar(&pipelineSize, "pipeline", 1, "Redis pipeline size")
 	flag.BoolVar(&setBlob, "set-blob", true, "Set reference data in plain binary safe Redis string format")
 	flag.BoolVar(&setTensor, "set-tensor", true, "Set reference data in AI.TENSOR format")
 	flag.Parse()
 }
 
 func main() {
-	runner.RunLoad(&aibench.RedisAIPool, newProcessor, 0)
+	runner.RunLoad(&aibench.RedisAIPool, newProcessor, rowBenchmarkNBytes)
 }
 
 type Loader struct {
-	Wg            *sync.WaitGroup
-	aiClient      *redisai.Client
+	Wg       *sync.WaitGroup
+	aiClient *redisai.Client
 }
 
 func (p *Loader) Close() {

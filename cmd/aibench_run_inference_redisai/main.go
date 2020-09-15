@@ -48,7 +48,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor, 0)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes)
 }
 
 type queryExecutorOptions struct {

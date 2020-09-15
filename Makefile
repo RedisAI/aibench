@@ -1,5 +1,5 @@
 # Go parameters
-GOCMD=go
+GOCMD=GO111MODULE=on go
 GOBUILD=$(GOCMD) build
 GOINSTALL=$(GOCMD) install
 GOCLEAN=$(GOCMD) clean
@@ -57,4 +57,10 @@ load-financial: loaders
 data-vision: generators
 	./scripts/generate_data_vision.sh
 
+bench-fraud-ci:
+	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=100000 RUNS_PER_VARIATION=1 ./scripts/run_inference_redisai_fraud.sh
+
+bench-vision-ci:
+	./scripts/load_models_mobilenet_redisai.sh
+	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=5000 RUNS_PER_VARIATION=1 ./scripts/run_inference_redisai_vision.sh
 
