@@ -16,6 +16,7 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
+            sudo apt install python3
 
   common_steps:
     parameters:
