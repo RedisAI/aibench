@@ -16,12 +16,15 @@ commands:
             make redis-cli
             sudo cp src/redis-cli /usr/local/bin/
             sudo chmod 755 /usr/local/bin/redis-cli
-            sudo apt install python3
 
   common_steps:
     parameters:
     steps:
       - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt install python3
       - run:
           name: Test and install Aibench execs
           command: |
