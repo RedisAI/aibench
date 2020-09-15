@@ -24,7 +24,8 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            sudo apt install python3
+            sudo apt install python3 python3-pip
+            python3 -m pip install -r ./datasets/vision/coco-2017-val/requirements.txt
       - run:
           name: Test and install Aibench execs
           command: |
