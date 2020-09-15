@@ -70,14 +70,14 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 		if len(b.fileName) > 0 {
 			// Read from specified file
 			file, err := os.Open(b.fileName)
-			log.Printf("Reading %s\n", b.fileName )
+			log.Printf("Reading %s\n", b.fileName)
 			if err != nil {
 				panic(fmt.Sprintf("cannot open file for read %s: %v", b.fileName, err))
 			}
 			b.br = bufio.NewReaderSize(file, defaultReadSize)
 		} else {
 			// Read from STDIN
-			log.Printf("Reading from STDIN\n" )
+			log.Printf("Reading from STDIN\n")
 			b.br = bufio.NewReaderSize(os.Stdin, defaultReadSize)
 		}
 	}
@@ -89,7 +89,7 @@ func (b *LoadRunner) GetBufferedReader() *bufio.Reader {
 // read in the input, execute the queries, and then does cleanup.
 func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate, rowBenchmarkNBytes int) {
 
-	if b.workers == 0 {
+		if b.workers == 0 {
 		panic("must have at least one worker")
 	}
 	b.ch = make(chan []byte, b.workers)

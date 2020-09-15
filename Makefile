@@ -21,7 +21,7 @@ loaders: aibench_load_data
 runners: aibench_run_inference_redisai aibench_run_inference_redisai_vision aibench_run_inference_triton_vision aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
 fmt:
-	go fmt ./...
+	$(GOFMT) ./...
 
 checkfmt:
 	@echo 'Checking gofmt';\
