@@ -1,20 +1,20 @@
 # aibench Supplemental Guide: TensorFlow Serving on ARM and Redis
 
 This page documents the ARM variation for the fraud-detection use case using TensorFlow Serving on ARM and Redis. 
-To do so, we rely on "TensorFlow Serving ARM project" docker images, specifically the 1.15.0 version, as documented [here](https://github.com/emacski/tensorflow-serving-arm/tree/1.15.0).
+To do so, we rely on "TensorFlow Serving ARM project" docker images, specifically the 2.3.0 version, as documented [here](https://github.com/emacski/tensorflow-serving-arm/tree/2.3.0).
 
 ## Installation 
 
 ### Ensure proper aibench version
 ```
 git clone https://github.com/RedisAI/aibench
-git checkout v0.1.1
+git checkout v0.2.0
 ```
 
 ### Docker Installation -- Download the TensorFlow Serving ARM Docker image and repo
 
 ```bash
-docker pull emacski/tensorflow-serving:1.15.0
+docker pull emacski/tensorflow-serving:2.3.0
 cd $GOPATH/src/github.com/RedisAI/aibench
 
 # Location of credit card fraud model
@@ -24,7 +24,7 @@ TESTDATA="$(pwd)/tests/models/tensorflow/reference"
 docker run -t --rm -p 8500:8500 -p 8501:8501 \
     -v "$TESTDATA:/models/financialNet" \
     -e MODEL_NAME=financialNet -e TF_CPP_MIN_VLOG_LEVEL=1 \
-    -d emacski/tensorflow-serving:1.15.0
+    -d emacski/tensorflow-serving:2.3.0
 
 # Query the model using the predict API
 curl --data @$(pwd)/tests/models/tensorflow/tensorflow_serving_inference_payload.json -X POST http://localhost:8501/v1/models/financialNet:predict
