@@ -18,10 +18,10 @@ require (
 	google.golang.org/grpc v1.32.0
 )
 
-replace github.com/RedisAI/aibench/cmd/aibench_run_inference_triton_vision/nvidia_inferenceserver => ./cmd/aibench_run_inference_triton_vision/nvidia_inferenceserver
-
-replace github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow => ./cmd/aibench_run_inference_tensorflow_serving/tensorflow
-
-replace github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow_serving => ./cmd/aibench_run_inference_tensorflow_serving/tensorflow_serving
-
-replace github.com/RedisAI/aibench/inference => ./inference
+replace (
+	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow => ./cmd/aibench_run_inference_tensorflow_serving/tensorflow
+	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow/core/lib/core => ./cmd/aibench_run_inference_tensorflow_serving/tensorflow/core/lib/core
+	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow_serving => ./cmd/aibench_run_inference_tensorflow_serving/tensorflow_serving
+	github.com/RedisAI/aibench/cmd/aibench_run_inference_triton_vision/nvidia_inferenceserver => ./cmd/aibench_run_inference_triton_vision/nvidia_inferenceserver
+	github.com/RedisAI/aibench/inference => ./inference
+)
