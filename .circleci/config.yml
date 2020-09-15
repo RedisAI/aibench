@@ -33,10 +33,13 @@ commands:
             make test
             make
       - run:
-          name: Generate sample data
+          name: Generate sample data for Fraud benchmark (CI)
           command: |
-            make data
-            make data-vision
+            make data-fraud-ci
+      - run:
+          name: Generate sample data for Vision benchmark (CI)
+          command: |
+            make data-vision-ci
 
   redisai_steps:
     parameters:
