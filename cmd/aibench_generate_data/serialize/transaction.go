@@ -1,11 +1,11 @@
 package serialize
 
-// Transaction wraps a single document. It stores database-agnostic data
+// Transaction wraps a single transaction. It stores database-agnostic data
 import (
 	"io"
 )
 
-// Transaction wraps a single document. It stores database-agnostic data
+// Transaction wraps a single transaction. It stores database-agnostic data
 // representing one Transaction
 //
 // Internally, Transaction uses byte slices instead of strings to try to minimize

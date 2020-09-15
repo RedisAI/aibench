@@ -36,7 +36,6 @@ for REFERENCE_DATA in "true" "false"; do
       # benchmark inference performance
       # make sure you're on the root project folder
       redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} config resetstat
-      cd $GOPATH/src/github.com/RedisAI/aibench
       cat ${DATA_FILE} |
         ${EXE_FILE_NAME} \
           -model=${MODEL_NAME} \

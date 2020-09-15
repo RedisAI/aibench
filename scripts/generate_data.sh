@@ -19,7 +19,8 @@ source ${EXE_DIR}/redisai_common.sh
 cat ${INPUT_FILE_NAME} |
   gunzip >${TMP_FILE_NAME}
 ${EXE_FILE_NAME} \
-  -input-file ${TMP_FILE_NAME} \
+  --debug=${DEBUG} \
+  -input-file=${TMP_FILE_NAME} \
   -use-case="creditcard-fraud" \
   -max-transactions=${NUM_INFERENCES} \
   -seed=${DATA_SEED} >${DATA_FILE}

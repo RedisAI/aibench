@@ -19,8 +19,6 @@ if [ ! -f ${OUTPUT_VISION_FILE_NAME} ]; then
   exit 1
 fi
 
-cd $GOPATH/src/github.com/RedisAI/aibench
-
 # we overload the NUM_WORKERS here for the official benchmark
 for NUM_WORKERS in 1 8 16 24 32 48 64 128; do
   for RUN in 1 2 3; do
@@ -30,15 +28,15 @@ for NUM_WORKERS in 1 8 16 24 32 48 64 128; do
     # benchmark inference performance
     # make sure you're on the root project folder
 
-      ${EXE_FILE_NAME} \
-        --file=${OUTPUT_VISION_FILE_NAME} \
-        -model=${VISION_MODEL_NAME} \
-        -workers=${NUM_WORKERS} \
-        -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
-        -print-interval=0 -reporting-period=1000ms \
-        -host=${DATABASE_HOST} \
-        -port=${DATABASE_PORT} \
-        2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
+    ${EXE_FILE_NAME} \
+      --file=${OUTPUT_VISION_FILE_NAME} \
+      -model=${VISION_MODEL_NAME} \
+      -workers=${NUM_WORKERS} \
+      -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
+      -print-interval=0 -reporting-period=1000ms \
+      -host=${DATABASE_HOST} \
+      -port=${DATABASE_PORT} \
+      2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 
     echo "Sleeping: $SLEEP_BETWEEN_RUNS"
     sleep ${SLEEP_BETWEEN_RUNS}

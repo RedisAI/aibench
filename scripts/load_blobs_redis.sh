@@ -19,12 +19,12 @@ fi
 
 # load the reference data in BLOB format
 ${EXE_FILE_NAME} \
-    --file=${DATA_FILE} \
-    --reporting-period 1000ms \
-    --set-tensor=false \
-    -set-blob=true \
-    --debug=3 \
-    --redis-host="redis://${DATABASE_HOST}:${DATABASE_PORT}" \
-    --workers=${NUM_WORKERS} --pipeline=1000
+  --file=${DATA_FILE} \
+  --reporting-period 1000ms \
+  --set-tensor=false \
+  -set-blob=true \
+  --debug=3 \
+  --redis-host="redis://${DATABASE_HOST}:${DATABASE_PORT}" \
+  --workers=${NUM_WORKERS} --pipeline=1000
 
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} info commandstats

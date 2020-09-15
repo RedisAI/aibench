@@ -11,7 +11,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.5
 	github.com/go-redis/redis/v8 v8.0.0-beta.12
 	github.com/golang/protobuf v1.4.2
-	github.com/gomodule/redigo v1.8.2
+	github.com/gomodule/redigo v1.8.2 // indirect
 	github.com/lib/pq v1.0.0
 	github.com/mediocregopher/radix/v3 v3.5.2
 	github.com/valyala/fasthttp v1.12.0

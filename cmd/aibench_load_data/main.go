@@ -8,11 +8,9 @@ import (
 	"fmt"
 	aibench "github.com/RedisAI/aibench/inference"
 	"github.com/RedisAI/redisai-go/redisai"
-	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
 	"log"
 	"sync"
-	"time"
 )
 
 // Program option vars:
@@ -22,7 +20,6 @@ var (
 	setBlob            bool
 	setTensor          bool
 	runner             *aibench.LoadRunner
-	cpool              *redis.Pool
 	rowBenchmarkNBytes = 8 + 120 + 1024
 )
 
@@ -34,12 +31,6 @@ func init() {
 	flag.BoolVar(&setBlob, "set-blob", true, "Set reference data in plain binary safe Redis string format")
 	flag.BoolVar(&setTensor, "set-tensor", true, "Set reference data in AI.TENSOR format")
 	flag.Parse()
-	cpool = &redis.Pool{
-		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
-	}
-
 }
 
 func main() {
@@ -47,28 +38,25 @@ func main() {
 }
 
 type Loader struct {
-	Wg      *sync.WaitGroup
-	pclient *redisai.Client
+	Wg            *sync.WaitGroup
+	aiClient      *redisai.Client
 }
 
 func (p *Loader) Close() {
-	p.pclient.Close()
+	p.aiClient.Close()
 }
 
 func newProcessor() aibench.Loader { return &Loader{} }
 
 func (p *Loader) Init(numWorker int, wg *sync.WaitGroup) {
 	p.Wg = wg
-	p.pclient = redisai.Connect(host, cpool)
-	p.pclient.Pipeline(uint32(pipelineSize))
+	p.aiClient = redisai.Connect(host, nil)
+	p.aiClient.Pipeline(uint32(pipelineSize))
 }
 
 func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*aibench.Stat, uint64, error) {
-	if(debug>0){
-		fmt.Println("adad")
-	}
-	if len(q) != (1024 + 8 + 120) {
-		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", 1024+8+120, len(q))
+	if len(q) != rowBenchmarkNBytes {
+		log.Fatalf("wrong Row lenght. Expected Set:%d got %d\n", rowBenchmarkNBytes, len(q))
 	}
 	tmp := make([]byte, 8)
 	referenceValues := make([]byte, 1024)
@@ -79,16 +67,16 @@ func (p *Loader) ProcessLoadQuery(q []byte, debug int) ([]*aibench.Stat, uint64,
 	id := "referenceTensor:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	idBlob := "referenceBLOB:{" + fmt.Sprintf("%d", int(idF)) + "}"
 	issuedCommands := 0
-	p.pclient.ActiveConnNX()
+	p.aiClient.ActiveConnNX()
 	if setBlob {
-		errSet := p.pclient.ActiveConn.Send("SET", idBlob, referenceValues)
+		errSet := p.aiClient.ActiveConn.Send("SET", idBlob, referenceValues)
 		if errSet != nil {
 			log.Fatal(errSet)
 		}
 		issuedCommands++
 	}
 	if setTensor {
-		err := p.pclient.TensorSet(id, redisai.TypeFloat, []int64{1, 256}, referenceValues)
+		err := p.aiClient.TensorSet(id, redisai.TypeFloat, []int64{1, 256}, referenceValues)
 		if err != nil {
 			log.Fatal(err)
 		}
