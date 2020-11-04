@@ -1,11 +1,3 @@
-// ftsb_generate_data generates full text search data from pre-specified use cases.
-//
-// Supported formats:
-// RediSearch
-
-// Supported use cases:
-// enwiki-abstract:
-
 package main
 
 import (
