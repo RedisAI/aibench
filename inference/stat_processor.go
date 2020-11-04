@@ -40,19 +40,14 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 	sp.StatsMapping = map[string]*statGroup{
 		allQueriesLabel: newStatGroup(*sp.limit),
 	}
-	// Only needed when differentiating between cold & warm
-	if sp.prewarmQueries {
-		sp.StatsMapping[labelColdQueries] = newStatGroup(*sp.limit)
-		sp.StatsMapping[labelWarmQueries] = newStatGroup(*sp.limit)
-	}
 
 	i := uint64(0)
 	start := time.Now()
 	prevTime := start
 	prevRequestCount := uint64(0)
 	for stat := range sp.c {
-		atomic.AddUint64(&sp.opsCount, 1)
-		if i < sp.burnIn {
+		atomic.AddUint64(&sp.opsCount, stat.totalResults)
+		if sp.opsCount < sp.burnIn {
 			i++
 			statPool.Put(stat)
 			continue
@@ -70,15 +65,6 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 
 		if !stat.isPartial {
 			sp.StatsMapping[allQueriesLabel].push(stat.value, stat.totalResults, stat.timedOut, stat.query)
-
-			// Only needed when differentiating between cold & warm
-			if sp.prewarmQueries {
-				if stat.isWarm {
-					sp.StatsMapping[labelWarmQueries].push(stat.value, stat.totalResults, stat.timedOut, stat.query)
-				} else {
-					sp.StatsMapping[labelColdQueries].push(stat.value, stat.totalResults, stat.timedOut, stat.query)
-				}
-			}
 
 			// If we're prewarming queries (i.e., running them twice in a row),
 			// only increment the counter for the first (cold) inference. Otherwise,
@@ -124,7 +110,7 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 		overallQueryRate := float64(sp.opsCount) / float64(sinceStart.Seconds())
 		// the final stats output goes to stdout:
 		_, err := fmt.Printf("Run complete after %d inferences with %d workers (Overall inference rate %0.2f inferences/sec):\n",
-			i-sp.burnIn,
+			sp.opsCount,
 			workers,
 			overallQueryRate)
 		if err != nil {

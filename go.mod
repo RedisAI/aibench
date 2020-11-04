@@ -3,6 +3,7 @@ module github.com/RedisAI/aibench
 go 1.13
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v0.9.0 // indirect
 	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow v0.0.0-00010101000000-000000000000
 	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow/core/lib/core v0.0.0-00010101000000-000000000000
 	github.com/RedisAI/aibench/cmd/aibench_run_inference_tensorflow_serving/tensorflow_serving v0.0.0-00010101000000-000000000000

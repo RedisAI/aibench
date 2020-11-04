@@ -34,7 +34,9 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
     ${EXE_FILE_NAME} \
       --file=${OUTPUT_VISION_FILE_NAME} \
       -model=${VISION_MODEL_NAME} \
+      -debug=${DEBUG} \
       -workers=${NUM_WORKERS} \
+      -batch-size=${TENSOR_BATCHSIZE} \
       -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
       -print-interval=0 -reporting-period=1000ms \
       -host=${DATABASE_HOST} \

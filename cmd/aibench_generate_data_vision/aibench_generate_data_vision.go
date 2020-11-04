@@ -21,6 +21,7 @@ import (
 var (
 	inputDir         string
 	outputFileName   string
+	batchSize        int
 	defaultWriteSize = 4 << 20 // 4 MB
 )
 
@@ -44,6 +45,15 @@ func getRGBAPos_CxHxW(y int, width int, x int, height int) (int, int, int, int) 
 
 // converts the image to a tensor with a H x W x C layout.
 func JPEGImageTo_HxWxC_float32_AiTensor(img image.Image, useAlpha bool, scale float32) ([]float32, *implementations.AITensor) {
+	width, height, numChannels, pixels := JP(img, useAlpha, scale)
+	// Build a tensor
+	tensor := implementations.NewAiTensor()
+	tensor.SetShape([]int64{int64(height), int64(width), numChannels})
+	tensor.SetData(pixels)
+	return pixels, tensor
+}
+
+func JP(img image.Image, useAlpha bool, scale float32) (int, int, int64, []float32) {
 	bounds := img.Bounds()
 	width, height := bounds.Max.X, bounds.Max.Y
 	var numChannels int64 = 4
@@ -62,11 +72,7 @@ func JPEGImageTo_HxWxC_float32_AiTensor(img image.Image, useAlpha bool, scale fl
 			}
 		}
 	}
-	// Build a tensor
-	tensor := implementations.NewAiTensor()
-	tensor.SetShape([]int64{int64(height), int64(width), numChannels})
-	tensor.SetData(pixels)
-	return pixels, tensor
+	return width, height, numChannels, pixels
 }
 
 // converts the image to a tensor with a H x W x C layout.
@@ -197,6 +203,7 @@ func SerializeTensorDataFloat32(pixels []float32, w io.Writer) (err error) {
 func main() {
 	flag.StringVar(&inputDir, "input-val-dir", ".", fmt.Sprintf(""))
 	flag.StringVar(&outputFileName, "output-file", "", "File name to write generated data to")
+	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
 	flag.Parse()
 
 	// Get output writer
@@ -209,7 +216,11 @@ func main() {
 	}()
 
 	items, _ := ioutil.ReadDir(inputDir)
+	log.Println(fmt.Sprintf("Reading images from: %s\n.Input tensor batch size %d.", inputDir, batchSize))
 	bar := pb.StartNew(len(items))
+	batchedPixels := make([]float32, 0, 0)
+	totalRows := 0
+	totalImages := 0
 	for _, item := range items {
 		if !item.IsDir() {
 
@@ -220,10 +231,18 @@ func main() {
 			}
 			img, err := jpeg.Decode(imageFile)
 			pixels, _ := JPEGImageTo_HxWxC_float32_AiTensor(img, false, 1.0/255.0)
-			SerializeTensorDataFloat32(pixels, out)
+			batchedPixels = append(batchedPixels, pixels...)
+			err = SerializeTensorDataFloat32(pixels, out)
+			if err != nil {
+				log.Fatal(err)
+			}
+			totalRows++
 			bar.Increment()
-
+			totalImages++
 		}
 	}
+	out.Flush()
+
 	bar.Finish()
+	fmt.Println(fmt.Sprintf("Read %d images. Generated a total of %d lines with %d image each. Total Bytes: %d", totalImages, totalRows, batchSize, out.Size()))
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 )
@@ -33,6 +32,7 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 		bytes := make([]byte, nbytes)
 
 		if *s.limit > 0 && n >= *s.limit {
+			fmt.Println(fmt.Sprintf("Reached produce limit %d", *s.limit))
 			// request queries limit reached, time to quit
 			break
 		}
@@ -43,12 +43,8 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 		if err != nil {
 			panic(fmt.Sprintf("expected to read %d bytes but got %d on row %d", nbytes, readBytes, n))
 		}
-		row := Uint64frombytes(bytes[0:8])
-
 		if debug > 0 {
-			if n%1000 == 0 {
-				fmt.Fprintln(os.Stderr, "At transaction "+strconv.Itoa(int(n))+". Sending Row: "+strconv.Itoa(int(row)))
-			}
+			fmt.Fprintf(os.Stderr, "Sending Row: %d with %d bytes. \n",n, readBytes)
 		}
 		c <- bytes
 		atomic.AddUint64(&n, 1)

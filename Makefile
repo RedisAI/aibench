@@ -12,6 +12,8 @@ GOFMT=$(GOCMD) fmt
 
 all: generators loaders runners
 
+redisai: aibench_generate_data aibench_generate_data_vision aibench_load_data aibench_run_inference_redisai aibench_run_inference_redisai_vision
+
 financial: aibench_generate_data aibench_load_data aibench_run_inference_redisai aibench_run_inference_torchserve aibench_run_inference_flask_tensorflow aibench_run_inference_tensorflow_serving
 
 generators: aibench_generate_data aibench_generate_data_vision

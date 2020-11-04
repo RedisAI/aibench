@@ -27,6 +27,7 @@ source ${EXE_DIR}/redisai_common.sh
 
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \
+  --batch-size=${TENSOR_BATCHSIZE} \
   --output-file=${OUTPUT_VISION_FILE_NAME}
 
 # Ensure data file is in place

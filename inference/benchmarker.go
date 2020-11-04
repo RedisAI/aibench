@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/bradfitz/iter"
 	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
@@ -19,10 +18,6 @@ import (
 
 const (
 	labelAllQueries  = "All queries"
-	labelColdQueries = "Cold queries"
-	labelWarmQueries = "Warm queries"
-	//rowBenchmarkNBytes = 8 + 120 + 1024
-
 	defaultReadSize = 4 << 20 // 4 MB
 	Inf             = rate.Limit(math.MaxFloat64)
 )
@@ -70,8 +65,6 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
 	flag.Uint64Var(&runner.limitrps, "limit-rps", 0, "Limit overall RPS. 0 disables limit.")
 	flag.UintVar(&runner.workers, "workers", 8, "Number of concurrent requests to make.")
-	flag.UintVar(&runner.repetitions, "repetitions", 10, "Number of repetitions of requests per dataset ( will round robin ).")
-	flag.BoolVar(&runner.sp.prewarmQueries, "prewarm-queries", false, "Run each inference twice in a row so the warm inference is guaranteed to be a cache hit")
 	flag.BoolVar(&runner.printResponses, "print-responses", false, "Pretty print response bodies for correctness checking (default false).")
 	flag.BoolVar(&runner.ignoreErrors, "ignore-errors", false, "Whether to ignore the inference errors and continue. By default on error the benchmark stops (default false).")
 	flag.BoolVar(&runner.enableReferenceDataRedis, "enable-reference-data-redis", false, "Whether to enable benchmarking inference with a model with reference data on Redis or not (default false).")
@@ -136,10 +129,11 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 			if err != nil {
 				panic(fmt.Sprintf("cannot open file for read %s: %v", b.fileName, err))
 			}
-			b.br = bufio.NewReaderSize(file, defaultReadSize)
+			b.br = bufio.NewReader(file)
+			//bufio.
 		} else {
 			// Read from STDIN
-			b.br = bufio.NewReaderSize(os.Stdin, defaultReadSize)
+			b.br = bufio.NewReader(os.Stdin)
 		}
 	}
 	return b.br
@@ -148,7 +142,7 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 // Run does the bulk of the benchmark execution.
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
-func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate, rowSizeBytes int) {
+func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate, rowSizeBytes int, inferencesPerRow int64) {
 
 	if b.cpuProfile != "" {
 		fmt.Printf("starting cpu profile. Saving into :%s", b.cpuProfile)
@@ -189,7 +183,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	var wg sync.WaitGroup
 	for i := 0; i < int(b.workers); i++ {
 		wg.Add(1)
-		go b.processorHandler(rateLimiter, &wg, queryPool, processorCreateFn(), i)
+		go b.processorHandler(rateLimiter, &wg, queryPool, processorCreateFn(), i, inferencesPerRow, b.limitrps != 0)
 	}
 
 	// Read in jobs, closing the job channel when done:
@@ -202,7 +196,9 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, rowSizeBytes, b.debug)
+	totalRows := br.produce(queryPool, b.ch, rowSizeBytes, b.debug)
+	_, err := fmt.Printf("Read a total of :%d rows\n", totalRows )
+
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
@@ -212,7 +208,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Wall clock end time
 	wallEnd := time.Now()
 	wallTook := wallEnd.Sub(wallStart)
-	_, err := fmt.Printf("Took: %8.3f sec\n", float64(wallTook.Nanoseconds())/1e9)
+	_, err = fmt.Printf("Took: %8.3f sec\n", float64(wallTook.Nanoseconds())/1e9)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -239,7 +235,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 
 }
 
-func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int) {
+func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int, inferencesPerRow int64, limitRps bool) {
 	buflen := uint64(len(b.ch))
 	metricsChan := make(chan uint64, buflen)
 	pwg := &sync.WaitGroup{}
@@ -249,44 +245,28 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 
 	processor.Init(workerNum, int(b.workers), pwg, metricsChan, responseSizesChan)
 
-	for i := range iter.N(int(b.repetitions)) {
-		for query := range b.ch {
-			r := rateLimiter.ReserveN(time.Now(), 1)
+	for query := range b.ch {
+		if limitRps {
+			r := rateLimiter.ReserveN(time.Now(), int(inferencesPerRow))
 			time.Sleep(r.Delay())
-			stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, false, workerInferences)
-			if err != nil {
-				if b.IgnoreErrors() {
-					fmt.Printf("On iteration %d Ignoring inference error: %v\n", i, err)
-				} else {
-					panic(err)
-				}
-			} else {
-				workerInferences++
-				atomic.AddUint64(&b.inferenceCount, 1)
-				b.sp.sendStats(stats)
-			}
-
-			// If PrewarmQueries is set, we run the inference as 'cold' first (see above),
-			// then we immediately run it a second time and report that as the 'warm' stat.
-			// This guarantees that the warm stat will reflect optimal cache performance.
-			if b.sp.prewarmQueries {
-				// Warm run
-				stats, err = processor.ProcessInferenceQuery(query, true, workerNum, b.enableReferenceDataRedis, false, workerInferences)
-				if err != nil {
-					if b.IgnoreErrors() {
-						fmt.Printf("Ignoring inference error: %v\n", err)
-					} else {
-						panic(err)
-					}
-				} else {
-					workerInferences++
-					atomic.AddUint64(&b.inferenceCount, 1)
-					b.sp.sendStats(stats)
-				}
-			}
-			queryPool.Put(&query)
 		}
+		stats, err := processor.ProcessInferenceQuery(query, false, workerNum, b.enableReferenceDataRedis, false, workerInferences)
+		if err != nil {
+			if b.IgnoreErrors() {
+				fmt.Printf("Ignoring inference error: %v\n", err)
+			} else {
+				panic(err)
+			}
+		} else {
+			workerInferences++
+			totalStatInferences := stats[0].totalResults
+			workerInferences = workerInferences + int64(totalStatInferences)
+			atomic.AddUint64(&b.inferenceCount, totalStatInferences)
+			b.sp.sendStats(stats)
+		}
+		queryPool.Put(&query)
 	}
+
 	processor.Close()
 
 	//pwg.Wait()

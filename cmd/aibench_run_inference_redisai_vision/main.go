@@ -29,8 +29,10 @@ var (
 	useDag                  bool
 	PoolPipelineConcurrency int
 	PoolPipelineWindow      time.Duration
-	inferenceType           = "RedisAI Query - mobilenet_v1_100_224 :"
-	rowBenchmarkNBytes      = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
+	inferenceType           = "RedisAI Query - mobilenet_v1_100_224 "
+	tensorBenchmarkBytes    = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
+	batchSize               int
+	batchSizeStr            string
 )
 
 // Parse args:
@@ -38,13 +40,15 @@ func init() {
 	runner = inference.NewBenchmarkRunner()
 	flag.StringVar(&host, "host", "localhost", "Redis host address, if more than one is passed will round robin requests")
 	flag.StringVar(&port, "port", "6379", "Redis host port, if more than one is passed will round robin requests")
-	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu_NxHxWxC", "model name")
+	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu", "model name")
 	flag.BoolVar(&persistOutputs, "persist-results", false, "persist the classification tensors")
 	flag.BoolVar(&useDag, "use-dag", false, "use DAGRUN")
 	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
 	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
+	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
 	flag.Parse()
+	inferenceType += fmt.Sprintf("(input tensor batch size=%d):", batchSize)
 	if useDag {
 		if persistOutputs {
 			inferenceType += "AI.DAGRUN with persistency ON"
@@ -54,11 +58,13 @@ func init() {
 	} else {
 		inferenceType += "AI.MODELRUN"
 	}
+	batchSizeStr = fmt.Sprintf("%d", batchSize)
 
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes)
+	rowBenchmarkBytes := batchSize * tensorBenchmarkBytes
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkBytes, int64(batchSize))
 }
 
 type queryExecutorOptions struct {
@@ -139,13 +145,13 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 			args = []string{"|>"}
 		}
 		args = append(args,
-			"AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues), "|>",
+			"AI.TENSORSET", tensorName, "FLOAT", batchSizeStr, "224", "224", "3", "BLOB", string(tensorValues), "|>",
 			"AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName, "|>",
 			"AI.TENSORGET", outputTensorName, "BLOB")
 		err = p.pclient[pos].Do(radix.Cmd(nil, "AI.DAGRUN", args...))
 	} else {
 		pipeCmds := radix.Pipeline(
-			radix.FlatCmd(nil, "AI.TENSORSET", tensorName, "FLOAT", "1", "224", "224", "3", "BLOB", string(tensorValues)),
+			radix.FlatCmd(nil, "AI.TENSORSET", tensorName, "FLOAT", batchSizeStr, "224", "224", "3", "BLOB", string(tensorValues)),
 			radix.FlatCmd(nil, "AI.MODELRUN", model, "INPUTS", tensorName, "OUTPUTS", outputTensorName),
 			radix.FlatCmd(nil, "AI.TENSORGET", outputTensorName, "BLOB"),
 		)
@@ -158,7 +164,7 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	}
 
 	stat := inference.GetStat()
-	stat.Init([]byte(inferenceType), took, uint64(0), false, "")
+	stat.Init([]byte(inferenceType), took, uint64(batchSize), false, "")
 
 	return []*inference.Stat{stat}, nil
 }
