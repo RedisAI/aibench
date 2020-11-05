@@ -96,14 +96,14 @@ As an example we will use RedisAI:
 cd $GOPATH/src/github.com/RedisAI/aibench
 
 ## run the benchmark
-$ ./scripts/run_inference_redisai_mobilenet.sh
+$ ./scripts/run_inference_redisai_vision.sh
 ```
  
  The
 resulting output will look similar to this:
 
 ```text
-$ ~/go/src/github.com/RedisAI/aibench$ ./scripts/run_inference_redisai_mobilenet.sh
+$ ~/go/src/github.com/RedisAI/aibench$ ./scripts/run_inference_redisai_vision.sh
   Benchmarking inference performance with 1 workers. Model name mobilenet_v1_100_224_cpu
   \t\tSaving files with file suffix: redisai__cpu_run_1_workers_1_rate_0.txt
   time (ms),total queries,instantaneous inferences/s,overall inferences/s,overall q50 lat(ms),overall q90 lat(ms),overall q95 lat(ms),overall q99 lat(ms),overall q99.999 lat(ms)
@@ -135,3 +135,90 @@ $ ~/go/src/github.com/RedisAI/aibench$ ./scripts/run_inference_redisai_mobilenet
   Took:  100.162 sec
   Saving Query Latencies HDR Histogram to stats-response-latency-hist.txt
 ```
+
+#### 3.1 Batching multiple inputs (images) to 4D batch tensor
+
+The used model is written to produce outputs from a batch of multiple inputs at the same time, 
+with input tensor having a B x C x H x W layout. 
+
+By default, the benchmark uses a 1 x C x H x W layout, meaning that each input tensor represents a single image. 
+
+Please denote that Batching multiple inputs (images) to 4D batch tensor is done on client side and completly independent of auto-batching settings on the server. Single client benchmarks can benefit from this benchmark feature. 
+
+In that manner, for batching 10 images into a single tensor and run a single modelrun, do as follows:
+
+```bash
+cd $GOPATH/src/github.com/RedisAI/aibench
+## Run the benchmark with the CPU model and batch 10 inputs (images) to 4D batch tensor
+$ DEVICE=cpu TENSOR_BATCHSIZE=10 ./scripts/run_inference_redisai_vision.sh
+
+## Run the benchmark with the GPU model and batch 10 inputs (images) to 4D batch tensor
+$ DEVICE=gpu TENSOR_BATCHSIZE=10 ./scripts/run_inference_redisai_vision.sh
+```
+
+### 4. Retrieving additional AI Module/Models runtime stats
+
+You can retrieve additional runtime stats by leveraging the following 3 commands:
+
+- `AI.INFO <model key>` -- to retrieve statistics like the cumulative duration of executions in microseconds, total number of executions and average batch size ( by dividing SAMPLES per CALLS ). Full details on the [following link](https://oss.redislabs.com/redisai/commands/#aiinfo) 
+
+For the given example of batching 10 images per modelrun, AI.INFO reply should look like the following:
+```
+$ redis-cli AI.INFO mobilenet_v1_100_224_cpu 
+ 1) "key"
+ 2) "mobilenet_v1_100_224_cpu"
+ 3) "type"
+ 4) "MODEL"
+ 5) "backend"
+ 6) "TF"
+ 7) "device"
+ 8) "cpu"
+ 9) "tag"
+10) ""
+11) "duration"
+12) (integer) 76611636
+13) "samples"
+14) (integer) 5000
+15) "calls"
+16) (integer) 500
+17) "errors"
+18) (integer) 0
+```
+
+- `INFO COMMANDSTATS` -- To retrieve the cumulative main thread execution time of the commands. 
+
+For the given example of batching 10 images per modelrun, `INFO COMMANDSTATS` reply should look like the following:
+
+```
+$ redis-cli info commandstats
+# Commandstats
+cmdstat_ai.modelrun:calls=500,usec=10383,usec_per_call=20.77
+cmdstat_ai.tensorget:calls=500,usec=3148,usec_per_call=6.30
+cmdstat_ai.tensorset:calls=500,usec=1929229,usec_per_call=3858.46
+```
+
+
+- `INFO MODULES` -- To retrieve per device CPU usage stats as well as some important load time configs.
+
+For the given example of batching 10 images per modelrun, `INFO MODULES` reply should look like the following:
+```
+$ redis-cli info modules
+# Modules
+module:name=ai,ver=999999,api=1,filters=0,usedby=[],using=[],options=[]
+
+# ai_git
+ai_git_sha:deb65404af7d500dd257bdafc231815fee82e5f8
+
+# ai_load_time_configs
+ai_threads_per_queue:1
+ai_inter_op_parallelism:0
+ai_intra_op_parallelism:0
+
+# ai_cpu
+ai_self_used_cpu_sys:133.079150
+ai_self_used_cpu_user:1459.490824
+ai_children_used_cpu_sys:0.001464
+ai_children_used_cpu_user:0.001836
+ai_queue_CPU_bthread_#1_used_cpu_total:0.000359
+```
+
