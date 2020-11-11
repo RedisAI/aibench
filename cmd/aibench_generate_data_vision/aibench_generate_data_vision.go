@@ -5,16 +5,16 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
-	"math"
-
 	"github.com/RedisAI/redisai-go/redisai/implementations"
+	"github.com/cheggaaa/pb/v3"
 	"image"
 	"image/jpeg"
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
+	"strconv"
 )
 
 // Program option vars:
@@ -24,6 +24,23 @@ var (
 	batchSize        int
 	defaultWriteSize = 4 << 20 // 4 MB
 )
+
+// Vars only for git sha and diff handling
+var GitSHA1 string = ""
+var GitDirty string = "0"
+
+func AibenchGitSHA1() string {
+	return GitSHA1
+}
+
+func AibenchGitDirty() (dirty bool) {
+	dirty = false
+	dirtyLines, err := strconv.Atoi(GitDirty)
+	if err == nil {
+		dirty = (dirtyLines != 0)
+	}
+	return
+}
 
 // img.At(x, y).RGBA() returns four uint32 values; we want a Pixel
 func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) (R, G, B, A uint8) {
@@ -204,7 +221,17 @@ func main() {
 	flag.StringVar(&inputDir, "input-val-dir", ".", fmt.Sprintf(""))
 	flag.StringVar(&outputFileName, "output-file", "", "File name to write generated data to")
 	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
+	version := flag.Bool("v", false, "Output version and exit")
 	flag.Parse()
+	if *version {
+		git_sha := AibenchGitSHA1()
+		git_dirty_str := ""
+		if AibenchGitDirty() {
+			git_dirty_str = "-dirty"
+		}
+		fmt.Fprintf(os.Stdout, "aibench_generate_data_vision (git_sha1:%s%s)\n", git_sha, git_dirty_str)
+		os.Exit(0)
+	}
 
 	// Get output writer
 	out := GetBufferedWriter(outputFileName)
