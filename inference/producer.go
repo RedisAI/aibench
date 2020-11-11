@@ -44,7 +44,7 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 			panic(fmt.Sprintf("expected to read %d bytes but got %d on row %d", nbytes, readBytes, n))
 		}
 		if debug > 0 {
-			fmt.Fprintf(os.Stderr, "Sending Row: %d with %d bytes. \n",n, readBytes)
+			fmt.Fprintf(os.Stderr, "Sending Row: %d with %d bytes. \n", n, readBytes)
 		}
 		c <- bytes
 		atomic.AddUint64(&n, 1)
