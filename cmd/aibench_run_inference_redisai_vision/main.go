@@ -1,6 +1,3 @@
-//
-
-// This program has no knowledge of the internals of the endpoint.
 package main
 
 import (
@@ -8,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +34,23 @@ var (
 	batchSizeStr            string
 )
 
+// Vars only for git sha and diff handling
+var GitSHA1 string = ""
+var GitDirty string = "0"
+
+func AibenchGitSHA1() string {
+	return GitSHA1
+}
+
+func AibenchGitDirty() (dirty bool) {
+	dirty = false
+	dirtyLines, err := strconv.Atoi(GitDirty)
+	if err == nil {
+		dirty = (dirtyLines != 0)
+	}
+	return
+}
+
 // Parse args:
 func init() {
 	runner = inference.NewBenchmarkRunner()
@@ -47,7 +63,17 @@ func init() {
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
 	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
 	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
+	version := flag.Bool("v", false, "Output version and exit")
 	flag.Parse()
+	if *version {
+		git_sha := AibenchGitSHA1()
+		git_dirty_str := ""
+		if AibenchGitDirty() {
+			git_dirty_str = "-dirty"
+		}
+		fmt.Fprintf(os.Stdout, "aibench_run_inference_redisai_vision (git_sha1:%s%s)\n", git_sha, git_dirty_str)
+		os.Exit(0)
+	}
 	inferenceType += fmt.Sprintf("(input tensor batch size=%d):", batchSize)
 	if useDag {
 		if persistOutputs {

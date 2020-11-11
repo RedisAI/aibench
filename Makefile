@@ -8,6 +8,15 @@ GOGET=$(GOCMD) get -v
 GOMOD=$(GOCMD) mod
 GOFMT=$(GOCMD) fmt
 
+# Build time variables
+ifeq ($(GIT_SHA),)
+GIT_SHA:=$(shell git rev-parse HEAD)
+endif
+
+ifeq ($(GIT_DIRTY),)
+GIT_DIRTY:=$(shell git diff --no-ext-diff 2> /dev/null | wc -l)
+endif
+
 .PHONY: all generators loaders runners
 
 all: generators loaders runners
@@ -43,7 +52,7 @@ test: get
 
 aibench_%: $(wildcard ./cmd/$@/*.go) ./inference/*.go
 	$(GOGET) ./cmd/$@
-	$(GOBUILD) ./cmd/$@
+	$(GOBUILD) -ldflags="-X 'main.GitSHA1=$(GIT_SHA)' -X 'main.GitDirty=$(GIT_DIRTY)'" ./cmd/$@
 	$(GOINSTALL) ./cmd/$@
 
 #####################
