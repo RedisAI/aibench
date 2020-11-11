@@ -51,7 +51,7 @@ test: get
 	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 aibench_%: $(wildcard ./cmd/$@/*.go) ./inference/*.go
-	$(GOGET) ./cmd/$@
+	#$(GOGET) ./cmd/$@
 	$(GOBUILD) -ldflags="-X 'main.GitSHA1=$(GIT_SHA)' -X 'main.GitDirty=$(GIT_DIRTY)'" ./cmd/$@
 	$(GOINSTALL) ./cmd/$@
 
