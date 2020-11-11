@@ -26,7 +26,9 @@ var (
 	showExplain             bool
 	clusterMode             bool
 	useDag                  bool
+	continueOnError         bool
 	PoolPipelineConcurrency int
+	dialReadTimeout         time.Duration
 	PoolPipelineWindow      time.Duration
 	inferenceType           = "RedisAI Query - mobilenet_v1_100_224 "
 	tensorBenchmarkBytes    = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
@@ -59,8 +61,10 @@ func init() {
 	flag.StringVar(&model, "model", "mobilenet_v1_100_224_cpu", "model name")
 	flag.BoolVar(&persistOutputs, "persist-results", false, "persist the classification tensors")
 	flag.BoolVar(&useDag, "use-dag", false, "use DAGRUN")
+	flag.BoolVar(&continueOnError, "continue-on-error", true, "If an error reply is received continue and only log the error message")
 	flag.BoolVar(&clusterMode, "cluster-mode", false, "read cluster slots and distribute inferences among shards.")
 	flag.DurationVar(&PoolPipelineWindow, "pool-pipeline-window", 500*time.Microsecond, "If window is zero then implicit pipelining will be disabled")
+	flag.DurationVar(&dialReadTimeout, "dial-read-timeout", 90*time.Second, "Redis connection dial timeout")
 	flag.IntVar(&PoolPipelineConcurrency, "pool-pipeline-concurrency", 0, "If limit is zero then no limit will be used and pipelines will only be limited by the specified time window")
 	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
 	version := flag.Bool("v", false, "Output version and exit")
@@ -133,7 +137,11 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	if len(hosts) > totalWorkers {
 		p.pclient = make([]*radix.Pool, len(hosts))
 		for idx, h := range hosts {
-			p.pclient[idx], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", h, ports[idx]), 1, radix.PoolPipelineWindow(0, 0))
+			addr := fmt.Sprintf("%s:%s", h, ports[idx])
+			connFunc := func(network, addr string) (radix.Conn, error) {
+				return radix.Dial(network, addr, radix.DialReadTimeout(dialReadTimeout))
+			}
+			p.pclient[idx], err = radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
 			if err != nil {
 				log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
 			}
@@ -142,7 +150,11 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 	} else {
 		pos := (numWorker + 1) % len(hosts)
 		p.pclient = make([]*radix.Pool, 1)
-		p.pclient[0], err = radix.NewPool("tcp", fmt.Sprintf("%s:%s", hosts[pos], ports[pos]), 1, radix.PoolPipelineWindow(0, 0))
+		addr := fmt.Sprintf("%s:%s", hosts[pos], ports[pos])
+		connFunc := func(network, addr string) (radix.Conn, error) {
+			return radix.Dial(network, addr, radix.DialReadTimeout(dialReadTimeout))
+		}
+		p.pclient[0], err = radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
 		if err != nil {
 			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
 		}
@@ -186,7 +198,11 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	took := time.Since(start).Microseconds()
 	if err != nil {
 		extendedError := fmt.Errorf("Prediction Receive() failed:%v\n", err)
-		log.Fatal(extendedError)
+		if !continueOnError {
+			log.Fatal(extendedError)
+		} else {
+			fmt.Fprint(os.Stderr, extendedError)
+		}
 	}
 
 	stat := inference.GetStat()
