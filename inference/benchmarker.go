@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	labelAllQueries  = "All queries"
+	labelAllQueries = "All queries"
 	defaultReadSize = 4 << 20 // 4 MB
 	Inf             = rate.Limit(math.MaxFloat64)
 )
@@ -197,7 +197,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 
 	br := b.scanner.setReader(b.GetBufferedReader())
 	totalRows := br.produce(queryPool, b.ch, rowSizeBytes, b.debug)
-	_, err := fmt.Printf("Read a total of :%d rows\n", totalRows )
+	_, err := fmt.Printf("Read a total of :%d rows\n", totalRows)
 
 	close(b.ch)
 

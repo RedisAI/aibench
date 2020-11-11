@@ -33,6 +33,7 @@ runners: aibench_run_inference_redisai aibench_run_inference_redisai_vision aibe
 
 fmt:
 	$(GOFMT) ./...
+	$(GOFMT) ./inference/*.go
 
 checkfmt:
 	@echo 'Checking gofmt';\
@@ -46,8 +47,7 @@ checkfmt:
 get:
 	$(GOGET) -t -v ./...
 
-test: get
-	$(GOFMT) ./...
+test: get fmt
 	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 aibench_%: $(wildcard ./cmd/$@/*.go) ./inference/*.go
