@@ -52,8 +52,8 @@ test: get fmt
 
 aibench_%: $(wildcard ./cmd/$@/*.go) ./inference/*.go
 	#$(GOGET) ./cmd/$@
-	$(GOBUILD) -ldflags="-X 'main.GitSHA1=$(GIT_SHA)' -X 'main.GitDirty=$(GIT_DIRTY)'" ./cmd/$@
-	$(GOINSTALL) ./cmd/$@
+	$(GOBUILD) -o ./bin/$@ -ldflags="-X 'main.GitSHA1=$(GIT_SHA)' -X 'main.GitDirty=$(GIT_DIRTY)'" ./cmd/$@
+	$(GOINSTALL) -ldflags="-X 'main.GitSHA1=$(GIT_SHA)' -X 'main.GitDirty=$(GIT_DIRTY)'" ./cmd/$@
 
 #####################
 ###### helpers ######

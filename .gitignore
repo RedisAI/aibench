@@ -1,27 +1,7 @@
 # aibench outputs #
 ###################
-
-cmd/aibench_generate_data_vision/aibench_generate_data_vision
-aibench_generate_data_vision
-cmd/aibench_generate_data/aibench_generate_data
-aibench_generate_data
-cmd/aibench_load_referencedata/aibench_load_referencedata
-aibench_load_referencedata
-cmd/aibench_load_data/aibench_load_data
-aibench_load_data
-cmd/aibench_run_inference_redisai/aibench_run_inference_redisai
-aibench_run_inference_redisai
-cmd/aibench_run_inference_redisai/aibench_run_inference_redisai_vision
-aibench_run_inference_redisai_vision
-cmd/aibench_run_inference_tensorflow_serving/aibench_run_inference_tensorflow_serving
-aibench_run_inference_tensorflow_serving
-cmd/aibench_run_inference_flask_tensorflow/aibench_run_inference_flask_tensorflow
-aibench_run_inference_flask_tensorflow
-cmd/aibench_run_inference_torchserve/aibench_run_inference_torchserve
-aibench_run_inference_torchserve
-cmd/aibench_run_inference_triton_vision/aibench_run_inference_triton_vision
-aibench_run_inference_triton_vision
-
+bin/
+!cmd/*.go
 
 ## datasets data
 *.png
