@@ -6,6 +6,7 @@ set -e
 WORKDIR=$PWD
 
 cd datasets/vision/coco-2017-val
+pip3 install --upgrade pip
 python3 -m pip install -r requirements.txt
 ck version
 ck pull repo:ck-env
