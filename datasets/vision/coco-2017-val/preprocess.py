@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 from os import listdir
 from os.path import isfile, join
-import tqdm
 import argparse
 from pathlib import Path
+from tqdm import tqdm
 
 """
  script to pre process the specified input images. For each image:
@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument('--input-val_dir', default='val2017')
     parser.add_argument('--output-val_dir', default='cropped-val2017')
     parser.add_argument('--random-seed', type=int, default=12345)
+    parser.add_argument('--re-use-factor', type=int, default=20)
     args = parser.parse_args()
     print("Using random seed {} to take a random 224 x 224 crop to the scaled image".format(args.random_seed))
     print("Saving cropped scaled images to {}".format(args.output_val_dir))
@@ -64,8 +65,16 @@ if __name__ == "__main__":
     filenames = [f for f in listdir(args.input_val_dir) if isfile(
         join(args.input_val_dir, f))]
     filenames.sort()
-    for filename in tqdm.tqdm(filenames):
+    total_images = len(filenames) * args.re_use_factor
+    print("Total images to save {}".format(total_images))
+    progress = tqdm(unit="images", total=total_images)
+
+    for filename in filenames:
         img = cv2.imread('{}/{}'.format(args.input_val_dir, filename))
         resized_img = image_min_resize(img, 256)
-        cropped_img = get_random_crop(resized_img, 224, 224)
-        cv2.imwrite('{}/{}'.format(args.output_val_dir, filename), cropped_img)
+        for sequence in range(1,args.re_use_factor):
+            cropped_img = get_random_crop(resized_img, 224, 224)
+            new_filename = "rep{}_{}".format(sequence,filename)
+            cv2.imwrite('{}/{}'.format(args.output_val_dir, new_filename), cropped_img)
+            progress.update()
+    progress.close()
