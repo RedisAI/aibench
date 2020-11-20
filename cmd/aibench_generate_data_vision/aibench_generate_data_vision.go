@@ -265,6 +265,8 @@ func main() {
 			}
 			totalRows++
 			bar.Increment()
+			imageFile.Close()
+			out.Flush()
 			totalImages++
 		}
 	}
