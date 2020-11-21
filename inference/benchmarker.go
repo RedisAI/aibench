@@ -2,8 +2,10 @@ package inference
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/HdrHistogram/hdrhistogram-go"
 	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
@@ -11,6 +13,7 @@ import (
 	"math/rand"
 	"os"
 	"runtime/pprof"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -48,6 +51,10 @@ type BenchmarkRunner struct {
 	scanner        *producer
 	ch             chan []byte
 	inferenceCount uint64
+
+	testResult           TestResult
+	JsonOutFile          string
+	MetadataAutobatching int64
 }
 
 // NewLoadRunner creates a new instance of LoadRunner which is
@@ -72,7 +79,9 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	flag.Int64Var(&runner.seed, "seed", 0, "PRNG seed (default, or 0, uses the current timestamp).")
 	flag.StringVar(&runner.fileName, "file", "", "File name to read queries from")
 	flag.DurationVar(&runner.reportingPeriod, "reporting-period", 1*time.Second, "Period to report write stats")
-	flag.StringVar(&runner.outputFileStatsResponseLatencyHist, "output-file-stats-hdr-response-latency-hist", "stats-response-latency-hist.txt", "File name to output the hdr response latency histogram to")
+	flag.StringVar(&runner.JsonOutFile, "json-out-file", "", "Name of json output file to output benchmark results. If not set, will not print to json.")
+	flag.Int64Var(&runner.MetadataAutobatching, "metadata-autobatching", -1, "Metadata string containing autobatching on the server side info.")
+	flag.StringVar(&runner.outputFileStatsResponseLatencyHist, "output-file-stats-hdr-response-latency-hist", "", "File name to output the hdr response latency histogram to")
 
 	return runner
 }
@@ -196,7 +205,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
-	totalRows := br.produce(queryPool, b.ch, rowSizeBytes, b.debug)
+	totalRows := br.produce(queryPool, b.ch, rowSizeBytes, inferencesPerRow, b.debug)
 	_, err := fmt.Printf("Read a total of :%d rows\n", totalRows)
 
 	close(b.ch)
@@ -208,6 +217,31 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Wall clock end time
 	wallEnd := time.Now()
 	wallTook := wallEnd.Sub(wallStart)
+
+	b.testResult.StartTime = wallStart.Unix()
+	b.testResult.EndTime = wallEnd.Unix()
+	b.testResult.DurationMillis = wallTook.Milliseconds()
+	b.testResult.TensorBatchSize = uint64(inferencesPerRow)
+	b.testResult.MetadataAutobatching = b.MetadataAutobatching
+	b.testResult.OverallRates = b.GetOverallRatesMap(b.limit, wallTook)
+	b.testResult.OverallQuantiles = b.GetOverallQuantiles()
+	b.testResult.Limit = b.limit
+	b.testResult.Workers = b.workers
+	b.testResult.MaxRps = b.limitrps
+
+	if strings.Compare(b.JsonOutFile, "") != 0 {
+		_, _ = fmt.Printf("Saving JSON results to %s\n", b.JsonOutFile)
+		file, err := json.MarshalIndent(b.testResult, "", " ")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = ioutil.WriteFile(b.JsonOutFile, file, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	_, err = fmt.Printf("Took: %8.3f sec\n", float64(wallTook.Nanoseconds())/1e9)
 	if err != nil {
 		log.Fatal(err)
@@ -233,6 +267,49 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		_ = f.Close()
 	}
 
+}
+
+func calculateRateMetrics(current, prev int64, took time.Duration) (rate float64) {
+	rate = float64(current-prev) / float64(took.Seconds())
+	return
+}
+
+func (l *BenchmarkRunner) GetOverallRatesMap(totalOps uint64, took time.Duration) map[string]interface{} {
+	/////////
+	// Overall Rates
+	/////////
+	configs := map[string]interface{}{}
+	overallOpsRate := calculateRateMetrics(int64(totalOps), 0, took)
+	configs["overallOpsRate"] = overallOpsRate
+	return configs
+}
+
+func generateQuantileMap(hist *hdrhistogram.Histogram) (int64, map[string]float64) {
+	ops := hist.TotalCount()
+	q0 := 0.0
+	q50 := 0.0
+	q95 := 0.0
+	q99 := 0.0
+	q999 := 0.0
+	q100 := 0.0
+	if ops > 0 {
+		q0 = float64(hist.ValueAtQuantile(0.0)) / 10e2
+		q50 = float64(hist.ValueAtQuantile(50.0)) / 10e2
+		q95 = float64(hist.ValueAtQuantile(95.0)) / 10e2
+		q99 = float64(hist.ValueAtQuantile(99.0)) / 10e2
+		q999 = float64(hist.ValueAtQuantile(99.90)) / 10e2
+		q100 = float64(hist.ValueAtQuantile(100.0)) / 10e2
+	}
+
+	mp := map[string]float64{"q0": q0, "q50": q50, "q95": q95, "q99": q99, "q999": q999, "q100": q100}
+	return ops, mp
+}
+
+func (b *BenchmarkRunner) GetOverallQuantiles() map[string]interface{} {
+	configs := map[string]interface{}{}
+	_, all := generateQuantileMap(b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram)
+	configs["AllQueries"] = all
+	return configs
 }
 
 func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.WaitGroup, queryPool *sync.Pool, processor Processor, workerNum int, inferencesPerRow int64, limitRps bool) {

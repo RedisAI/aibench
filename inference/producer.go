@@ -2,6 +2,7 @@ package inference
 
 import (
 	"fmt"
+	"github.com/prometheus/common/log"
 	"io"
 	"os"
 	"sync"
@@ -26,7 +27,7 @@ func (s *producer) setReader(r io.Reader) *producer {
 }
 
 // produce reads encoded inference queries and places them into a channel
-func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int) uint64 {
+func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, inferencesPerRow int64, debug int) uint64 {
 	n := uint64(0)
 	for {
 		bytes := make([]byte, nbytes)
@@ -41,13 +42,14 @@ func (s *producer) produce(pool *sync.Pool, c chan []byte, nbytes int, debug int
 			break
 		}
 		if err != nil {
-			panic(fmt.Sprintf("expected to read %d bytes but got %d on row %d", nbytes, readBytes, n))
+			log.Error(fmt.Sprintf("expected to read %d bytes but got %d on row %d. Stopping the producer", nbytes, readBytes, n))
+			break
 		}
 		if debug > 0 {
 			fmt.Fprintf(os.Stderr, "Sending Row: %d with %d bytes. \n", n, readBytes)
 		}
 		c <- bytes
-		atomic.AddUint64(&n, 1)
+		atomic.AddUint64(&n, uint64(inferencesPerRow))
 	}
 	return n
 }

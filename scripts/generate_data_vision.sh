@@ -1,7 +1,10 @@
 #!/bin/bash
 #Exit immediately if a command exits with a non-zero status.
 set -e
-set -e
+
+# Load parameters - common
+EXE_DIR=${EXE_DIR:-$(dirname $0)}
+source ${EXE_DIR}/redisai_common.sh
 
 WORKDIR=$PWD
 
@@ -12,7 +15,7 @@ ck version
 ck pull repo:ck-env
 ck install package --tags=object-detection,dataset,coco,2017,val,original
 ck locate env --tags=object-detection,dataset,coco,2017,val,original
-python3 preprocess.py --input-val_dir $(ck locate env --tags=object-detection,dataset,coco,2017,val,original)/val2017
+python3 preprocess.py --re-use-factor ${VISION_REUSE_FACTOR} --input-val_dir $(ck locate env --tags=object-detection,dataset,coco,2017,val,original)/val2017
 
 # Ensure generator is available
 EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_generate_data_vision)}
@@ -22,13 +25,9 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
 fi
 
 cd ${WORKDIR}
-# Load parameters - common
-EXE_DIR=${EXE_DIR:-$(dirname $0)}
-source ${EXE_DIR}/redisai_common.sh
 
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \
-  --batch-size=${TENSOR_BATCHSIZE} \
   --output-file=${OUTPUT_VISION_FILE_NAME}
 
 # Ensure data file is in place
