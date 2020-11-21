@@ -72,7 +72,7 @@ if __name__ == "__main__":
     for filename in filenames:
         img = cv2.imread('{}/{}'.format(args.input_val_dir, filename))
         resized_img = image_min_resize(img, 256)
-        for sequence in range(1,args.re_use_factor):
+        for sequence in range(1,args.re_use_factor+1):
             cropped_img = get_random_crop(resized_img, 224, 224)
             new_filename = "rep{}_{}".format(sequence,filename)
             cv2.imwrite('{}/{}'.format(args.output_val_dir, new_filename), cropped_img)
