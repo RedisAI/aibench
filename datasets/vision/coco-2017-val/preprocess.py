@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser.add_argument('--input-val_dir', default='val2017')
     parser.add_argument('--output-val_dir', default='cropped-val2017')
     parser.add_argument('--random-seed', type=int, default=12345)
-    parser.add_argument('--re-use-factor', type=int, default=20)
+    parser.add_argument('--re-use-factor', type=int, default=10)
     args = parser.parse_args()
     print("Using random seed {} to take a random 224 x 224 crop to the scaled image".format(args.random_seed))
     print("Saving cropped scaled images to {}".format(args.output_val_dir))
