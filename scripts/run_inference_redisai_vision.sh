@@ -30,8 +30,9 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
   echo "@@@@@@@@@@@@@@@@@@ AUTO-BATCHING ${BATCHSIZE} @@@@@@@@@@@@@@@@@@"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
-  # delete any previous model with that name
-  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} DEL ${VISION_MODEL_NAME}
+  # flushall
+  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
+
   # set the Model
   redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
     TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
@@ -87,8 +88,9 @@ done
 
 BATCHSIZE=1
 
-# delete any previous model with that name
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} DEL ${VISION_MODEL_NAME}
+# flushall
+redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
+
 # set the Model
 redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
   TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
