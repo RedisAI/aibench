@@ -2,6 +2,8 @@
 ###################
 bin/
 !cmd/*.go
+results/
+*.json
 
 ## datasets data
 *.png

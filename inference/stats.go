@@ -2,10 +2,11 @@ package inference
 
 import (
 	"fmt"
+	"github.com/HdrHistogram/hdrhistogram-go"
 	"github.com/VividCortex/gohistogram"
-	"github.com/filipecosta90/hdrhistogram"
 	"io"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -117,7 +118,9 @@ func (s *statGroup) stringQueryLatencyStatistical() string {
 
 // stringQueryResponseSizeFullHistogram returns a string histogram of Query Response Size (#docs)
 func (s *statGroup) stringQueryLatencyFullHistogram() string {
-	return s.latencyHDRHistogram.PercentilesPrint(100, 1000.0)
+	writer := new(strings.Builder)
+	s.latencyHDRHistogram.PercentilesPrint(writer, 100, 1000.0)
+	return writer.String()
 }
 
 var FormatString1 = "%s,%d\n"

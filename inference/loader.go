@@ -114,7 +114,7 @@ func (b *LoadRunner) RunLoad(queryPool *sync.Pool, LoaderCreateFn LoaderCreate, 
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
-	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, b.debug)
+	_ = br.produce(queryPool, b.ch, rowBenchmarkNBytes, 1, b.debug)
 	close(b.ch)
 
 	// Block for workers to finish sending requests, closing the stats channel when done:
