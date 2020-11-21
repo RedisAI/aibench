@@ -30,14 +30,6 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
   echo "@@@@@@@@@@@@@@@@@@ AUTO-BATCHING ${BATCHSIZE} @@@@@@@@@@@@@@@@@@"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
-  # flushall
-  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
-
-  # set the Model
-  redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
-    TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
-    OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
-
   # we overload the NUM_WORKERS here for the official benchmark
   for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
     if [ $NUM_WORKERS == 0 ]; then
@@ -54,6 +46,15 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
     TENSOR_BATCHSIZE=1
 
     for RUN in $(seq 1 ${RUNS_PER_VARIATION}); do
+
+      # flushall
+      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
+
+      # set the Model
+      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
+        TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
+        OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+
       FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_autobatching_${BATCHSIZE}_tensorbatchsize_${TENSOR_BATCHSIZE}_rate_${RATE_LIMIT}
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       echo "Benchmarking inference performance with ${NUM_WORKERS} workers."
@@ -88,14 +89,6 @@ done
 
 BATCHSIZE=1
 
-# flushall
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
-
-# set the Model
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
-  TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
-  OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
-
 # we overload the NUM_WORKERS here for the official benchmark
 for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
   if [ $NUM_WORKERS == 0 ]; then
@@ -112,6 +105,15 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
     for RUN in $(seq 1 ${RUNS_PER_VARIATION}); do
+
+      # flushall
+      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
+
+      # set the Model
+      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
+        TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
+        OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+
       FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_autobatching_${BATCHSIZE}_tensorbatchsize_${TENSOR_BATCHSIZE}_rate_${RATE_LIMIT}.txt
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       echo "Benchmarking inference performance with ${NUM_WORKERS} workers."
