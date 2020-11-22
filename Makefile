@@ -66,12 +66,17 @@ data-fraud-ci: generators
 	DEBUG=1 NUM_INFERENCES=100000 ./scripts/generate_data.sh
 
 data-vision-ci: generators
-	DEBUG=1 ./scripts/generate_data_vision.sh
+	DEBUG=1 VISION_REUSE_FACTOR=1 ./scripts/generate_data_vision.sh
 
 bench-fraud-ci:
-	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=100000 RUNS_PER_VARIATION=1 ./scripts/run_inference_redisai_fraud.sh
+	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=100000 RUNS_PER_VARIATION=1 \
+	./scripts/run_inference_redisai_fraud.sh
 
 bench-vision-ci:
 	./scripts/load_models_mobilenet_redisai.sh
-	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=5000 RUNS_PER_VARIATION=1 ./scripts/run_inference_redisai_vision.sh
+	SLEEP_BETWEEN_RUNS=0 QUERIES_BURN_IN=100 NUM_INFERENCES=5000 RUNS_PER_VARIATION=1 \
+	CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 \
+	MIN_TENSOR_BATCHSIZE=1 MAX_TENSOR_BATCHSIZE=1 TENSOR_BATCHSIZE_STEP=1 \
+	MIN_BATCHSIZE=0 MAX_BATCHSIZE=0 BATCHSIZE_STEP=0 \
+	./scripts/run_inference_redisai_vision.sh
 

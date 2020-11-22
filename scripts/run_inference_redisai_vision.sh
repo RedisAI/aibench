@@ -23,9 +23,6 @@ if [ ! -f ${OUTPUT_VISION_FILE_NAME} ]; then
 fi
 
 for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
-  if [ $BATCHSIZE == 0 ]; then
-    BATCHSIZE=1
-  fi
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
   echo "@@@@@@@@@@@@@@@@@@ AUTO-BATCHING ${BATCHSIZE} @@@@@@@@@@@@@@@@@@"
   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
