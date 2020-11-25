@@ -84,7 +84,7 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
 
 done
 
-BATCHSIZE=1
+BATCHSIZE=0
 
 # we overload the NUM_WORKERS here for the official benchmark
 for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
