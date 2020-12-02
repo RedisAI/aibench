@@ -69,6 +69,11 @@ func (p *Processor) Close() {
 	p.grpcClientConn.Close()
 }
 
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	// TODO:
+	return
+}
+
 func newProcessor() inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {

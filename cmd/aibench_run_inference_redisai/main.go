@@ -64,6 +64,11 @@ type Processor struct {
 	pclient []*radix.Pool
 }
 
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	// TODO:
+	return
+}
+
 func (p *Processor) Close() {
 	if p.pclient != nil {
 		for _, client := range p.pclient {

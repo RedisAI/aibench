@@ -117,7 +117,7 @@ func (b *BenchmarkRunner) UseReferenceDataRedis() bool {
 // LoaderCreate is a function that creates a new Loader (called in Run)
 type ProcessorCreate func() Processor
 
-// Loader is an interface that handles the setup of a inference processing worker and executes queries one at a time
+// Processor is an interface that handles the setup of a inference processing worker and executes queries one at a time
 type Processor interface {
 	// Init initializes at global state for the Loader, possibly based on its worker number / ID
 	Init(workerNum int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64)
@@ -127,6 +127,10 @@ type Processor interface {
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
+
+	// CollectRunTimeMetrics asks the specific runner to fetch runtime stats that will then be stored on the results file.
+	// Returns the collection timestamp and an interface with all fetched data
+	CollectRunTimeMetrics() (int64, interface{}, error)
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
