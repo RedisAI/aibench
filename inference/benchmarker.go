@@ -117,6 +117,15 @@ func (b *BenchmarkRunner) UseReferenceDataRedis() bool {
 // LoaderCreate is a function that creates a new Loader (called in Run)
 type ProcessorCreate func() Processor
 
+type MetricCollectorCreate func() MetricCollector
+
+// MetricCollector is an interface that handles the metrics collection from the model server
+type MetricCollector interface {
+	// CollectRunTimeMetrics asks the specific runner to fetch runtime stats that will then be stored on the results file.
+	// Returns the collection timestamp and an interface with all fetched data
+	CollectRunTimeMetrics() (int64, interface{}, error)
+}
+
 // Processor is an interface that handles the setup of a inference processing worker and executes queries one at a time
 type Processor interface {
 	// Init initializes at global state for the Loader, possibly based on its worker number / ID
@@ -127,10 +136,6 @@ type Processor interface {
 
 	// Close forces any work buffered to be sent to the DB being tested prior to going further
 	Close()
-
-	// CollectRunTimeMetrics asks the specific runner to fetch runtime stats that will then be stored on the results file.
-	// Returns the collection timestamp and an interface with all fetched data
-	CollectRunTimeMetrics() (int64, interface{}, error)
 }
 
 // GetBufferedReader returns the buffered Reader that should be used by the loader
@@ -155,7 +160,7 @@ func (b *BenchmarkRunner) GetBufferedReader() *bufio.Reader {
 // Run does the bulk of the benchmark execution.
 // It launches a gorountine to track stats, creates workers to process queries,
 // read in the input, execute the queries, and then does cleanup.
-func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate, rowSizeBytes int, inferencesPerRow int64) {
+func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorCreate, rowSizeBytes int, inferencesPerRow int64, metricCollectorFn MetricCollectorCreate) {
 
 	if b.cpuProfile != "" {
 		fmt.Printf("starting cpu profile. Saving into :%s", b.cpuProfile)
@@ -198,6 +203,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		wg.Add(1)
 		go b.processorHandler(rateLimiter, &wg, queryPool, processorCreateFn(), i, inferencesPerRow, b.limitrps != 0)
 	}
+	b.testResult.RunTimeStats = make(map[int64]interface{})
 
 	// Read in jobs, closing the job channel when done:
 	// Wall clock start time
@@ -206,6 +212,10 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	// Start background reporting process
 	if b.reportingPeriod.Nanoseconds() > 0 {
 		go b.report(b.reportingPeriod, wallStart)
+	}
+
+	if metricCollectorFn != nil {
+		go b.collectRunTimeStats(b.reportingPeriod, metricCollectorFn(), b.testResult.RunTimeStats)
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
@@ -386,5 +396,21 @@ func (b *BenchmarkRunner) report(period time.Duration, start time.Time) {
 
 		prevOpsCount = opsCount
 		prevTime = now
+	}
+}
+
+// report handles periodic reporting of loading stats
+func (b *BenchmarkRunner) collectRunTimeStats(period time.Duration, collector MetricCollector, runtimeStats map[int64]interface{}) {
+
+	for now := range time.NewTicker(period).C {
+		_, metrics, err := collector.CollectRunTimeMetrics()
+		if err != nil {
+			if b.IgnoreErrors() {
+				fmt.Printf("Ignoring runtime stats error: %v\n", err)
+			} else {
+				log.Fatalf("Runtime stats error: %v\n", err)
+			}
+		}
+		runtimeStats[now.UnixNano()] = metrics
 	}
 }

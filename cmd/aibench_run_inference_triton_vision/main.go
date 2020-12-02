@@ -134,7 +134,7 @@ func Postprocess(inferResponse *triton.ModelInferResponse) []float32 {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1, nil)
 }
 
 type queryExecutorOptions struct {
