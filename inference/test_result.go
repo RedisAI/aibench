@@ -11,7 +11,7 @@ type TestResult struct {
 	MaxRps               uint64 `json:"MaxRps"`
 
 	// Test Description
-	TestDescription  string `json:"TestDescription"`
+	TestDescription string `json:"TestDescription"`
 
 	// DB Spefic Configs
 	DBSpecificConfigs map[string]interface{} `json:"DBSpecificConfigs"`
@@ -30,5 +30,4 @@ type TestResult struct {
 	OverallQuantiles map[string]interface{} `json:"OverallQuantiles"`
 
 	RunTimeStats map[int64]interface{} `json:"RunTimeStats"`
-
 }
