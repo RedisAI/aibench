@@ -1,8 +1,8 @@
 [![license](https://img.shields.io/github/license/RedisAI/aibench.svg)](https://github.com/RedisAI/aibench)
 [![CircleCI](https://circleci.com/gh/RedisAI/aibench.svg?style=svg)](https://circleci.com/gh/RedisAI/aibench)
-[![Forum](https://img.shields.io/badge/Forum-RedisAI-blue)](https://forum.redislabs.com/c/modules/redisai)
-[![Gitter](https://badges.gitter.im/RedisLabs/RedisAI.svg)](https://gitter.im/RedisLabs/RedisAI?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/RedisAI/redisai-go)
+[![Forum](https://img.shields.io/badge/Forum-RedisAI-blue)](https://forum.redislabs.com/c/modules/redisai)
+[![Discord](https://img.shields.io/discord/697882427875393627?style=flat-square)](https://discord.gg/rTQm7UZ)
 
 # aibench
 This repo contains code for benchmarking deep learning solutions,
@@ -10,17 +10,15 @@ including RedisAI.
 This code is based on a fork of work initially made public by TSBS
 at https://github.com/timescale/tsbs.
 
-Current DL solutions supported:
+###  Current DL solutions supported:
 
-
-As stated on 
 - [RedisAI](https://redisai.io): an AI serving engine for real-time applications built by Redis Labs and Tensorwerk, seamlessly plugged into ​Redis.
 - [Nvidia Triton Inference Server](https://docs.nvidia.com/deeplearning/triton-inference-server): An open source inference serving software that lets teams deploy trained AI models from any framework (TensorFlow, TensorRT, PyTorch, ONNX Runtime, or a custom framework), from local storage or Google Cloud Platform or AWS S3 on any GPU- or CPU-based infrastructure.
 - [TorchServe](https://pytorch.org/serve/): built and maintained by Amazon Web Services (AWS) in collaboration with Facebook, TorchServe is available as part of the PyTorch open-source project.
 - [Tensorflow Serving](https://www.tensorflow.org/tfx/guide/serving): a high-performance serving system, wrapping TensorFlow and maintained by Google.
 - [Common REST API serving](https://redisai.io): a common DL production grade setup with Gunicorn (a Python WSGI HTTP server) communicating with Flask through a WSGI protocol, and using TensorFlow as the backend.
 
-## Current use cases
+### Current use cases
 
 Currently, aibench supports two use cases: 
  - **creditcard-fraud [[details here](docs/creditcard-fraud-benchmark/description.md)]**: from [Kaggle](https://www.kaggle.com/mlg-ulb/creditcardfraud) with the extension of reference data. This use-case aims to detect a fraudulent transaction based on anonymized credit card transactions and reference data. 
@@ -35,7 +33,7 @@ Currently, aibench supports two use cases:
 
 
 
-## Installation
+### Installation
 
 The easiest way to get and install the go benchmark programs is to use `go get` and then issuing make:
 ```
@@ -46,4 +44,6 @@ cd $GOPATH/src/github.com/RedisAI/aibench
 make
 ```
 
+### Blogs/White-papers that reference this tool
 
+- [1] [Announcing RedisAI 1.0: AI Serving Engine for Real-Time Applications](https://redislabs.com/blog/redisai-ai-serving-engine-for-real-time-applications/), May 19, 2020
