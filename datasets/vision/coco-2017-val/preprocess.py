@@ -52,10 +52,13 @@ if __name__ == "__main__":
     parser.add_argument('--input-val_dir', default='val2017')
     parser.add_argument('--output-val_dir', default='cropped-val2017')
     parser.add_argument('--random-seed', type=int, default=12345)
-    parser.add_argument('--re-use-factor', type=int, default=10)
+    parser.add_argument('--re-use-factor', type=int, default=1)
+    parser.add_argument('--limit', type=int, default=0)
     args = parser.parse_args()
     print("Using random seed {} to take a random 224 x 224 crop to the scaled image".format(args.random_seed))
     print("Saving cropped scaled images to {}".format(args.output_val_dir))
+    if args.limit > 0:
+        print("Limitting the total images to be generated to {}".format(args.limit))
 
     np.random.seed(args.random_seed)
 
@@ -66,15 +69,21 @@ if __name__ == "__main__":
         join(args.input_val_dir, f))]
     filenames.sort()
     total_images = len(filenames) * args.re_use_factor
+    if args.limit > 0 and args.limit < total_images:
+        total_images = args.limit
     print("Total images to save {}".format(total_images))
     progress = tqdm(unit="images", total=total_images)
 
+    processed_images = 0
     for filename in filenames:
+        if processed_images > total_images:
+            break
         img = cv2.imread('{}/{}'.format(args.input_val_dir, filename))
         resized_img = image_min_resize(img, 256)
         for sequence in range(1,args.re_use_factor+1):
             cropped_img = get_random_crop(resized_img, 224, 224)
             new_filename = "rep{}_{}".format(sequence,filename)
             cv2.imwrite('{}/{}'.format(args.output_val_dir, new_filename), cropped_img)
+            processed_images=processed_images+1
             progress.update()
     progress.close()

@@ -16,7 +16,7 @@ ck version
 ck pull repo:ck-env
 ck install package --tags=object-detection,dataset,coco,2017,val,original
 ck locate env --tags=object-detection,dataset,coco,2017,val,original
-python3 preprocess.py --re-use-factor ${VISION_IMAGE_REUSE_FACTOR} --input-val_dir $(ck locate env --tags=object-detection,dataset,coco,2017,val,original)/val2017
+python3 preprocess.py --re-use-factor ${VISION_IMAGE_REUSE_FACTOR} --limit=${NUM_VISION_INFERENCES} --input-val_dir $(ck locate env --tags=object-detection,dataset,coco,2017,val,original)/val2017
 
 # Ensure generator is available
 EXE_FILE_NAME=${EXE_FILE_NAME:-$(which aibench_generate_data_vision)}
@@ -31,7 +31,8 @@ echo "Generating data file ${OUTPUT_VISION_FILE_NAME}"
 
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \
-  --output-file=${OUTPUT_VISION_FILE_NAME}
+  --output-file=${OUTPUT_VISION_FILE_NAME} \
+  --limit=${NUM_VISION_INFERENCES}
 
 # Ensure data file is in place
 if [ ! -f ${OUTPUT_VISION_FILE_NAME} ]; then

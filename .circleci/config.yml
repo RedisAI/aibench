@@ -1,31 +1,10 @@
 version: 2.1
 
 commands:
-  redis_steps:
-    parameters:
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            # get redis-cli
-            cd /tmp
-            wget http://download.redis.io/releases/redis-5.0.8.tar.gz
-            tar xvzf redis-5.0.8.tar.gz
-            cd redis-5.0.8
-            make redis-cli
-            sudo cp src/redis-cli /usr/local/bin/
-            sudo chmod 755 /usr/local/bin/redis-cli
-
   common_steps:
     parameters:
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt install python3 python3-pip
-            python3 -m pip install -r ./datasets/vision/coco-2017-val/requirements.txt
       - run:
           name: Test and install Aibench execs
           command: |
@@ -33,32 +12,6 @@ commands:
             make get
             make test
             make
-      - run:
-          name: Generate sample data for Fraud benchmark (CI)
-          command: |
-            make data-fraud-ci
-      - run:
-          name: Generate sample data for Vision benchmark (CI)
-          command: |
-            make data-vision-ci
-
-  redisai_steps:
-    parameters:
-    steps:
-      - checkout
-      - run:
-          name: Load tensors into Redis
-          command: |
-            ./scripts/load_tensors_redis.sh
-      - run:
-          name: Run fraud benchmark (CI) for RedisAI
-          command: |
-            make bench-fraud-ci
-      - run:
-          name: Run vision benchmark (CI) for RedisAI
-          command: |
-            make bench-vision-ci
-
 
 jobs:
   build-edge: # test with redisai:edge
@@ -70,8 +23,6 @@ jobs:
     steps:
       - checkout
       - common_steps
-      - redis_steps
-      - redisai_steps
 
 workflows:
   version: 2
