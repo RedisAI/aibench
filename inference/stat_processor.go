@@ -11,14 +11,15 @@ import (
 
 // statProcessor is used to collect, analyze, and print inference execution statistics.
 type statProcessor struct {
-	prewarmQueries bool       // PrewarmQueries tells the StatProcessor whether we're running each inference twice to prewarm the cache
-	c              chan *Stat // c is the channel for Stats to be sent for processing
-	limit          *uint64    // limit is the number of statistics to analyze before stopping
-	burnIn         uint64     // burnIn is the number of statistics to ignore before analyzing
-	printInterval  uint64     // printInterval is how often print intermediate stats (number of queries)
-	wg             sync.WaitGroup
-	StatsMapping   map[string]*statGroup
-	opsCount       uint64
+	prewarmQueries     bool       // PrewarmQueries tells the StatProcessor whether we're running each inference twice to prewarm the cache
+	c                  chan *Stat // c is the channel for Stats to be sent for processing
+	limit              *uint64    // limit is the number of statistics to analyze before stopping
+	burnIn             uint64     // burnIn is the number of statistics to ignore before analyzing
+	printInterval      uint64     // printInterval is how often print intermediate stats (number of queries)
+	wg                 sync.WaitGroup
+	StatsMapping       map[string]*statGroup
+	InstantaneousStats *statGroup
+	opsCount           uint64
 }
 
 func (sp *statProcessor) sendStats(stats []*Stat) {
@@ -40,11 +41,10 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 	sp.StatsMapping = map[string]*statGroup{
 		allQueriesLabel: newStatGroup(*sp.limit),
 	}
+	sp.InstantaneousStats = newStatGroup(*sp.limit)
 
 	i := uint64(0)
 	start := time.Now()
-	prevTime := start
-	prevRequestCount := uint64(0)
 	for stat := range sp.c {
 		atomic.AddUint64(&sp.opsCount, stat.totalResults)
 		if sp.opsCount < sp.burnIn {
@@ -65,6 +65,7 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 
 		if !stat.isPartial {
 			sp.StatsMapping[allQueriesLabel].push(stat.value, stat.totalResults, stat.timedOut, stat.query)
+			sp.InstantaneousStats.push(stat.value, stat.totalResults, stat.timedOut, stat.query)
 
 			// If we're prewarming queries (i.e., running them twice in a row),
 			// only increment the counter for the first (cold) inference. Otherwise,
@@ -75,34 +76,6 @@ func (sp *statProcessor) process(workers uint, printStats bool) {
 		}
 
 		statPool.Put(stat)
-
-		// print stats to stderr (if printInterval is greater than zero):
-		if sp.printInterval > 0 && i > 0 && i%sp.printInterval == 0 && (i < *sp.limit || *sp.limit == 0) {
-			now := time.Now()
-			sinceStart := now.Sub(start)
-			took := now.Sub(prevTime)
-			intervalQueryRate := float64(sp.opsCount-prevRequestCount) / float64(took.Seconds())
-			overallQueryRate := float64(sp.opsCount) / float64(sinceStart.Seconds())
-			_, err := fmt.Fprintf(os.Stderr, "After %d queries with %d workers:\nInterval query rate: %0.2f queries/sec\tOverall query rate: %0.2f queries/sec\n",
-				i-sp.burnIn,
-				workers,
-				intervalQueryRate,
-				overallQueryRate,
-			)
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = writeStatGroupMap(os.Stderr, sp.StatsMapping)
-			if err != nil {
-				log.Fatal(err)
-			}
-			_, err = fmt.Fprintf(os.Stderr, "\n")
-			if err != nil {
-				log.Fatal(err)
-			}
-			prevRequestCount = sp.opsCount
-			prevTime = now
-		}
 	}
 
 	if printStats {

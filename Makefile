@@ -35,6 +35,10 @@ fmt:
 	$(GOFMT) ./...
 	$(GOFMT) ./inference/*.go
 
+tidy:
+	$(GOMOD) tidy
+	cd inference; $(GOMOD) tidy; cd ..;
+
 checkfmt:
 	@echo 'Checking gofmt';\
  	bash -c "diff -u <(echo -n) <(gofmt -d .)";\

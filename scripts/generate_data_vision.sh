@@ -1,6 +1,7 @@
 #!/bin/bash
 #Exit immediately if a command exits with a non-zero status.
 set -e
+set -x
 
 # Load parameters - common
 EXE_DIR=${EXE_DIR:-$(dirname $0)}
@@ -25,6 +26,8 @@ if [[ -z "${EXE_FILE_NAME}" ]]; then
 fi
 
 cd ${WORKDIR}
+
+echo "Generating data file ${OUTPUT_VISION_FILE_NAME}"
 
 ${EXE_FILE_NAME} \
   --input-val-dir=${INPUT_VISION_VAL_DIR} \

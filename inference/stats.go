@@ -3,7 +3,6 @@ package inference
 import (
 	"fmt"
 	"github.com/HdrHistogram/hdrhistogram-go"
-	"github.com/VividCortex/gohistogram"
 	"io"
 	"sort"
 	"strings"
@@ -62,11 +61,10 @@ func (s *Stat) reset() *Stat {
 
 // statGroup collects simple streaming statistics.
 type statGroup struct {
-	sumTotalResults                  uint64
-	count                            int64
-	timedOutCount                    int64
-	totalResultsStatisticalHistogram *gohistogram.NumericHistogram
-	latencyHDRHistogram              *hdrhistogram.Histogram
+	sumTotalResults     uint64
+	count               int64
+	timedOutCount       int64
+	latencyHDRHistogram *hdrhistogram.Histogram
 }
 
 // newStatGroup returns a new StatGroup with an initial size
@@ -80,11 +78,10 @@ func newStatGroup(size uint64) *statGroup {
 	//   - 1 second (or better) up to it's maximum tracked value ( 30 seconds ).
 	lH := hdrhistogram.New(1, 30000000, 3)
 	return &statGroup{
-		count:                            0,
-		timedOutCount:                    0,
-		sumTotalResults:                  0,
-		latencyHDRHistogram:              lH,
-		totalResultsStatisticalHistogram: gohistogram.NewHistogram(1000),
+		count:               0,
+		timedOutCount:       0,
+		sumTotalResults:     0,
+		latencyHDRHistogram: lH,
 	}
 }
 
@@ -92,14 +89,18 @@ func newStatGroup(size uint64) *statGroup {
 // latency is the latency in microseconds
 func (s *statGroup) push(latency_us int64, totalResults uint64, timedOut bool, query string) {
 	_ = s.latencyHDRHistogram.RecordValue(latency_us)
-	s.totalResultsStatisticalHistogram.Add(float64(totalResults))
 	s.sumTotalResults += totalResults
 	if timedOut {
 		s.timedOutCount++
 	}
-
 	s.count++
+}
 
+// reset a StatGroup
+func (s *statGroup) reset() {
+	s.latencyHDRHistogram.Reset()
+	s.timedOutCount = 0
+	s.count = 0
 }
 
 // string makes a simple description of a statGroup.

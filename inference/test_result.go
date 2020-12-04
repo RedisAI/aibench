@@ -29,5 +29,9 @@ type TestResult struct {
 	// Overall Quantiles
 	OverallQuantiles map[string]interface{} `json:"OverallQuantiles"`
 
-	RunTimeStats map[int64]interface{} `json:"RunTimeStats"`
+	// Per second ( tick ) client stats
+	ClientRunTimeStats map[int64]interface{} `json:"ClientRunTimeStats"`
+
+	// Per second ( tick ) server stats
+	ServerRunTimeStats map[int64]interface{} `json:"ServerRunTimeStats"`
 }

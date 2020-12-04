@@ -67,7 +67,6 @@ func NewBenchmarkRunner() *BenchmarkRunner {
 	}
 	flag.Uint64Var(&runner.sp.burnIn, "burn-in", 0, "Number of queries to ignore before collecting statistics.")
 	flag.Uint64Var(&runner.limit, "max-queries", 0, "Limit the number of queries to send, 0 = no limit")
-	flag.Uint64Var(&runner.sp.printInterval, "print-interval", 1000, "Print timing stats to stderr after this many queries (0 to disable)")
 	flag.StringVar(&runner.memProfile, "memprofile", "", "Write a memory profile to this file.")
 	flag.StringVar(&runner.cpuProfile, "cpuprofile", "", "Write a cpu profile to this file.")
 	flag.Uint64Var(&runner.limitrps, "limit-rps", 0, "Limit overall RPS. 0 disables limit.")
@@ -203,7 +202,8 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 		wg.Add(1)
 		go b.processorHandler(rateLimiter, &wg, queryPool, processorCreateFn(), i, inferencesPerRow, b.limitrps != 0)
 	}
-	b.testResult.RunTimeStats = make(map[int64]interface{})
+	b.testResult.ServerRunTimeStats = make(map[int64]interface{})
+	b.testResult.ClientRunTimeStats = make(map[int64]interface{})
 
 	// Read in jobs, closing the job channel when done:
 	// Wall clock start time
@@ -211,11 +211,11 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 
 	// Start background reporting process
 	if b.reportingPeriod.Nanoseconds() > 0 {
-		go b.report(b.reportingPeriod, wallStart)
+		go b.report(b.reportingPeriod, wallStart, b.testResult.ClientRunTimeStats)
 	}
 
 	if metricCollectorFn != nil {
-		go b.collectRunTimeStats(b.reportingPeriod, metricCollectorFn(), b.testResult.RunTimeStats)
+		go b.collectRunTimeStats(b.reportingPeriod, metricCollectorFn(), b.testResult.ServerRunTimeStats)
 	}
 
 	br := b.scanner.setReader(b.GetBufferedReader())
@@ -238,7 +238,7 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	b.testResult.TensorBatchSize = uint64(inferencesPerRow)
 	b.testResult.MetadataAutobatching = b.MetadataAutobatching
 	b.testResult.OverallRates = b.GetOverallRatesMap(b.limit, wallTook)
-	b.testResult.OverallQuantiles = b.GetOverallQuantiles()
+	b.testResult.OverallQuantiles = b.GetOverallQuantiles(b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram)
 	b.testResult.Limit = b.limit
 	b.testResult.Workers = b.workers
 	b.testResult.MaxRps = b.limitrps
@@ -319,10 +319,15 @@ func generateQuantileMap(hist *hdrhistogram.Histogram) (int64, map[string]float6
 	return ops, mp
 }
 
-func (b *BenchmarkRunner) GetOverallQuantiles() map[string]interface{} {
+func (b *BenchmarkRunner) GetOverallQuantiles(histogram *hdrhistogram.Histogram) map[string]interface{} {
 	configs := map[string]interface{}{}
-	_, all := generateQuantileMap(b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram)
+	_, all := generateQuantileMap(histogram)
 	configs["AllQueries"] = all
+	configs["EncodedHistogram"] = nil
+	encodedHist, err := histogram.Encode(hdrhistogram.V2CompressedEncodingCookieBase)
+	if err == nil {
+		configs["EncodedHistogram"] = encodedHist
+	}
 	return configs
 }
 
@@ -368,34 +373,33 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 }
 
 // report handles periodic reporting of loading stats
-func (b *BenchmarkRunner) report(period time.Duration, start time.Time) {
+func (b *BenchmarkRunner) report(period time.Duration, start time.Time, quantileStats map[int64]interface{}) {
 	prevTime := start
-	prevOpsCount := uint64(0)
-
-	fmt.Printf("time (ms),total queries,instantaneous inferences/s,overall inferences/s,overall q50 lat(ms),overall q90 lat(ms),overall q95 lat(ms),overall q99 lat(ms),overall q99.999 lat(ms)\n")
+	fmt.Printf("%26s %25s %25s %26s %26s %26s\n", "Test time", "Inference Rate", "Total Inferences", "p50 lat. (msec)", "p95 lat. (msec)", "p99 lat. (msec)")
 	for now := range time.NewTicker(period).C {
 		opsCount := atomic.LoadUint64(&b.inferenceCount)
-
-		sinceStart := now.Sub(start)
 		took := now.Sub(prevTime)
-		instantRate := float64(opsCount-prevOpsCount) / float64(took.Seconds())
-		overallRate := float64(opsCount) / float64(sinceStart.Seconds())
-		statHist := b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram
-
-		fmt.Printf("%d,%d,%0.0f,%0.0f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f\n",
-			now.UnixNano()/10e6,
-			opsCount,
-			instantRate,
-			overallRate,
-			float64(statHist.ValueAtQuantile(50.0))/10e2,
-			float64(statHist.ValueAtQuantile(90.00))/10e2,
-			float64(statHist.ValueAtQuantile(95.00))/10e2,
-			float64(statHist.ValueAtQuantile(99.00))/10e2,
-			float64(statHist.ValueAtQuantile(99.999))/10e2,
-		)
-
-		prevOpsCount = opsCount
+		statHist := b.sp.InstantaneousStats.latencyHDRHistogram
+		testTime := time.Since(start).Seconds()
+		instantRate := float64(statHist.TotalCount()) / float64(took.Seconds())
+		p50 := float64(statHist.ValueAtQuantile(50.0)) / 10e2
+		p95 := float64(statHist.ValueAtQuantile(95.0)) / 10e2
+		p99 := float64(statHist.ValueAtQuantile(99.0)) / 10e2
+		fmt.Printf("%25.0fs %25.0f %25d %25.3f %25.3f %25.3f\t", testTime, instantRate, opsCount, p50, p95, p99)
+		fmt.Printf("\n")
 		prevTime = now
+
+		var currentClientStats = make(map[string]interface{})
+		currentClientStats["InferenceRate"] = instantRate
+		currentClientStats["TestTime"] = testTime
+		_, qm := generateQuantileMap(statHist)
+		encodedHist, err := statHist.Encode(hdrhistogram.V2CompressedEncodingCookieBase)
+		if err == nil {
+			currentClientStats["EncodedHistogram"] = encodedHist
+		}
+		currentClientStats["Quantiles"] = qm
+		quantileStats[now.UnixNano()] = currentClientStats
+		b.sp.InstantaneousStats.reset()
 	}
 }
 
