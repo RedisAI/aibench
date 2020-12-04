@@ -11,8 +11,11 @@ categories:
       - 'bugfix'
       - 'bug'
   - title: '🧰Maintenance'
-    label: 'chore'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+    labels:
+      - 'chore'
+      - 'maintenance'
+
+change-template: '- $TITLE (#$NUMBER)'
 exclude-labels:
   - 'skip-changelog'
 template: |

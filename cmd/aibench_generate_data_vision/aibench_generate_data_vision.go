@@ -22,6 +22,7 @@ var (
 	inputDir         string
 	outputFileName   string
 	batchSize        int
+	limit            int
 	defaultWriteSize = 4 << 20 // 4 MB
 )
 
@@ -221,6 +222,7 @@ func main() {
 	flag.StringVar(&inputDir, "input-val-dir", ".", fmt.Sprintf(""))
 	flag.StringVar(&outputFileName, "output-file", "", "File name to write generated data to")
 	flag.IntVar(&batchSize, "batch-size", 1, "Input tensor batch size")
+	flag.IntVar(&limit, "limit", -1, "limit the number of generated tensors. If < 0 no limit is applied")
 	version := flag.Bool("v", false, "Output version and exit")
 	flag.Parse()
 	if *version {
@@ -244,11 +246,19 @@ func main() {
 
 	items, _ := ioutil.ReadDir(inputDir)
 	log.Println(fmt.Sprintf("Reading images from: %s\n.Input tensor batch size %d.", inputDir, batchSize))
-	bar := pb.StartNew(len(items))
+	total_images_to_read := len(items)
+	if limit > 0 && total_images_to_read > limit {
+		total_images_to_read = limit
+	}
+	bar := pb.StartNew(total_images_to_read)
 	batchedPixels := make([]float32, 0, 0)
 	totalRows := 0
 	totalImages := 0
 	for _, item := range items {
+		if totalImages >= limit && limit > 0 {
+			log.Println(fmt.Sprintf("Reached limit of tensor generation %d.", limit))
+			break
+		}
 		if !item.IsDir() {
 
 			// Read image from file that already exists
@@ -271,7 +281,6 @@ func main() {
 		}
 	}
 	out.Flush()
-
 	bar.Finish()
 	fmt.Println(fmt.Sprintf("Read %d images. Generated a total of %d lines with %d image each. Total Bytes: %d", totalImages, totalRows, batchSize, out.Size()))
 }
