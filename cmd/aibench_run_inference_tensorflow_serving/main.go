@@ -48,7 +48,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1, nil)
 }
 
 type queryExecutorOptions struct {
@@ -67,6 +67,11 @@ type Processor struct {
 
 func (p *Processor) Close() {
 	p.grpcClientConn.Close()
+}
+
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	// TODO:
+	return
 }
 
 func newProcessor() inference.Processor { return &Processor{} }

@@ -35,7 +35,7 @@ for NUM_WORKERS in 1 8 16 24; do
       --file=${OUTPUT_VISION_FILE_NAME} \
       -workers=${NUM_WORKERS} \
       -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
-      -print-interval=0 -reporting-period=1000ms \
+       -reporting-period=1000ms \
       -host=${MODELSERVER_HOST}:${TRITON_PORT} \
       2>&1 | tee ~/RAW_${FILENAME_SUFFIX}
 

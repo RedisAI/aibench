@@ -34,6 +34,9 @@ var (
 	tensorBenchmarkBytes    = 4 * 1 * 224 * 224 * 3 // number of bytes per float * N x H x W x C
 	batchSize               int
 	batchSizeStr            string
+	metricsCollector        inference.MetricCollector
+	metricsPools            []*radix.Pool
+	metricsHosts            []string
 )
 
 // Vars only for git sha and diff handling
@@ -89,12 +92,29 @@ func init() {
 		inferenceType += "AI.MODELRUN"
 	}
 	batchSizeStr = fmt.Sprintf("%d", batchSize)
-
 }
 
 func main() {
 	rowBenchmarkBytes := batchSize * tensorBenchmarkBytes
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkBytes, int64(batchSize))
+	metricsCollector = &Processor{}
+	hosts := strings.Split(host, ",")
+	ports := strings.Split(port, ",")
+	metricsPools = make([]*radix.Pool, len(hosts))
+	metricsHosts = make([]string, len(hosts))
+	var err error = nil
+	for idx, h := range hosts {
+		addr := fmt.Sprintf("%s:%s", h, ports[idx])
+		metricsHosts[idx] = addr
+		connFunc := func(network, addr string) (radix.Conn, error) {
+			return radix.Dial(network, addr, radix.DialReadTimeout(dialReadTimeout))
+		}
+		metricsPools[idx], err = radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
+		if err != nil {
+			log.Fatalf("Error preparing for metrics collectors, while creating new pool. error = %v", err)
+		}
+	}
+
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkBytes, int64(batchSize), newCollector)
 }
 
 type queryExecutorOptions struct {
@@ -118,6 +138,94 @@ func (p *Processor) Close() {
 	}
 }
 
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	var hosts_metrics_map = make(map[string]interface{})
+	for pos, h := range metricsPools {
+		var aicpu_rcv string
+		var aiinfo_rcv []string
+		var commandstats_rcv string
+		var kvmap = make(map[string]interface{})
+		pipeCmds := radix.Pipeline(
+			radix.FlatCmd(&aicpu_rcv, "INFO", "MODULES"),
+			radix.FlatCmd(&aiinfo_rcv, "AI.INFO", model),
+			radix.FlatCmd(nil, "AI.INFO", model, "RESETSTAT"),
+			radix.FlatCmd(&commandstats_rcv, "INFO", "COMMANDSTATS"),
+			radix.FlatCmd(nil, "CONFIG", "RESETSTAT"),
+		)
+		err = h.Do(pipeCmds)
+		if err != nil {
+			return
+		}
+		process_ainfo_reply(aiinfo_rcv, kvmap)
+		process_commandstats_reply(commandstats_rcv, kvmap)
+		process_info_modules_ai_cpu(aicpu_rcv, kvmap)
+		hosts_metrics_map[metricsHosts[pos]] = kvmap
+	}
+	stats = hosts_metrics_map
+	return
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func process_ainfo_reply(aiinfo_rcv []string, kvmap map[string]interface{}) {
+	interested_keys := []string{"duration", "samples", "calls", "errors"}
+	for i := 0; i < len(aiinfo_rcv); i += 2 {
+		k := aiinfo_rcv[i]
+		if stringInSlice(k, interested_keys) {
+			sk := fmt.Sprintf("ai_info.%s", k)
+			sv := aiinfo_rcv[i+1]
+			kvmap[sk] = sv
+		}
+	}
+}
+
+func process_commandstats_reply(commandstats_rcv string, kvmap map[string]interface{}) {
+	ai_cpu_idx := strings.Index(commandstats_rcv, "Commandstats")
+	if ai_cpu_idx > -1 {
+		ai_cpu_str := commandstats_rcv[ai_cpu_idx:]
+		ai_cpu_metrics_str_arr := strings.Split(ai_cpu_str, "\r\n")[1:]
+		for _, kv_str := range ai_cpu_metrics_str_arr {
+			kv := strings.Split(kv_str, ":")
+			if len(kv) == 2 {
+				k := kv[0]
+				v := kv[1]
+				kvmap[k] = v
+			}
+
+		}
+	}
+}
+
+func process_info_modules_ai_cpu(rcv string, kvmap map[string]interface{}) {
+	ai_cpu_idx := strings.Index(rcv, "ai_cpu")
+	if ai_cpu_idx > -1 {
+		ai_cpu_str := rcv[ai_cpu_idx:]
+		ai_cpu_end_idx := strings.Index(ai_cpu_str, "# ")
+		if ai_cpu_end_idx > -1 {
+			ai_cpu_str = ai_cpu_str[:ai_cpu_end_idx]
+		}
+		ai_cpu_metrics_str_arr := strings.Split(ai_cpu_str, "\r\n")[1:]
+		for _, kv_str := range ai_cpu_metrics_str_arr {
+			kv := strings.Split(kv_str, ":")
+			if len(kv) == 2 {
+				k := kv[0]
+				v := kv[1]
+				kvmap[k] = v
+			}
+
+		}
+	}
+}
+
+func newCollector() inference.MetricCollector { return metricsCollector }
+
 func newProcessor() inference.Processor { return &Processor{} }
 
 func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m chan uint64, rs chan uint64) {
@@ -135,18 +243,7 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 
 	// if we have more hosts than workers lets connect to them all
 	if len(hosts) > totalWorkers {
-		p.pclient = make([]*radix.Pool, len(hosts))
-		for idx, h := range hosts {
-			addr := fmt.Sprintf("%s:%s", h, ports[idx])
-			connFunc := func(network, addr string) (radix.Conn, error) {
-				return radix.Dial(network, addr, radix.DialReadTimeout(dialReadTimeout))
-			}
-			p.pclient[idx], err = radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
-			if err != nil {
-				log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
-			}
-		}
-
+		err = p.connectAllHosts(hosts, ports, err)
 	} else {
 		pos := (numWorker + 1) % len(hosts)
 		p.pclient = make([]*radix.Pool, 1)
@@ -159,7 +256,21 @@ func (p *Processor) Init(numWorker int, totalWorkers int, wg *sync.WaitGroup, m 
 			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
 		}
 	}
+}
 
+func (p *Processor) connectAllHosts(hosts []string, ports []string, err error) error {
+	p.pclient = make([]*radix.Pool, len(hosts))
+	for idx, h := range hosts {
+		addr := fmt.Sprintf("%s:%s", h, ports[idx])
+		connFunc := func(network, addr string) (radix.Conn, error) {
+			return radix.Dial(network, addr, radix.DialReadTimeout(dialReadTimeout))
+		}
+		p.pclient[idx], err = radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
+		if err != nil {
+			log.Fatalf("Error preparing for DAGRUN(), while creating new pool. error = %v", err)
+		}
+	}
+	return err
 }
 
 func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, useReferenceDataRedis bool, useReferenceDataMysql bool, queryNumber int64) ([]*inference.Stat, error) {

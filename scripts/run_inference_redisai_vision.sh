@@ -76,7 +76,7 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
         -metadata-autobatching=${BATCHSIZE} \
         -batch-size=${TENSOR_BATCHSIZE} \
         -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
-        -print-interval=0 -reporting-period=1000ms \
+        -reporting-period=1000ms \
         -host=${DATABASE_HOST} \
         -port=${DATABASE_PORT} \
         -json-out-file=./results/JSON_${FILENAME_SUFFIX}.json \
@@ -146,7 +146,7 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
         -metadata-autobatching=${BATCHSIZE} \
         -batch-size=${TENSOR_BATCHSIZE} \
         -burn-in=${VISION_QUERIES_BURN_IN} -max-queries=${NUM_VISION_INFERENCES} \
-        -print-interval=0 -reporting-period=1000ms \
+         -reporting-period=1000ms \
         -host=${DATABASE_HOST} \
         -port=${DATABASE_PORT} \
         -json-out-file=./results/JSON_${FILENAME_SUFFIX}.json \

@@ -10,6 +10,9 @@ type TestResult struct {
 	Workers              uint   `json:"Workers"`
 	MaxRps               uint64 `json:"MaxRps"`
 
+	// Test Description
+	TestDescription string `json:"TestDescription"`
+
 	// DB Spefic Configs
 	DBSpecificConfigs map[string]interface{} `json:"DBSpecificConfigs"`
 
@@ -25,4 +28,10 @@ type TestResult struct {
 
 	// Overall Quantiles
 	OverallQuantiles map[string]interface{} `json:"OverallQuantiles"`
+
+	// Per second ( tick ) client stats
+	ClientRunTimeStats map[int64]interface{} `json:"ClientRunTimeStats"`
+
+	// Per second ( tick ) server stats
+	ServerRunTimeStats map[int64]interface{} `json:"ServerRunTimeStats"`
 }

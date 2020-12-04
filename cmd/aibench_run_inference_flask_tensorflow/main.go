@@ -50,7 +50,7 @@ func init() {
 func main() {
 	strRequestURI = []byte(restapiRequestUri)
 	strHost = []byte(restapiHost)
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1, nil)
 }
 
 type queryExecutorOptions struct {
@@ -68,6 +68,11 @@ type Processor struct {
 
 func (p *Processor) Close() {
 
+}
+
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	// TODO:
+	return
 }
 
 func newProcessor() inference.Processor { return &Processor{} }

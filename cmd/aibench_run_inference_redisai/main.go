@@ -48,7 +48,7 @@ func init() {
 }
 
 func main() {
-	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1)
+	runner.Run(&inference.RedisAIPool, newProcessor, rowBenchmarkNBytes, 1, nil)
 }
 
 type queryExecutorOptions struct {
@@ -62,6 +62,11 @@ type Processor struct {
 	Metrics chan uint64
 	Wg      *sync.WaitGroup
 	pclient []*radix.Pool
+}
+
+func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err error) {
+	// TODO:
+	return
 }
 
 func (p *Processor) Close() {

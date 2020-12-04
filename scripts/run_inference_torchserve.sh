@@ -36,7 +36,7 @@ for REFERENCE_DATA in "true"; do
           -workers=${NUM_WORKERS} \
           -print-responses=${PRINT_RESPONSES} \
           -burn-in=${QUERIES_BURN_IN} -max-queries=${NUM_INFERENCES} \
-          -print-interval=0 -reporting-period=1000ms \
+           -reporting-period=1000ms \
           -limit-rps=${RATE_LIMIT} \
           -debug=${DEBUG} \
           -ignore-errors=true \
