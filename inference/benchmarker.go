@@ -46,11 +46,16 @@ type BenchmarkRunner struct {
 	outputFileStatsResponseLatencyHist string
 
 	// non-flag fields
-	br             *bufio.Reader
-	sp             *statProcessor
-	scanner        *producer
-	ch             chan []byte
+	br      *bufio.Reader
+	sp      *statProcessor
+	scanner *producer
+	ch      chan []byte
+
+	// all inferences
 	inferenceCount uint64
+
+	// inferences excluding the warmup
+	benchInferenceCount uint64
 
 	testResult           TestResult
 	JsonOutFile          string
@@ -237,7 +242,10 @@ func (b *BenchmarkRunner) Run(queryPool *sync.Pool, processorCreateFn ProcessorC
 	b.testResult.DurationMillis = wallTook.Milliseconds()
 	b.testResult.TensorBatchSize = uint64(inferencesPerRow)
 	b.testResult.MetadataAutobatching = b.MetadataAutobatching
-	b.testResult.OverallRates = b.GetOverallRatesMap(b.limit, wallTook)
+	opsCount := atomic.LoadUint64(&b.benchInferenceCount)
+	b.testResult.OverallRates = b.GetOverallRatesMap(opsCount, wallTook)
+	allOpsCount := atomic.LoadUint64(&b.inferenceCount)
+	b.testResult.OverallRatesIncludingWarmup = b.GetOverallRatesMap(allOpsCount, wallTook)
 	b.testResult.OverallQuantiles = b.GetOverallQuantiles(b.sp.StatsMapping[labelAllQueries].latencyHDRHistogram)
 	b.testResult.Limit = b.limit
 	b.testResult.Workers = b.workers
@@ -355,9 +363,13 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 			}
 		} else {
 			workerInferences++
+
 			totalStatInferences := stats[0].totalResults
 			workerInferences = workerInferences + int64(totalStatInferences)
 			atomic.AddUint64(&b.inferenceCount, totalStatInferences)
+			if !stats[0].isWarm {
+				atomic.AddUint64(&b.benchInferenceCount, totalStatInferences)
+			}
 			b.sp.sendStats(stats)
 		}
 		queryPool.Put(&query)
@@ -375,19 +387,22 @@ func (b *BenchmarkRunner) processorHandler(rateLimiter *rate.Limiter, wg *sync.W
 // report handles periodic reporting of loading stats
 func (b *BenchmarkRunner) report(period time.Duration, start time.Time, quantileStats map[int64]interface{}) {
 	prevTime := start
+	prevCount := uint64(0)
 	fmt.Printf("%26s %25s %25s %26s %26s %26s\n", "Test time", "Inference Rate", "Total Inferences", "p50 lat. (msec)", "p95 lat. (msec)", "p99 lat. (msec)")
 	for now := range time.NewTicker(period).C {
 		opsCount := atomic.LoadUint64(&b.inferenceCount)
 		took := now.Sub(prevTime)
 		statHist := b.sp.InstantaneousStats.latencyHDRHistogram
 		testTime := time.Since(start).Seconds()
-		instantRate := float64(statHist.TotalCount()) / float64(took.Seconds())
+		instantCount := opsCount - prevCount
+		instantRate := float64(instantCount) / float64(took.Seconds())
 		p50 := float64(statHist.ValueAtQuantile(50.0)) / 10e2
 		p95 := float64(statHist.ValueAtQuantile(95.0)) / 10e2
 		p99 := float64(statHist.ValueAtQuantile(99.0)) / 10e2
 		fmt.Printf("%25.0fs %25.0f %25d %25.3f %25.3f %25.3f\t", testTime, instantRate, opsCount, p50, p95, p99)
 		fmt.Printf("\n")
 		prevTime = now
+		prevCount = opsCount
 
 		var currentClientStats = make(map[string]interface{})
 		currentClientStats["InferenceRate"] = instantRate
