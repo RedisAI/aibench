@@ -24,7 +24,8 @@ type TestResult struct {
 	Totals map[string]interface{} `json:"Totals"`
 
 	// Overall Rates
-	OverallRates map[string]interface{} `json:"OverallRates"`
+	OverallRates                map[string]interface{} `json:"OverallRates"`
+	OverallRatesIncludingWarmup map[string]interface{} `json:"OverallRatesIncludingWarmup"`
 
 	// Overall Quantiles
 	OverallQuantiles map[string]interface{} `json:"OverallQuantiles"`
