@@ -45,14 +45,21 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
     for RUN in $(seq 1 ${RUNS_PER_VARIATION}); do
 
       # flushall
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} MEMORY PURGE
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} CONFIG RESETSTAT
+      hosts=($(echo $DATABASE_HOST | tr "," "\n"))
+      ports=($(echo $DATABASE_PORT | tr "," "\n"))
+      for i in "${!hosts[@]}"; do
+        H="${hosts[i]}"
+        P="${ports[i]}"
+        redis-cli -h ${H} -p ${P} FLUSHALL
+        redis-cli -h ${H} -p ${P} MEMORY PURGE
+        redis-cli -h ${H} -p ${P} CONFIG RESETSTAT
 
-      # set the Model
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
-        TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
-        OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+        # set the Model
+        redis-cli -h ${H} -p ${P} -x AI.MODELSET ${VISION_MODEL_NAME} \
+          TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
+          OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+
+      done
 
       FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_autobatching_${BATCHSIZE}_tensorbatchsize_${TENSOR_BATCHSIZE}_rate_${RATE_LIMIT}
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -64,9 +71,6 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       # benchmark inference performance
       # make sure you're on the root project folder
-
-      # info modules prior the run
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO MODULES >./results/INFOMODULES__START__${FILENAME_SUFFIX}.txt
 
       ${EXE_FILE_NAME} \
         --file=${OUTPUT_VISION_FILE_NAME} \
@@ -81,10 +85,6 @@ for BATCHSIZE in $(seq ${MIN_BATCHSIZE} ${BATCHSIZE_STEP} ${MAX_BATCHSIZE}); do
         -port=${DATABASE_PORT} \
         -json-out-file=./results/JSON_${FILENAME_SUFFIX}.json \
         2>&1 | tee ./results/RAW_${FILENAME_SUFFIX}.txt
-
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO MODULES >./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO COMMANDSTATS >>./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.INFO ${VISION_MODEL_NAME} >>./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
 
       echo "Sleeping: $SLEEP_BETWEEN_RUNS"
       sleep ${SLEEP_BETWEEN_RUNS}
@@ -113,15 +113,19 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
 
     for RUN in $(seq 1 ${RUNS_PER_VARIATION}); do
 
-      # flushall
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} FLUSHALL
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} MEMORY PURGE
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} CONFIG RESETSTAT
+      for i in "${!hosts[@]}"; do
+        H="${hosts[i]}"
+        P="${ports[i]}"
+        redis-cli -h ${H} -p ${P} FLUSHALL
+        redis-cli -h ${H} -p ${P} MEMORY PURGE
+        redis-cli -h ${H} -p ${P} CONFIG RESETSTAT
 
-      # set the Model
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${VISION_MODEL_NAME} \
-        TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
-        OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+        # set the Model
+        redis-cli -h ${H} -p ${P} -x AI.MODELSET ${VISION_MODEL_NAME} \
+          TF ${DEVICE} BATCHSIZE ${BATCHSIZE} INPUTS input \
+          OUTPUTS MobilenetV1/Predictions/Reshape_1 BLOB <./tests/models/tensorflow/mobilenet/mobilenet_v1_100_224_${DEVICE}_NxHxWxC.pb
+
+      done
 
       FILENAME_SUFFIX=redisai_${OUTPUT_NAME_SUFIX}_${DEVICE}_run_${RUN}_workers_${NUM_WORKERS}_autobatching_${BATCHSIZE}_tensorbatchsize_${TENSOR_BATCHSIZE}_rate_${RATE_LIMIT}.txt
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -133,9 +137,6 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
       echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
       # benchmark inference performance
       # make sure you're on the root project folder
-
-      # info modules prior the run
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO MODULES >./results/INFOMODULES__START__${FILENAME_SUFFIX}.txt
 
       ${EXE_FILE_NAME} \
         --file=${OUTPUT_VISION_FILE_NAME} \
@@ -150,10 +151,6 @@ for NUM_WORKERS in $(seq ${MIN_CLIENTS} ${CLIENTS_STEP} ${MAX_CLIENTS}); do
         -port=${DATABASE_PORT} \
         -json-out-file=./results/JSON_${FILENAME_SUFFIX}.json \
         2>&1 | tee ./results/RAW_${FILENAME_SUFFIX}.txt
-
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO MODULES >./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} INFO COMMANDSTATS >>./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
-      redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} AI.INFO ${VISION_MODEL_NAME} >>./results/INFOMODULES__END__${FILENAME_SUFFIX}.txt
 
       echo "Sleeping: $SLEEP_BETWEEN_RUNS"
       sleep ${SLEEP_BETWEEN_RUNS}
