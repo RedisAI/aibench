@@ -66,11 +66,17 @@ aibench_%: $(wildcard ./cmd/$@/*.go) ./inference/*.go
 load-fraud: loaders
 	./scripts/load_tensors_redis.sh
 
+data-fraud: generators
+	DEBUG=1 NUM_INFERENCES=100000 ./scripts/generate_data.sh
+
 data-fraud-ci: generators
 	DEBUG=1 NUM_INFERENCES=100000 ./scripts/generate_data.sh
 
 data-vision-ci: generators
 	DEBUG=1 VISION_REUSE_FACTOR=1 NUM_VISION_INFERENCES=500 ./scripts/generate_data_vision.sh
+
+data-vision: generators
+	DEBUG=1 VISION_REUSE_FACTOR=1 ./scripts/generate_data_vision.sh
 
 bench-fraud-ci:
 	SLEEP_BETWEEN_RUNS=0 CLIENTS_STEP=16 MIN_CLIENTS=0 MAX_CLIENTS=16 NUM_INFERENCES=100000 RUNS_PER_VARIATION=1 \
