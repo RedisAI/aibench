@@ -12,6 +12,12 @@ ai_queue_CPU_bthread_n1_used_cpu_total_start = None
 ai_self_used_cpu_sys_start = None
 ai_self_used_cpu_user_start = None
 
+print(
+    "Warning! This script was created to easily understand the first CPU bottleneck among main thread, BG thread, or backend.",
+)
+print(
+    "Currently it only collects up to 1 background worker thread CPU usage. If your setup has more than one BG worker thread please adjust this script accordingly.",
+)
 with open(sys.argv[1]) as json_file:
     dd = json.load(json_file)
     server_stats = dd["ServerRunTimeStats"]
@@ -31,18 +37,24 @@ with open(sys.argv[1]) as json_file:
         ai_queue_CPU_bthread_n1_used_cpu_total = 0
         ai_self_used_cpu_sys = 0
         ai_self_used_cpu_user = 0
-        for hostname, tich_stat in host_stats.items():
+        for hostname, timeframe_server_runtime_stats_dict in host_stats.items():
             ai_main_thread_used_cpu_sys += float(
-                tich_stat["ai_main_thread_used_cpu_sys"]
+                timeframe_server_runtime_stats_dict["ai_main_thread_used_cpu_sys"]
             )
             ai_main_thread_used_cpu_user += float(
-                tich_stat["ai_main_thread_used_cpu_user"]
+                timeframe_server_runtime_stats_dict["ai_main_thread_used_cpu_user"]
             )
             ai_queue_CPU_bthread_n1_used_cpu_total += float(
-                tich_stat["ai_queue_CPU_bthread_n1_used_cpu_total"]
+                timeframe_server_runtime_stats_dict[
+                    "ai_queue_CPU_bthread_n1_used_cpu_total"
+                ]
             )
-            ai_self_used_cpu_sys += float(tich_stat["ai_self_used_cpu_sys"])
-            ai_self_used_cpu_user += float(tich_stat["ai_self_used_cpu_user"])
+            ai_self_used_cpu_sys += float(
+                timeframe_server_runtime_stats_dict["ai_self_used_cpu_sys"]
+            )
+            ai_self_used_cpu_user += float(
+                timeframe_server_runtime_stats_dict["ai_self_used_cpu_user"]
+            )
 
         if ai_main_thread_used_cpu_sys_start is not None:
             ai_main_thread_used_cpu_sys_end = ai_main_thread_used_cpu_sys
@@ -54,8 +66,6 @@ with open(sys.argv[1]) as json_file:
             ai_self_used_cpu_user_end = ai_self_used_cpu_user
 
             timeframe = (float(ts) - float(start_ts)) / 1000000000.0
-            # if timeframe > 0.0:
-            # print(timeframe)
             ai_main_thread_used_cpu_sys_pct = (
                 (ai_main_thread_used_cpu_sys_end - ai_main_thread_used_cpu_sys_start)
                 / timeframe
