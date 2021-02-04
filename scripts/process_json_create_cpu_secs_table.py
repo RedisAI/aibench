@@ -1,6 +1,5 @@
 import json
 import sys
-import os
 
 start_ts = None
 end_ts = None
