@@ -1,12 +1,12 @@
-# Image Classification Benchmark 
+# Image Classification Benchmark
 
-## Use Case Description 
-To assess image classification inference performance, we rely on one network “backbone”: MobileNet V1, which can be considered as one of the standards by the AI community. We’re recurring to COCO 2017 validation dataset (a large-scale object detection, segmentation, and captioning dataset). 
+## Use Case Description
+To assess image classification inference performance, we rely on one network “backbone”: MobileNet V1, which can be considered as one of the standards by the AI community. We’re recurring to COCO 2017 validation dataset (a large-scale object detection, segmentation, and captioning dataset).
 
 To provide the fairest comparison possible we’ve preprocessed all images by:
 - Converting them to tensors of single precision floats
 - Normalizing the tensor values to ranges between [0,1]
-- Downscaling them so that the smallest dimension ( either Height or Width ) matched 256, and after that downscaled we’ve cropped a random deterministic rectangle of 226x226 as required by the benchmark model. 
+- Downscaling them so that the smallest dimension ( either Height or Width ) matched 256, and after that downscaled we’ve cropped a random deterministic rectangle of 226x226 as required by the benchmark model.
 
 All steps are auditable via the following [link](https://github.com/RedisAI/aibench/tree/master/datasets/vision/coco-2017-val). In the following sections you will be provided with the commands required from pre-processing up to benchmarking.
 
@@ -32,7 +32,7 @@ Using aibench for benchmarking inference performance involves 3 phases: image pr
 
 ### 1. Image preprocessing
 
-So that benchmarking results are not affected by pre-processing data on-the-fly, with aibench you pre-process the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking phase. All inference benchmarks use the same dataset, built based uppon the COCO 2017 validation dataset.
+So that benchmarking results are not affected by pre-processing data on-the-fly, with aibench you pre-process the data required for the inference benchmarks first, and then you can (re-)use it as input to the benchmarking phase. All inference benchmarks use the same dataset, built based upon the COCO 2017 validation dataset.
 
 
 ```bash
@@ -52,9 +52,9 @@ Saving cropped scaled images to cropped-val2017
 Data generated to file /tmp/bulk_data/vision_tensors.out
 ```
 
-### 2. Model Loading 
+### 2. Model Loading
 
-As an example of the model loading step we will use RedisAI. You can specificy the `DEVICE=GPU|CPU` in order to load the different device models. In that manner, for setting up the model do as follows:
+As an example of the model loading step we will use RedisAI. You can specify the `DEVICE=GPU|CPU` in order to load the different device models. You can use `BACKEND=TFLITE` for Tensorflow Lite model (specifying the `DEVICE` is not required for Tensorflow Lite). In that manner, for setting up the model do as follows:
 ```bash
 cd $GOPATH/src/github.com/RedisAI/aibench
 ## load the CPU model
@@ -62,14 +62,19 @@ $ DEVICE=cpu ./scripts/load_models_mobilenet_redisai.sh
 
 ## load the GPU model
 $ DEVICE=gpu ./scripts/load_models_mobilenet_redisai.sh
+
+## load Tensorflow Lite model
+$ BACKEND=TFLITE ./scripts/load_models_mobilenet_redisai.sh
 ```
 
 #### 2.1 Auto batching
-By default, the benchmark uses a batch size of 0. You can benchmark RedisAI auto batching capabilities by specifying the `BATCHSIZE=<n>` env variable.
+By default, the benchmark uses a batch size of 0. You can benchmark RedisAI
+auto batching capabilities by specifying the `BATCHSIZE=<n>` env variable
+(**Tensorflow Lite backend currently doesn't support auto-batching**).
 
-When provided with an n that is greater than 0, the engine will batch incoming requests from multiple clients that use the model with input tensors of the same shape. 
+When provided with an n that is greater than 0, the engine will batch incoming requests from multiple clients that use the model with input tensors of the same shape.
 
-Please denote that single client benchmarks will not benefit from auto-batching. 
+Please denote that single client benchmarks will not benefit from auto-batching.
 
 In that manner, for setting up the model with auto batching up to 32 tensors from distinct clients, do as follows:
 
@@ -95,10 +100,10 @@ As an example we will use RedisAI:
 # make sure you're on the root project folder
 cd $GOPATH/src/github.com/RedisAI/aibench
 
-## run the benchmark
+## run the benchmark. Use BACKEND=TFLITE for Tensorflow Lite
 $ ./scripts/run_inference_redisai_vision.sh
 ```
- 
+
  The
 resulting output will look similar to this:
 
@@ -127,23 +132,23 @@ $ ~/go/src/github.com/RedisAI/aibench$ ./scripts/run_inference_redisai_vision.sh
   All queries                                      :
   + Inference execution latency (statistical histogram):
           min:    15.51 ms,  mean:    20.07 ms, q25:    16.96 ms, med(q50):    18.38 ms, q75:    21.07 ms, q99:    40.38 ms, max:    74.05 ms, stddev:     5.17ms, count: 4900, timedOut count: 0
-  
+
   RedisAI Query - mobilenet_v1_100_224 :AI.MODELRUN:
   + Inference execution latency (statistical histogram):
           min:    15.51 ms,  mean:    20.07 ms, q25:    16.96 ms, med(q50):    18.38 ms, q75:    21.07 ms, q99:    40.38 ms, max:    74.05 ms, stddev:     5.17ms, count: 4900, timedOut count: 0
-  
+
   Took:  100.162 sec
   Saving Query Latencies HDR Histogram to stats-response-latency-hist.txt
 ```
 
 #### 3.1 Batching multiple inputs (images) to 4D batch tensor
 
-The used model is written to produce outputs from a batch of multiple inputs at the same time, 
-with input tensor having a B x C x H x W layout. 
+The used model is written to produce outputs from a batch of multiple inputs at the same time,
+with input tensor having a B x C x H x W layout.
 
-By default, the benchmark uses a 1 x C x H x W layout, meaning that each input tensor represents a single image. 
+By default, the benchmark uses a 1 x C x H x W layout, meaning that each input tensor represents a single image.
 
-Please denote that Batching multiple inputs (images) to 4D batch tensor is done on client side and completly independent of auto-batching settings on the server. Single client benchmarks can benefit from this benchmark feature. 
+Please denote that Batching multiple inputs (images) to 4D batch tensor is done on client side and completly independent of auto-batching settings on the server. Single client benchmarks can benefit from this benchmark feature.
 
 In that manner, for batching 10 images into a single tensor and run a single modelrun, do as follows:
 
@@ -160,11 +165,11 @@ $ DEVICE=gpu TENSOR_BATCHSIZE=10 ./scripts/run_inference_redisai_vision.sh
 
 You can retrieve additional runtime stats by leveraging the following 3 commands:
 
-- `AI.INFO <model key>` -- to retrieve statistics like the cumulative duration of executions in microseconds, total number of executions and average batch size ( by dividing SAMPLES per CALLS ). Full details on the [following link](https://oss.redislabs.com/redisai/commands/#aiinfo) 
+- `AI.INFO <model key>` -- to retrieve statistics like the cumulative duration of executions in microseconds, total number of executions and average batch size ( by dividing SAMPLES per CALLS ). Full details on the [following link](https://oss.redislabs.com/redisai/commands/#aiinfo)
 
 For the given example of batching 10 images per modelrun, AI.INFO reply should look like the following:
 ```
-$ redis-cli AI.INFO mobilenet_v1_100_224_cpu 
+$ redis-cli AI.INFO mobilenet_v1_100_224_cpu
  1) "key"
  2) "mobilenet_v1_100_224_cpu"
  3) "type"
@@ -185,7 +190,7 @@ $ redis-cli AI.INFO mobilenet_v1_100_224_cpu
 18) (integer) 0
 ```
 
-- `INFO COMMANDSTATS` -- To retrieve the cumulative main thread execution time of the commands. 
+- `INFO COMMANDSTATS` -- To retrieve the cumulative main thread execution time of the commands.
 
 For the given example of batching 10 images per modelrun, `INFO COMMANDSTATS` reply should look like the following:
 
@@ -221,4 +226,3 @@ ai_children_used_cpu_sys:0.001464
 ai_children_used_cpu_user:0.001836
 ai_queue_CPU_bthread_#1_used_cpu_total:0.000359
 ```
-

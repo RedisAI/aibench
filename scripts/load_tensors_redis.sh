@@ -24,13 +24,23 @@ fi
 #if [[ "${SETUP_MODEL}" == "true" ]]; then
 #
 ##  # set the Model
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
+resp=$(redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME} \
   TF CPU INPUTS transaction reference \
-  OUTPUTS output BLOB <./tests/models/tensorflow/creditcardfraud.pb
+  OUTPUTS output BLOB <./tests/models/tensorflow/creditcardfraud.pb)
 
-redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
+if [ "$resp" != "OK" ]; then
+  echo "Error loading the model into Redis: ${resp}"
+  exit 1
+fi
+
+resp=$(redis-cli -h ${DATABASE_HOST} -p ${DATABASE_PORT} -x AI.MODELSET ${MODEL_NAME_NOREFERENCE} \
   TF CPU INPUTS transaction \
-  OUTPUTS out BLOB <./tests/models/tensorflow/creditcardfraud_noreference.pb
+  OUTPUTS out BLOB <./tests/models/tensorflow/creditcardfraud_noreference.pb)
+
+if [ "$resp" != "OK" ]; then
+  echo "Error loading the model into Redis: ${resp}"
+  exit 1
+fi
 #
 #fi
 
