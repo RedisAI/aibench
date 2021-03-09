@@ -226,3 +226,106 @@ ai_children_used_cpu_sys:0.001464
 ai_children_used_cpu_user:0.001836
 ai_queue_CPU_bthread_#1_used_cpu_total:0.000359
 ```
+
+### 5. Processing aibench RedisAI results 101
+
+After running the benchmark automation scripts within aibench repo, you should have a `results` folder with one or more result files.
+
+To ease the production of result summaries you can use the helper scripts available on the aibench repo to output the best results on latency and throughput broken by auto batching and tensor-batching features.
+
+Furthermore, if you’ve used file suffixes during the benchmark runs ( namely used the `OUTPUT_NAME_SUFIX` env var. e.g.  `OUTPUT_NAME_SUFIX="v1.0.3_" ./scripts/run_inference_redisai_vision.sh` ) you can also filter the results by prefix.
+
+
+#### Example usage: 
+
+To give a concrete example let's imagine we’ve run two RedisAI version benchmarks and now have a results folder that contains both JSON_redisai_v1.0* results and  JSON_redisai_v1.2* results.
+
+To produce the summary tables for each version we would simple:
+
+**1st version**
+
+
+```
+$ python3 scripts/redisai_produce_results_table.py --dir results --prefix JSON_redisai_v1.0
+-------------------
+## Auto-batching overall throughput (inferences/sec) ((higher is better))
+Workers,Auto-batching 0,Auto-batching 10,Auto-batching 20,Auto-batching 30,Auto-batching 40,Auto-batching 50
+1 workers,51.904,n/a,n/a,n/a,n/a,n/a
+10 workers,55.658,85.408,n/a,n/a,n/a,n/a
+20 workers,56.356,91.401,91.948,n/a,n/a,n/a
+30 workers,55.521,91.041,90.937,87.990,n/a,n/a
+40 workers,55.609,90.980,90.303,91.671,90.443,n/a
+50 workers,55.563,90.929,88.393,89.207,87.592,86.330
+
+## Auto-batching p50 latency results (latency in ms including RTT) ((lower is better))
+Workers,Auto-batching 0,Auto-batching 10,Auto-batching 20,Auto-batching 30,Auto-batching 40,Auto-batching 50
+1 workers,18.975,n/a,n/a,n/a,n/a,n/a
+10 workers,178.175,116.223,n/a,n/a,n/a,n/a
+20 workers,352.767,217.599,215.807,n/a,n/a,n/a
+30 workers,538.111,328.447,327.935,342.015,n/a,n/a
+40 workers,716.799,437.503,442.111,431.615,437.503,n/a
+50 workers,894.463,548.351,631.807,555.519,570.879,574.463
+
+-------------------
+## Tensor-batching overall throughput (inferences/sec) ((higher is better))
+Workers,Tensor-batching 1,Tensor-batching 10,Tensor-batching 20,Tensor-batching 30,Tensor-batching 40,Tensor-batching 50
+1 workers,51.904,80.559,79.917,78.203,77.408,73.799
+10 workers,55.658,92.787,92.170,89.950,87.032,85.170
+20 workers,56.356,92.634,92.404,138.579,120.213,83.555
+30 workers,55.521,91.987,90.834,169.002,83.548,83.300
+40 workers,55.609,92.039,91.284,88.832,85.158,84.403
+50 workers,55.563,92.948,92.661,89.996,84.435,82.513
+
+## Tensor-batching p50 latency results (latency in ms including RTT) ((lower is better))
+Workers,Tensor-batching 1,Tensor-batching 10,Tensor-batching 20,Tensor-batching 30,Tensor-batching 40,Tensor-batching 50
+1 workers,18.975,123.199,247.679,380.671,511.743,671.743
+10 workers,178.175,1073.151,2152.447,3307.519,4554.751,5824.511
+20 workers,352.767,2148.351,4280.319,6651.903,9183.231,11821.055
+30 workers,538.111,3241.983,6500.351,2572.287,14163.967,17678.335
+40 workers,716.799,4325.375,8617.983,13377.535,18546.687,23003.135
+50 workers,894.463,5353.471,10633.215,16310.271,22888.447,29245.439
+```
+
+**2nd version**
+
+```
+$ python3 scripts/redisai_produce_results_table.py --dir results --prefix JSON_redisai_v1.2
+-------------------
+## Auto-batching overall throughput (inferences/sec) ((higher is better))
+Workers,Auto-batching 0,Auto-batching 10,Auto-batching 20,Auto-batching 30,Auto-batching 40,Auto-batching 50
+1 workers,56.167,n/a,n/a,n/a,n/a,n/a
+10 workers,61.301,70.802,n/a,n/a,n/a,n/a
+20 workers,61.221,71.307,72.340,n/a,n/a,n/a
+30 workers,61.141,71.603,72.094,70.564,n/a,n/a
+40 workers,61.064,72.248,72.289,70.362,70.600,n/a
+50 workers,61.140,72.190,70.610,71.819,70.676,71.908
+
+## Auto-batching p50 latency results (latency in ms including RTT) ((lower is better))
+Workers,Auto-batching 0,Auto-batching 10,Auto-batching 20,Auto-batching 30,Auto-batching 40,Auto-batching 50
+1 workers,17.615,n/a,n/a,n/a,n/a,n/a
+10 workers,162.559,141.183,n/a,n/a,n/a,n/a
+20 workers,325.887,281.087,275.199,n/a,n/a,n/a
+30 workers,489.471,419.583,418.303,424.703,n/a,n/a
+40 workers,654.335,552.447,549.887,567.295,565.759,n/a
+50 workers,816.639,692.223,706.559,696.831,706.047,694.783
+
+-------------------
+## Tensor-batching overall throughput (inferences/sec) ((higher is better))
+Workers,Tensor-batching 1,Tensor-batching 10,Tensor-batching 20,Tensor-batching 30,Tensor-batching 40,Tensor-batching 50
+1 workers,56.167,83.954,84.546,78.325,78.351,75.279
+10 workers,61.301,97.924,96.441,93.542,90.880,85.847
+20 workers,61.221,98.110,96.390,89.169,87.912,85.954
+30 workers,61.141,98.112,97.172,93.849,90.497,87.170
+40 workers,61.064,98.327,97.966,94.125,91.471,88.044
+50 workers,61.140,98.213,97.844,93.924,88.825,86.082
+
+## Tensor-batching p50 latency results (latency in ms including RTT) ((lower is better))
+Workers,Tensor-batching 1,Tensor-batching 10,Tensor-batching 20,Tensor-batching 30,Tensor-batching 40,Tensor-batching 50
+1 workers,17.615,117.759,235.135,382.975,509.951,661.503
+10 workers,162.559,1016.831,2069.503,3188.735,4358.143,5791.743
+20 workers,325.887,2029.567,4136.959,6692.863,9068.543,11567.103
+30 workers,489.471,3045.375,6152.191,9543.679,13123.583,17055.743
+40 workers,654.335,4055.039,8142.847,12656.639,17285.119,22249.471
+50 workers,816.639,5074.943,10149.887,15802.367,22134.783,28180.479
+```
+
