@@ -40,8 +40,8 @@ var (
 )
 
 // Vars only for git sha and diff handling
-var GitSHA1 string = ""
-var GitDirty string = "0"
+var GitSHA1 = ""
+var GitDirty = "0"
 
 func AibenchGitSHA1() string {
 	return GitSHA1
@@ -51,7 +51,7 @@ func AibenchGitDirty() (dirty bool) {
 	dirty = false
 	dirtyLines, err := strconv.Atoi(GitDirty)
 	if err == nil {
-		dirty = (dirtyLines != 0)
+		dirty = dirtyLines != 0
 	}
 	return
 }
@@ -279,8 +279,8 @@ func (p *Processor) ProcessInferenceQuery(q []byte, isWarm bool, workerNum int, 
 	if isWarm && p.opts.showExplain {
 		return nil, nil
 	}
-	tensorName := fmt.Sprintf("imageTensor:{w%d-i%d}", workerNum, queryNumber)
-	outputTensorName := fmt.Sprintf("classificationTensor:{w%d-i%d}", workerNum, queryNumber)
+	tensorName := fmt.Sprintf("imageTensor:{w%d}", workerNum)
+	outputTensorName := fmt.Sprintf("classificationTensor:{w%d}", workerNum)
 	tensorValues := q
 	pos := rand.Int31n(int32(len(p.pclient)))
 	var err error
