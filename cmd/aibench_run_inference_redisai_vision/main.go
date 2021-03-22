@@ -206,7 +206,6 @@ func process_commandstats_reply(commandstats_rcv string, kvmap map[string]interf
 	}
 }
 
-
 func process_memorystats_reply(commandstats_rcv string, kvmap map[string]interface{}) {
 	ai_cpu_idx := strings.Index(commandstats_rcv, "Memory")
 	if ai_cpu_idx > -1 {
@@ -223,7 +222,6 @@ func process_memorystats_reply(commandstats_rcv string, kvmap map[string]interfa
 		}
 	}
 }
-
 
 func process_info_modules_ai_cpu(rcv string, kvmap map[string]interface{}) {
 	ai_cpu_idx := strings.Index(rcv, "ai_cpu")
