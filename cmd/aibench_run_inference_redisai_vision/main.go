@@ -144,12 +144,14 @@ func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err er
 		var aicpu_rcv string
 		var aiinfo_rcv []string
 		var commandstats_rcv string
+		var infomemory_rcv string
 		var kvmap = make(map[string]interface{})
 		pipeCmds := radix.Pipeline(
 			radix.FlatCmd(&aicpu_rcv, "INFO", "MODULES"),
 			radix.FlatCmd(&aiinfo_rcv, "AI.INFO", model),
 			radix.FlatCmd(nil, "AI.INFO", model, "RESETSTAT"),
 			radix.FlatCmd(&commandstats_rcv, "INFO", "COMMANDSTATS"),
+			radix.FlatCmd(&infomemory_rcv, "INFO", "MEMORY"),
 			radix.FlatCmd(nil, "CONFIG", "RESETSTAT"),
 		)
 		err = h.Do(pipeCmds)
@@ -158,6 +160,7 @@ func (p *Processor) CollectRunTimeMetrics() (ts int64, stats interface{}, err er
 		}
 		process_ainfo_reply(aiinfo_rcv, kvmap)
 		process_commandstats_reply(commandstats_rcv, kvmap)
+		process_memorystats_reply(infomemory_rcv, kvmap)
 		process_info_modules_ai_cpu(aicpu_rcv, kvmap)
 		hosts_metrics_map[metricsHosts[pos]] = kvmap
 	}
@@ -188,6 +191,23 @@ func process_ainfo_reply(aiinfo_rcv []string, kvmap map[string]interface{}) {
 
 func process_commandstats_reply(commandstats_rcv string, kvmap map[string]interface{}) {
 	ai_cpu_idx := strings.Index(commandstats_rcv, "Commandstats")
+	if ai_cpu_idx > -1 {
+		ai_cpu_str := commandstats_rcv[ai_cpu_idx:]
+		ai_cpu_metrics_str_arr := strings.Split(ai_cpu_str, "\r\n")[1:]
+		for _, kv_str := range ai_cpu_metrics_str_arr {
+			kv := strings.Split(kv_str, ":")
+			if len(kv) == 2 {
+				k := kv[0]
+				v := kv[1]
+				kvmap[k] = v
+			}
+
+		}
+	}
+}
+
+func process_memorystats_reply(commandstats_rcv string, kvmap map[string]interface{}) {
+	ai_cpu_idx := strings.Index(commandstats_rcv, "Memory")
 	if ai_cpu_idx > -1 {
 		ai_cpu_str := commandstats_rcv[ai_cpu_idx:]
 		ai_cpu_metrics_str_arr := strings.Split(ai_cpu_str, "\r\n")[1:]
