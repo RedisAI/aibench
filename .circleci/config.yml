@@ -86,7 +86,7 @@ jobs:
   datasets-ci-fraud: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
-      - image: redisai/redisai:edge
+      - image: redislabs/redisai:edge-cpu
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
@@ -98,7 +98,7 @@ jobs:
   datasets-ci-vision: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
-      - image: redisai/redisai:edge
+      - image: redislabs/redisai:edge-cpu
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
@@ -110,7 +110,7 @@ jobs:
   datasets-ci-vision-tflite: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
-      - image: redisai/redisai:edge
+      - image: redislabs/redisai:edge-cpu
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
