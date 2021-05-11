@@ -53,6 +53,7 @@ commands:
       - run:
           name: Install dependencies
           command: |
+            sudo apt update
             sudo apt install python3 python3-pip
             python3 -m pip install -r ./datasets/vision/coco-2017-val/requirements.txt
       - run:
@@ -71,7 +72,8 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            sudo apt install python3 python3-pip
+            sudo apt update
+            sudo apt install --fix-missing python3 python3-pip
             python3 -m pip install -r ./datasets/vision/coco-2017-val/requirements.txt
       - run:
           name: Generate sample data for Vision benchmark (CI)
@@ -85,8 +87,8 @@ commands:
 jobs:
   datasets-ci-fraud: # test with redisai:edge
     docker:
-      - image: circleci/golang:1.13
-      - image: redislabs/redisai:edge-cpu
+      - image: circleci/golang:1.16
+      - image: redislabs/redisai:edge-cpu-bionic
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
@@ -97,8 +99,8 @@ jobs:
 
   datasets-ci-vision: # test with redisai:edge
     docker:
-      - image: circleci/golang:1.13
-      - image: redislabs/redisai:edge-cpu
+      - image: circleci/golang:1.16
+      - image: redislabs/redisai:edge-cpu-bionic
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
@@ -109,8 +111,8 @@ jobs:
 
   datasets-ci-vision-tflite: # test with redisai:edge
     docker:
-      - image: circleci/golang:1.13
-      - image: redislabs/redisai:edge-cpu
+      - image: circleci/golang:1.16
+      - image: redislabs/redisai:edge-cpu-bionic
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
@@ -121,7 +123,7 @@ jobs:
 
   build:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
 
     working_directory: /go/src/github.com/RedisAI/aibench
     steps:
