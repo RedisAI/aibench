@@ -138,10 +138,10 @@ workflows:
       - datasets-ci-fraud
       - datasets-ci-vision
       - datasets-ci-vision-tflite
-  nightly:
+  weekly:
     triggers:
       - schedule:
-          cron: "0 0 * * *"
+          cron: "00 07 * * 1"
           filters:
             branches:
               only:
